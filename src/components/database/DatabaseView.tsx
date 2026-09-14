@@ -235,12 +235,22 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({
               </p>
             </div>
           </div>
-          <button
-            onClick={() => setShowConfig(!showConfig)}
-            className="px-3.5 py-2 text-xs font-bold text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-xl transition-colors cursor-pointer shrink-0"
-          >
-            {showConfig ? 'Fechar Configuração' : '⚙️ Configurar Nuvem'}
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={checkStatus}
+              disabled={checkingStatus}
+              className="px-3.5 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 rounded-xl transition-colors cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${checkingStatus ? 'animate-spin' : ''}`} />
+              <span>Testar Conexão</span>
+            </button>
+            <button
+              onClick={() => setShowConfig(!showConfig)}
+              className="px-3.5 py-2 text-xs font-bold text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-xl transition-colors cursor-pointer"
+            >
+              {showConfig ? 'Fechar' : '⚙️ Configurar Nuvem'}
+            </button>
+          </div>
         </div>
 
         {showConfig && (
@@ -286,30 +296,44 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({
         )}
 
         {supabaseStatus && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${supabaseStatus.configured ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-zinc-50 border-zinc-300 text-zinc-700'}`}>
-              {supabaseStatus.configured ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" /> : <AlertCircle className="w-5 h-5 text-zinc-400 shrink-0" />}
-              <div>
-                <div className="text-xs font-bold">Variáveis de Ambiente</div>
-                <div className="text-[11px] opacity-90">{supabaseStatus.configured ? 'Configuradas' : 'Não configuradas (Modo 100% Local)'}</div>
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${supabaseStatus.configured ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-zinc-50 border-zinc-300 text-zinc-700'}`}>
+                {supabaseStatus.configured ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" /> : <AlertCircle className="w-5 h-5 text-zinc-400 shrink-0" />}
+                <div>
+                  <div className="text-xs font-bold">Variáveis de Ambiente</div>
+                  <div className="text-[11px] opacity-90">{supabaseStatus.configured ? 'Configuradas' : 'Não configuradas (Modo 100% Local)'}</div>
+                </div>
+              </div>
+
+              <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${supabaseStatus.connected ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-zinc-50 border-zinc-300 text-zinc-700'}`}>
+                {supabaseStatus.connected ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" /> : <AlertCircle className="w-5 h-5 text-zinc-400 shrink-0" />}
+                <div>
+                  <div className="text-xs font-bold">Conexão Nuvem</div>
+                  <div className="text-[11px] opacity-90">{supabaseStatus.connected ? 'Conectado com sucesso' : 'Usando SQLite localmente'}</div>
+                </div>
+              </div>
+
+              <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${supabaseStatus.tablesReady ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-zinc-50 border-zinc-300 text-zinc-700'}`}>
+                {supabaseStatus.tablesReady ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" /> : <AlertCircle className="w-5 h-5 text-zinc-400 shrink-0" />}
+                <div>
+                  <div className="text-xs font-bold">Tabelas Nuvem</div>
+                  <div className="text-[11px] opacity-90">{supabaseStatus.tablesReady ? 'Sincronizadas' : 'Opcional'}</div>
+                </div>
               </div>
             </div>
 
-            <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${supabaseStatus.connected ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-zinc-50 border-zinc-300 text-zinc-700'}`}>
-              {supabaseStatus.connected ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" /> : <AlertCircle className="w-5 h-5 text-zinc-400 shrink-0" />}
-              <div>
-                <div className="text-xs font-bold">Conexão Nuvem</div>
-                <div className="text-[11px] opacity-90">{supabaseStatus.connected ? 'Conectado com sucesso' : 'Usando SQLite localmente'}</div>
+            {supabaseStatus.configured && !supabaseStatus.connected && (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs space-y-2">
+                <div className="font-bold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>Atenção: Variáveis configuradas, mas as tabelas ainda não foram criadas no Supabase.</span>
+                </div>
+                <p className="text-[11px] text-amber-800 leading-relaxed">
+                  {supabaseStatus.error ? `Detalhe do erro: ${supabaseStatus.error}` : 'Para habilitar a sincronização em nuvem, copie o script SQL abaixo e execute-o na aba "SQL Editor" do seu painel do Supabase.'}
+                </p>
               </div>
-            </div>
-
-            <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${supabaseStatus.tablesReady ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-zinc-50 border-zinc-300 text-zinc-700'}`}>
-              {supabaseStatus.tablesReady ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" /> : <AlertCircle className="w-5 h-5 text-zinc-400 shrink-0" />}
-              <div>
-                <div className="text-xs font-bold">Tabelas Nuvem</div>
-                <div className="text-[11px] opacity-90">{supabaseStatus.tablesReady ? 'Sincronizadas' : 'Opcional'}</div>
-              </div>
-            </div>
+            )}
           </div>
         )}
       </div>

@@ -19,7 +19,7 @@ import {
 import { ColumnMapping, ImportPreviewItem, StatementFileType } from '../src/types';
 import { calculateConsolidatedBalance } from '../src/utils/consolidatedBalance';
 import { runFinancialUnitTests } from './financialTests';
-import { getSupabaseClient, isSupabaseConfigured } from './supabaseService';
+import { getSupabaseClient, isSupabaseConfigured, resetSupabaseClient } from './supabaseService';
 import { getSqliteDatabaseInfo, getSqliteDbPath, saveUserProfileSqlite } from './sqliteService';
 import {
   getUserProfiles,
@@ -130,6 +130,7 @@ apiRouter.post('/supabase/configure', async (req: Request, res: Response) => {
 
     fs.writeFileSync(envPath, envContent, 'utf8');
 
+    resetSupabaseClient();
     const client = getSupabaseClient();
     let connected = false;
     let errorMsg = null;
