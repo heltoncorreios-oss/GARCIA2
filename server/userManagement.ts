@@ -193,15 +193,15 @@ async function seedInitialAdmins(): Promise<void> {
         p => p.id === authUser.id || p.email.toLowerCase() === email
       );
 
-      if (!existing && isInitialAdmin) {
+      if (isInitialAdmin) {
         const adminProfile: UserProfile = {
-          id: authUser.id,
-          name: authUser.user_metadata?.name || (email === 'admin@supermercado.com' ? 'Administrador Financeiro' : 'Helton'),
+          id: existing ? existing.id : authUser.id,
+          name: existing?.name || authUser.user_metadata?.name || (email === 'admin@supermercado.com' ? 'Administrador Financeiro' : 'Helton'),
           email: authUser.email!,
           role: 'ADMINISTRADOR',
           status: 'ATIVO',
-          createdAt: authUser.created_at || new Date().toISOString(),
-          lastSignInAt: authUser.last_sign_in_at || null
+          createdAt: existing?.createdAt || authUser.created_at || new Date().toISOString(),
+          lastSignInAt: authUser.last_sign_in_at || existing?.lastSignInAt || null
         };
 
         cachedProfiles.set(adminProfile.id, adminProfile);
@@ -215,14 +215,18 @@ async function seedInitialAdmins(): Promise<void> {
           updated_at: new Date().toISOString()
         }]);
 
-        await addAuditLog({
-          user: 'SISTEMA',
-          userName: 'Sistema Automático',
-          action: 'USUARIO_INICIALIZADO',
-          description: `Perfil de ADMINISTRADOR configurado para ${adminProfile.email}`,
-          entityType: 'USER',
-          entityId: adminProfile.id
-        });
+        if (!existing || existing.role !== 'ADMINISTRADOR') {
+          await addAuditLog({
+            user: 'SISTEMA',
+            userName: 'Sistema Automático',
+            action: 'USUARIO_INICIALIZADO',
+            description: `Perfil de ADMINISTRADOR configurado para ${adminProfile.email}`,
+            entityType: 'USER',
+            entityId: adminProfile.id
+          });
+        }
+      } else if (!existing) {
+        // ... handled elsewhere or normal creation
       }
     }
   } catch (err) {
