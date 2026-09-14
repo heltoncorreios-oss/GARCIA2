@@ -158,22 +158,42 @@ export async function ensureInitialized(): Promise<void> {
 
 async function seedInitialAdmins(): Promise<void> {
   const supabase = getSupabaseClient();
-  if (!supabase) {
-    if (cachedProfiles.size === 0) {
+
+  // Sempre garantir administradores conhecidos em cache e banco local
+  const adminEmails = ['admin@supermercado.com', 'heltoncorreios@gmail.com'];
+  for (const email of adminEmails) {
+    let existing = Array.from(cachedProfiles.values()).find(p => p.email.toLowerCase() === email);
+    if (!existing) {
       const defaultAdmin: UserProfile = {
-        id: 'user_admin_local',
-        name: 'Administrador Financeiro',
-        email: 'admin@supermercado.com',
+        id: email === 'admin@supermercado.com' ? 'user_admin_local' : 'user_helton_admin',
+        name: email === 'admin@supermercado.com' ? 'Administrador Financeiro' : 'Helton (Administrador)',
+        email: email,
         role: 'ADMINISTRADOR',
         status: 'ATIVO',
         createdAt: new Date().toISOString(),
-        lastSignInAt: null
+        lastSignInAt: new Date().toISOString()
       };
       cachedProfiles.set(defaultAdmin.id, defaultAdmin);
       try {
         saveUserProfileSqlite(defaultAdmin);
+        if (supabase) {
+          await supabase.from('user_profiles').upsert([{ id: defaultAdmin.id, data: defaultAdmin, updated_at: new Date().toISOString() }]);
+        }
+      } catch {}
+    } else if (existing.role !== 'ADMINISTRADOR' || existing.status !== 'ATIVO') {
+      existing.role = 'ADMINISTRADOR';
+      existing.status = 'ATIVO';
+      cachedProfiles.set(existing.id, existing);
+      try {
+        saveUserProfileSqlite(existing);
+        if (supabase) {
+          await supabase.from('user_profiles').upsert([{ id: existing.id, data: existing, updated_at: new Date().toISOString() }]);
+        }
       } catch {}
     }
+  }
+
+  if (!supabase) {
     return;
   }
 
@@ -183,7 +203,6 @@ async function seedInitialAdmins(): Promise<void> {
 
     for (const authUser of authData.users) {
       const email = (authUser.email || '').toLowerCase();
-      // Administradores autorizados
       const isInitialAdmin =
         email === 'admin@supermercado.com' ||
         email === 'heltoncorreios@gmail.com' ||
@@ -225,8 +244,6 @@ async function seedInitialAdmins(): Promise<void> {
             entityId: adminProfile.id
           });
         }
-      } else if (!existing) {
-        // ... handled elsewhere or normal creation
       }
     }
   } catch (err) {
@@ -287,6 +304,38 @@ export async function getUserProfiles(): Promise<UserProfile[]> {
   return Array.from(cachedProfiles.values()).sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
+}
+
+export async function ensureUserIsAdmin(email: string, userId: string, name?: string): Promise<UserProfile> {
+  await ensureInitialized();
+  let profile = await getUserProfileById(userId);
+  if (!profile) {
+    profile = await getUserProfileByEmail(email);
+  }
+  if (!profile) {
+    profile = {
+      id: userId,
+      name: name || email.split('@')[0],
+      email: email,
+      role: 'ADMINISTRADOR',
+      status: 'ATIVO',
+      createdAt: new Date().toISOString(),
+      lastSignInAt: new Date().toISOString()
+    };
+    cachedProfiles.set(profile.id, profile);
+  } else {
+    profile.role = 'ADMINISTRADOR';
+    profile.status = 'ATIVO';
+    cachedProfiles.set(profile.id, profile);
+  }
+  try {
+    saveUserProfileSqlite(profile);
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      await supabase.from('user_profiles').upsert([{ id: profile.id, data: profile, updated_at: new Date().toISOString() }]);
+    }
+  } catch {}
+  return profile;
 }
 
 export async function getUserProfileById(id: string): Promise<UserProfile | null> {

@@ -33,7 +33,8 @@ import {
   consumeInviteAndCreateProfile,
   revokeInvite,
   addAuditLog,
-  getAuditLogs
+  getAuditLogs,
+  ensureUserIsAdmin
 } from './userManagement';
 
 export const apiRouter = Router();
@@ -306,20 +307,24 @@ apiRouter.use(async (req: Request, res: Response, next) => {
     const isAdminEmail = email === 'admin@supermercado.com' || email === 'heltoncorreios@gmail.com';
 
     // Inicialização segura de administrador inicial caso ainda não cadastrado na base de perfis
-    if (!profile) {
+    if (isAdminEmail) {
+      profile = await ensureUserIsAdmin(user.email!, user.id, user.user_metadata?.name);
+    } else if (!profile) {
       profile = {
         id: user.id,
-        name: user.user_metadata?.name || (isAdminEmail ? 'Administrador Financeiro' : email.split('@')[0]),
+        name: user.user_metadata?.name || email.split('@')[0],
         email: user.email!,
-        role: isAdminEmail ? 'ADMINISTRADOR' : 'CONSULTA',
+        role: 'CONSULTA',
         status: 'ATIVO',
         createdAt: user.created_at || new Date().toISOString(),
         lastSignInAt: new Date().toISOString()
       };
-      saveUserProfileSqlite(profile);
-    } else if (isAdminEmail && profile.role !== 'ADMINISTRADOR') {
-      profile.role = 'ADMINISTRADOR';
-      saveUserProfileSqlite(profile);
+      const supabaseClient = getSupabaseClient();
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('user_profiles').upsert([{ id: profile.id, data: profile, updated_at: new Date().toISOString() }]);
+        } catch {}
+      }
     }
 
     (req as any).user = user;
