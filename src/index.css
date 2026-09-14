@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    background-color: #0a0a0c;
+    color: #e4e4e7;
+  }
+}
+
+/* Custom dark scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0c;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+.checkerboard-bg {
+  background-color: #121216;
+  background-image: linear-gradient(45deg, #1a1a20 25%, transparent 25%), linear-gradient(-45deg, #1a1a20 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #1a1a20 75%), linear-gradient(-45deg, transparent 75%, #1a1a20 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+}
+
+/* Regras para Impressao / PDF */
+@media print {
+  aside,
+  header,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .overflow-x-auto,
+  .overflow-y-auto,
+  .max-h-\[380px\],
+  .max-h-\[560px\] {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Ajustes gerais em cartoes e tabelas para fundo claro */
+  .bg-\[\#121215\],
+  .bg-\[\#141418\],
+  .bg-\[\#141417\],
+  .bg-\[\#18181c\] {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-color: #e5e7eb !important;
+  }
+
+  .text-zinc-100,
+  .text-zinc-200,
+  .text-zinc-300,
+  .text-zinc-400,
+  .text-zinc-500 {
+    color: #1f2937 !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  th, td {
+    border-bottom: 1px solid #e5e7eb !important;
+  }
+}

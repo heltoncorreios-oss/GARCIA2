@@ -1,0 +1,6 @@
+{
+  "name": "Gestão Financeira Supermercado",
+  "description": "Sistema completo de gestão financeira para supermercados com importação e padronização de extratos bancários (OFX, CSV, XLSX, TXT, PDF), classificação automática, conciliação e relatórios gerenciais.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

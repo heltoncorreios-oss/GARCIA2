@@ -1,0 +1,570 @@
+import crypto from 'crypto';
+import { getSupabaseClient } from './supabaseService.js';
+import { UserProfile, UserRole, UserStatus, UserInvite, InviteStatus, AuditLogEntry } from '../src/types';
+
+// In-memory cache for fast, reliable access and local fallback
+let cachedProfiles: Map<string, UserProfile> = new Map();
+let cachedInvites: Map<string, UserInvite> = new Map();
+let cachedAuditLogs: AuditLogEntry[] = [];
+let isInitialized = false;
+
+// Gera códigos no padrão estrito FIN-XXXX-XXXX (ex: FIN-8K4P-X92M)
+export function generateInviteCode(): string {
+  const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let part1 = '';
+  let part2 = '';
+  for (let i = 0; i < 4; i++) {
+    part1 += chars[crypto.randomInt(0, chars.length)];
+    part2 += chars[crypto.randomInt(0, chars.length)];
+  }
+  return `FIN-${part1}-${part2}`;
+}
+
+export async function addAuditLog(entry: {
+  user: string;
+  userName?: string;
+  action: string;
+  description: string;
+  entityType?: string;
+  entityId?: string;
+  metadata?: Record<string, any>;
+}): Promise<AuditLogEntry> {
+  const log: AuditLogEntry = {
+    id: 'audit_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+    user: entry.user,
+    userName: entry.userName,
+    action: entry.action,
+    description: entry.description,
+    timestamp: new Date().toISOString(),
+    entityType: entry.entityType,
+    entityId: entry.entityId,
+    metadata: entry.metadata
+  };
+
+  cachedAuditLogs.unshift(log);
+  if (cachedAuditLogs.length > 500) {
+    cachedAuditLogs = cachedAuditLogs.slice(0, 500);
+  }
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      await supabase.from('audit_logs').insert([{
+        id: log.id,
+        data: log,
+        updated_at: log.timestamp
+      }]);
+    } catch (err) {
+      console.error('[Auditoria] Falha ao persistir no Supabase:', err);
+    }
+  }
+
+  return log;
+}
+
+export async function getAuditLogs(limit = 100): Promise<AuditLogEntry[]> {
+  await ensureInitialized();
+  return cachedAuditLogs.slice(0, limit);
+}
+
+export async function ensureInitialized(): Promise<void> {
+  if (isInitialized) return;
+
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    isInitialized = true;
+    return;
+  }
+
+  try {
+    // 1. Carregar perfis existentes
+    const { data: profRows, error: profErr } = await supabase.from('user_profiles').select('*');
+    if (!profErr && profRows) {
+      for (const row of profRows) {
+        if (row.data) {
+          cachedProfiles.set(row.data.id, row.data);
+        }
+      }
+    }
+
+    // 2. Carregar convites existentes
+    const { data: invRows, error: invErr } = await supabase.from('user_invites').select('*');
+    if (!invErr && invRows) {
+      for (const row of invRows) {
+        if (row.data) {
+          cachedInvites.set(row.data.id, row.data);
+        }
+      }
+    }
+
+    // 3. Carregar logs de auditoria
+    const { data: auditRows, error: auditErr } = await supabase
+      .from('audit_logs')
+      .select('*')
+      .order('updated_at', { ascending: false })
+      .limit(200);
+    if (!auditErr && auditRows) {
+      cachedAuditLogs = auditRows.map(r => r.data).filter(Boolean);
+    }
+
+    // 4. Garantir que os administradores iniciais do sistema estejam cadastrados no banco
+    await seedInitialAdmins();
+
+    // 5. Garantir pelo menos 2 convites iniciais ativos para testes e uso imediato
+    await seedInitialInvitesIfEmpty();
+
+    isInitialized = true;
+  } catch (err) {
+    console.error('[UserManagement] Erro na inicialização:', err);
+    isInitialized = true;
+  }
+}
+
+async function seedInitialAdmins(): Promise<void> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return;
+
+  try {
+    const { data: authData, error: authErr } = await supabase.auth.admin.listUsers();
+    if (authErr || !authData?.users) return;
+
+    for (const authUser of authData.users) {
+      const email = (authUser.email || '').toLowerCase();
+      // Administradores autorizados
+      const isInitialAdmin =
+        email === 'admin@supermercado.com' ||
+        email === 'heltoncorreios@gmail.com' ||
+        cachedProfiles.size === 0;
+
+      let existing = Array.from(cachedProfiles.values()).find(
+        p => p.id === authUser.id || p.email.toLowerCase() === email
+      );
+
+      if (!existing && isInitialAdmin) {
+        const adminProfile: UserProfile = {
+          id: authUser.id,
+          name: authUser.user_metadata?.name || (email === 'admin@supermercado.com' ? 'Administrador Financeiro' : 'Helton'),
+          email: authUser.email!,
+          role: 'ADMINISTRADOR',
+          status: 'ATIVO',
+          createdAt: authUser.created_at || new Date().toISOString(),
+          lastSignInAt: authUser.last_sign_in_at || null
+        };
+
+        cachedProfiles.set(adminProfile.id, adminProfile);
+        await supabase.from('user_profiles').upsert([{
+          id: adminProfile.id,
+          data: adminProfile,
+          updated_at: new Date().toISOString()
+        }]);
+
+        await addAuditLog({
+          user: 'SISTEMA',
+          userName: 'Sistema Automático',
+          action: 'USUARIO_INICIALIZADO',
+          description: `Perfil de ADMINISTRADOR configurado para ${adminProfile.email}`,
+          entityType: 'USER',
+          entityId: adminProfile.id
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('[UserManagement] Erro ao sincronizar administradores iniciais:', err);
+  }
+}
+
+async function seedInitialInvitesIfEmpty(): Promise<void> {
+  if (cachedInvites.size > 0) return;
+
+  const initialInvites = [
+    {
+      code: 'FIN-8K4P-X92M',
+      role: 'FINANCEIRO' as UserRole,
+      expirationDays: 30
+    },
+    {
+      code: 'FIN-OPER-7B3Q',
+      role: 'OPERADOR' as UserRole,
+      expirationDays: 30
+    },
+    {
+      code: 'FIN-CONS-9L1W',
+      role: 'CONSULTA' as UserRole,
+      expirationDays: 30
+    }
+  ];
+
+  for (const inv of initialInvites) {
+    await createInviteWithCode(
+      inv.code,
+      'admin@supermercado.com',
+      inv.role,
+      inv.expirationDays
+    );
+  }
+}
+
+export async function getUserProfiles(): Promise<UserProfile[]> {
+  await ensureInitialized();
+
+  // Atualizar last_sign_in_at dinamicamente a partir do Supabase Auth
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data: authData } = await supabase.auth.admin.listUsers();
+      if (authData?.users) {
+        for (const authUser of authData.users) {
+          const prof = cachedProfiles.get(authUser.id);
+          if (prof && authUser.last_sign_in_at) {
+            prof.lastSignInAt = authUser.last_sign_in_at;
+          }
+        }
+      }
+    } catch {}
+  }
+
+  return Array.from(cachedProfiles.values()).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+}
+
+export async function getUserProfileById(id: string): Promise<UserProfile | null> {
+  await ensureInitialized();
+  return cachedProfiles.get(id) || null;
+}
+
+export async function getUserProfileByEmail(email: string): Promise<UserProfile | null> {
+  await ensureInitialized();
+  const cleanEmail = email.trim().toLowerCase();
+  for (const prof of cachedProfiles.values()) {
+    if (prof.email.toLowerCase() === cleanEmail) {
+      return prof;
+    }
+  }
+  return null;
+}
+
+export async function updateUserStatus(
+  userId: string,
+  newStatus: UserStatus,
+  adminUserEmail: string
+): Promise<{ success: boolean; profile?: UserProfile; error?: string }> {
+  await ensureInitialized();
+  const target = cachedProfiles.get(userId);
+  if (!target) {
+    return { success: false, error: 'Usuário não encontrado.' };
+  }
+
+  // Não permitir bloquear o último administrador ativo
+  if (target.role === 'ADMINISTRADOR' && newStatus === 'BLOQUEADO') {
+    const activeAdmins = Array.from(cachedProfiles.values()).filter(
+      p => p.role === 'ADMINISTRADOR' && p.status === 'ATIVO' && p.id !== userId
+    );
+    if (activeAdmins.length === 0) {
+      return { success: false, error: 'Não é permitido bloquear o único administrador ativo do sistema.' };
+    }
+  }
+
+  const prevStatus = target.status;
+  target.status = newStatus;
+  cachedProfiles.set(target.id, target);
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    await supabase.from('user_profiles').upsert([{
+      id: target.id,
+      data: target,
+      updated_at: new Date().toISOString()
+    }]);
+  }
+
+  const actionName = newStatus === 'ATIVO' ? 'USUARIO_ATIVADO' : newStatus === 'BLOQUEADO' ? 'USUARIO_BLOQUEADO' : 'USUARIO_PENDENTE';
+  const desc = `Administrador ${adminUserEmail} alterou o status do usuário ${target.name} (${target.email}) de ${prevStatus} para ${newStatus}.`;
+
+  await addAuditLog({
+    user: adminUserEmail,
+    action: actionName,
+    description: desc,
+    entityType: 'USER',
+    entityId: target.id,
+    metadata: { previousStatus: prevStatus, newStatus }
+  });
+
+  return { success: true, profile: target };
+}
+
+export async function updateUserRole(
+  userId: string,
+  newRole: UserRole,
+  adminUserEmail: string
+): Promise<{ success: boolean; profile?: UserProfile; error?: string }> {
+  await ensureInitialized();
+  const target = cachedProfiles.get(userId);
+  if (!target) {
+    return { success: false, error: 'Usuário não encontrado.' };
+  }
+
+  // Não permitir rebaixar o único administrador ativo
+  if (target.role === 'ADMINISTRADOR' && newRole !== 'ADMINISTRADOR') {
+    const activeAdmins = Array.from(cachedProfiles.values()).filter(
+      p => p.role === 'ADMINISTRADOR' && p.status === 'ATIVO' && p.id !== userId
+    );
+    if (activeAdmins.length === 0) {
+      return { success: false, error: 'O sistema deve possuir pelo menos um administrador ativo.' };
+    }
+  }
+
+  const prevRole = target.role;
+  target.role = newRole;
+  cachedProfiles.set(target.id, target);
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    await supabase.from('user_profiles').upsert([{
+      id: target.id,
+      data: target,
+      updated_at: new Date().toISOString()
+    }]);
+  }
+
+  await addAuditLog({
+    user: adminUserEmail,
+    action: 'PERFIL_ALTERADO',
+    description: `Administrador ${adminUserEmail} alterou o perfil de ${target.name} (${target.email}) de ${prevRole} para ${newRole}.`,
+    entityType: 'USER',
+    entityId: target.id,
+    metadata: { previousRole: prevRole, newRole }
+  });
+
+  return { success: true, profile: target };
+}
+
+// Gerenciamento de Convites
+export async function getInvites(): Promise<UserInvite[]> {
+  await ensureInitialized();
+  const now = new Date();
+
+  // Atualiza status dinamicamente para EXPIRADO se a data passou e ainda estava DISPONIVEL
+  for (const inv of cachedInvites.values()) {
+    if (inv.status === 'DISPONIVEL' && !inv.used && new Date(inv.expiresAt) < now) {
+      inv.status = 'EXPIRADO';
+    }
+  }
+
+  return Array.from(cachedInvites.values()).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+}
+
+export async function createInvite(
+  adminEmail: string,
+  role: UserRole = 'CONSULTA',
+  expirationDays: number = 7
+): Promise<UserInvite> {
+  const code = generateInviteCode();
+  return createInviteWithCode(code, adminEmail, role, expirationDays);
+}
+
+async function createInviteWithCode(
+  code: string,
+  adminEmail: string,
+  role: UserRole = 'CONSULTA',
+  expirationDays: number = 7
+): Promise<UserInvite> {
+  await ensureInitialized();
+
+  const id = 'inv_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + expirationDays * 24 * 60 * 60 * 1000).toISOString();
+
+  const invite: UserInvite = {
+    id,
+    code,
+    role,
+    createdBy: adminEmail,
+    createdAt: now.toISOString(),
+    expiresAt,
+    used: false,
+    usedBy: null,
+    usedAt: null,
+    status: 'DISPONIVEL'
+  };
+
+  cachedInvites.set(id, invite);
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      await supabase.from('user_invites').upsert([{
+        id,
+        data: invite,
+        updated_at: now.toISOString()
+      }]);
+    } catch (err) {
+      console.error('[UserManagement] Erro ao salvar convite no Supabase:', err);
+    }
+  }
+
+  await addAuditLog({
+    user: adminEmail,
+    action: 'CONVITE_GERADO',
+    description: `Administrador ${adminEmail} gerou convite de acesso ${code} para o perfil ${role} (Validade: ${expirationDays} dias).`,
+    entityType: 'INVITE',
+    entityId: id,
+    metadata: { code, role, expirationDays }
+  });
+
+  return invite;
+}
+
+export async function verifyInviteCode(rawCode: string): Promise<{
+  valid: boolean;
+  error?: string;
+  invite?: UserInvite;
+}> {
+  await ensureInitialized();
+  if (!rawCode || !rawCode.trim()) {
+    return { valid: false, error: 'Código de convite obrigatório.' };
+  }
+
+  const cleanCode = rawCode.trim().toUpperCase();
+  let foundInvite: UserInvite | null = null;
+
+  for (const inv of cachedInvites.values()) {
+    if (inv.code.toUpperCase() === cleanCode) {
+      foundInvite = inv;
+      break;
+    }
+  }
+
+  if (!foundInvite) {
+    return { valid: false, error: 'Código de convite inválido ou expirado.' };
+  }
+
+  if (foundInvite.used || foundInvite.status === 'UTILIZADO') {
+    return { valid: false, error: 'Este código de convite já foi utilizado.' };
+  }
+
+  if (foundInvite.status === 'REVOGADO') {
+    return { valid: false, error: 'Código de convite inválido ou expirado.' };
+  }
+
+  if (new Date(foundInvite.expiresAt) < new Date()) {
+    foundInvite.status = 'EXPIRADO';
+    return { valid: false, error: 'Código de convite inválido ou expirado.' };
+  }
+
+  return { valid: true, invite: foundInvite };
+}
+
+export async function consumeInviteAndCreateProfile(data: {
+  userId: string;
+  name: string;
+  email: string;
+  inviteCode: string;
+}): Promise<{ success: boolean; profile?: UserProfile; error?: string }> {
+  await ensureInitialized();
+  const { valid, error, invite } = await verifyInviteCode(data.inviteCode);
+  if (!valid || !invite) {
+    return { success: false, error: error || 'Código de convite inválido ou expirado.' };
+  }
+
+  const now = new Date().toISOString();
+
+  // 1. Atualizar convite para UTILIZADO
+  invite.used = true;
+  invite.usedBy = data.email.toLowerCase();
+  invite.usedAt = now;
+  invite.status = 'UTILIZADO';
+  cachedInvites.set(invite.id, invite);
+
+  // 2. Criar perfil com status PENDENTE (conforme Requisitos 14 e 15)
+  // Novos usuários cadastrados por convite iniciam PENDENTES para validação do administrador
+  const newProfile: UserProfile = {
+    id: data.userId,
+    name: data.name.trim(),
+    email: data.email.trim().toLowerCase(),
+    role: invite.role || 'CONSULTA',
+    status: 'PENDENTE',
+    createdAt: now,
+    lastSignInAt: now,
+    inviteCode: invite.code,
+    invitedBy: invite.createdBy
+  };
+
+  cachedProfiles.set(newProfile.id, newProfile);
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      await Promise.all([
+        supabase.from('user_invites').upsert([{
+          id: invite.id,
+          data: invite,
+          updated_at: now
+        }]),
+        supabase.from('user_profiles').upsert([{
+          id: newProfile.id,
+          data: newProfile,
+          updated_at: now
+        }])
+      ]);
+    } catch (err) {
+      console.error('[UserManagement] Erro ao persistir cadastro no Supabase:', err);
+    }
+  }
+
+  await addAuditLog({
+    user: newProfile.email,
+    userName: newProfile.name,
+    action: 'NOVO_CADASTRO',
+    description: `Novo usuário ${newProfile.name} (${newProfile.email}) realizou cadastro com o convite ${invite.code}. Cadastro aguardando aprovação (PENDENTE).`,
+    entityType: 'USER',
+    entityId: newProfile.id,
+    metadata: { inviteCode: invite.code, role: newProfile.role, status: newProfile.status }
+  });
+
+  return { success: true, profile: newProfile };
+}
+
+export async function revokeInvite(
+  inviteId: string,
+  adminEmail: string
+): Promise<{ success: boolean; error?: string }> {
+  await ensureInitialized();
+  const invite = cachedInvites.get(inviteId);
+  if (!invite) {
+    return { success: false, error: 'Convite não encontrado.' };
+  }
+
+  if (invite.used || invite.status === 'UTILIZADO') {
+    return { success: false, error: 'Convites já utilizados não podem ser revogados.' };
+  }
+
+  invite.status = 'REVOGADO';
+  cachedInvites.set(invite.id, invite);
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      await supabase.from('user_invites').upsert([{
+        id: invite.id,
+        data: invite,
+        updated_at: new Date().toISOString()
+      }]);
+    } catch (err) {
+      console.error('[UserManagement] Erro ao revogar convite no Supabase:', err);
+    }
+  }
+
+  await addAuditLog({
+    user: adminEmail,
+    action: 'CONVITE_REVOGADO',
+    description: `Administrador ${adminEmail} revogou o convite ${invite.code}.`,
+    entityType: 'INVITE',
+    entityId: invite.id,
+    metadata: { code: invite.code }
+  });
+
+  return { success: true };
+}

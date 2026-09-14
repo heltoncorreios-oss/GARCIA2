@@ -1,0 +1,416 @@
+import React, { useState, useRef } from 'react';
+import {
+  Building2,
+  Upload,
+  Image as ImageIcon,
+  Trash2,
+  X,
+  Check,
+  Sparkles,
+  Link,
+  ShieldCheck,
+  AlertCircle,
+  Crop
+} from 'lucide-react';
+import { CompanyProfile } from '../../types';
+import { ImageCropperModal } from './ImageCropperModal';
+
+interface CompanySettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  companyProfile: CompanyProfile;
+  onSaveProfile: (profile: CompanyProfile) => void;
+}
+
+export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
+  isOpen,
+  onClose,
+  companyProfile,
+  onSaveProfile
+}) => {
+  const [name, setName] = useState(companyProfile.name || 'Supermercado Central');
+  const [subtitle, setSubtitle] = useState(
+    companyProfile.subtitle || 'Gestão Financeira'
+  );
+  const [logoUrl, setLogoUrl] = useState<string | null>(companyProfile.logoUrl || null);
+  const [cnpj, setCnpj] = useState(companyProfile.cnpj || '');
+  const [badge, setBadge] = useState(companyProfile.badge || 'FINANCEIRO');
+  const [urlInput, setUrlInput] = useState('');
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Cropper state
+  const [isCropperOpen, setIsCropperOpen] = useState(false);
+  const [cropperImage, setCropperImage] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  if (!isOpen) return null;
+
+  const handleFileProcess = (file: File) => {
+    setErrorMsg(null);
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/svg+xml', 'image/gif'];
+    if (!validTypes.includes(file.type) && !file.name.match(/\.(png|jpe?g|webp|svg|gif)$/i)) {
+      setErrorMsg('Formato inválido! Envie uma imagem nos formatos .PNG, .JPG, .JPEG, .WEBP ou .SVG.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMsg('A imagem é muito grande. Escolha uma imagem de até 5MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setCropperImage(result);
+      setIsCropperOpen(true);
+    };
+    reader.onerror = () => {
+      setErrorMsg('Erro ao carregar o arquivo de imagem.');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileProcess(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileProcess(e.target.files[0]);
+    }
+  };
+
+  const handleApplyUrl = () => {
+    if (!urlInput.trim()) return;
+    setCropperImage(urlInput.trim());
+    setIsCropperOpen(true);
+    setUrlInput('');
+    setShowUrlInput(false);
+  };
+
+  const handleRemoveLogo = () => {
+    setLogoUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleSave = () => {
+    if (!name.trim()) {
+      setErrorMsg('O nome do estabelecimento é obrigatório.');
+      return;
+    }
+    onSaveProfile({
+      name: name.trim(),
+      subtitle: subtitle.trim(),
+      logoUrl: logoUrl || null,
+      cnpj: cnpj.trim() || undefined,
+      badge: badge.trim() || 'FINANCEIRO'
+    });
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white border border border-black rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        {/* Header */}
+        <div className="p-5 border-b border border-black flex items-center justify-between bg-[#101014]">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-orange-500/10 text-orange-700 font-bold border border-orange-500/20 flex items-center justify-center">
+              <ImageIcon className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-zinc-950 font-bold">
+                Logotipo & Dados do Estabelecimento
+              </h3>
+              <p className="text-xs text-zinc-900 font-semibold">
+                Personalize o logo da empresa (.png, .jpg, .jpeg) e os títulos do cabeçalho
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 text-zinc-900 font-semibold hover:text-zinc-950 font-bold hover:bg-white/5 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Body content */}
+        <div className="p-6 space-y-6 overflow-y-auto">
+          {errorMsg && (
+            <div className="p-3 bg-rose-500/10 border border border-black text-rose-700 font-bold text-xs font-semibold rounded-xl flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-700 font-bold shrink-0" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {/* Logo Upload Slot */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-950 font-bold">
+              Espaço para Logotipo do Estabelecimento (.png, .jpg, .jpeg)
+            </label>
+
+            <div
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              className={`relative border-2 border-dashed rounded-2xl p-4 transition-all flex flex-col sm:flex-row items-center gap-4 ${
+                dragActive
+                  ? 'border-orange-500 bg-orange-500/10'
+                  : logoUrl
+                  ? 'border border-black bg-white'
+                  : 'border border-black hover:border border-black bg-white'
+              }`}
+            >
+              {/* Logo Preview Box */}
+              <div className="w-24 h-24 rounded-xl bg-[#101014] border border border-black flex items-center justify-center overflow-hidden shrink-0 relative group">
+                {logoUrl ? (
+                  <img
+                    src={logoUrl}
+                    alt="Logo do Estabelecimento"
+                    className="w-full h-full object-contain p-1.5"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-zinc-900 font-semibold">
+                    <Building2 className="w-8 h-8 text-zinc-900 font-semibold mb-1" />
+                    <span className="text-[9px] uppercase font-bold text-zinc-800 font-medium">Sem Logo</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Upload controls */}
+              <div className="flex-1 text-center sm:text-left space-y-2 w-full">
+                <div>
+                  <h4 className="text-xs font-bold text-zinc-950 font-bold">
+                    {logoUrl ? 'Logotipo Carregado' : 'Selecione ou arraste a imagem do logo'}
+                  </h4>
+                  <p className="text-[11px] text-zinc-900 font-semibold">
+                    Suporta imagens em alta resolução: PNG com fundo transparente, JPG ou JPEG.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 pt-1 justify-center sm:justify-start">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png, image/jpeg, image/jpg, image/webp, image/svg+xml"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    id="logo-file-input"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{logoUrl ? 'Trocar Imagem' : 'Escolher Imagem (.png, .jpg)'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowUrlInput(!showUrlInput)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 hover:bg-white/10 text-zinc-950 font-bold text-xs font-semibold rounded-xl border border border-black transition-colors"
+                  >
+                    <Link className="w-3.5 h-3.5" />
+                    <span>URL da Web</span>
+                  </button>
+
+                  {logoUrl && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCropperImage(logoUrl);
+                          setIsCropperOpen(true);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/15 hover:bg-orange-500/25 text-orange-700 font-bold text-xs font-bold rounded-xl border border-orange-500/30 transition-colors cursor-pointer"
+                      >
+                        <Crop className="w-3.5 h-3.5" />
+                        <span>Redimensionar / Ajustar</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleRemoveLogo}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 font-bold text-xs font-semibold rounded-xl border border border-black transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Remover</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {showUrlInput && (
+                  <div className="flex items-center gap-1.5 pt-2">
+                    <input
+                      type="text"
+                      placeholder="https://exemplo.com/logo.png"
+                      value={urlInput}
+                      onChange={(e) => setUrlInput(e.target.value)}
+                      className="flex-1 px-3 py-1.5 bg-white border border border-black rounded-lg text-xs text-zinc-950 font-bold placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyUrl}
+                      className="px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-semibold rounded-lg"
+                    >
+                      Aplicar
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Form Fields: Name, Subtitle, CNPJ, Badge */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-semibold text-zinc-950 font-bold mb-1">
+                Nome do Estabelecimento / Supermercado:
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ex: Supermercado Central, Hipermercado Estrela..."
+                className="w-full px-3.5 py-2.5 bg-white border border border-black rounded-xl text-xs text-zinc-950 font-bold font-bold focus:outline-none focus:ring-1 focus:ring-orange-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-zinc-950 font-bold mb-1">
+                Subtítulo / Módulo:
+              </label>
+              <input
+                type="text"
+                value={subtitle}
+                onChange={(e) => setSubtitle(e.target.value)}
+                placeholder="Ex: Gestão Financeira"
+                className="w-full px-3 py-2 bg-white border border border-black rounded-xl text-xs text-zinc-950 font-bold focus:outline-none focus:ring-1 focus:ring-orange-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-zinc-950 font-bold mb-1">
+                Etiqueta / Tag (Badge):
+              </label>
+              <input
+                type="text"
+                value={badge}
+                onChange={(e) => setBadge(e.target.value.toUpperCase())}
+                placeholder="Ex: FINANCEIRO, MATRIZ, LOJA 01..."
+                className="w-full px-3 py-2 bg-white border border border-black rounded-xl text-xs text-zinc-950 font-bold uppercase font-mono focus:outline-none focus:ring-1 focus:ring-orange-500"
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-semibold text-zinc-950 font-bold mb-1">
+                CNPJ do Estabelecimento (Opcional):
+              </label>
+              <input
+                type="text"
+                value={cnpj}
+                onChange={(e) => setCnpj(e.target.value)}
+                placeholder="00.000.000/0001-00"
+                className="w-full px-3 py-2 bg-white border border border-black rounded-xl text-xs text-zinc-950 font-bold focus:outline-none focus:ring-1 focus:ring-orange-500"
+              />
+            </div>
+          </div>
+
+          {/* Live Header Preview Box */}
+          <div className="space-y-1.5">
+            <span className="text-[11px] font-bold text-zinc-900 font-semibold uppercase tracking-wider block">
+              Pré-visualização do Cabeçalho:
+            </span>
+            <div className="p-3 bg-[#0e0e12] border border border-black rounded-xl flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center text-white shadow-md overflow-hidden shrink-0 border border border-black">
+                  {logoUrl ? (
+                    <img
+                      src={logoUrl}
+                      alt="Preview"
+                      className="w-full h-full object-contain p-1 bg-white"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <Building2 className="w-5 h-5" />
+                  )}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-zinc-950 font-bold">{name || 'Supermercado'}</span>
+                    {badge && (
+                      <span className="px-1.5 py-0.5 text-[9px] font-bold bg-orange-500/15 text-orange-700 font-bold border border-orange-500/25 rounded">
+                        {badge}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-zinc-900 font-semibold">
+                    {subtitle || 'Gestão Financeira'}
+                  </p>
+                </div>
+              </div>
+
+              <span className="text-[10px] text-emerald-700 font-bold font-bold bg-emerald-500/10 border border border-black px-2 py-0.5 rounded-full">
+                Ativo
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer actions */}
+        <div className="p-4 border-t border border-black bg-[#101014] flex items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-xs font-semibold text-zinc-900 font-semibold hover:text-white rounded-xl transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-xl shadow-md transition-colors"
+          >
+            <Check className="w-4 h-4" />
+            <span>Salvar Estabelecimento</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Sub-modal for image cropping & resizing */}
+      <ImageCropperModal
+        isOpen={isCropperOpen}
+        imageSrc={cropperImage}
+        onClose={() => setIsCropperOpen(false)}
+        onCropComplete={(croppedBase64) => {
+          setLogoUrl(croppedBase64);
+          setIsCropperOpen(false);
+        }}
+      />
+    </div>
+  );
+};
