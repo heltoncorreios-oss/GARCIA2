@@ -9,22 +9,29 @@ let clientInstance: SupabaseClient | null = null;
 
 export function getSupabase(): SupabaseClient {
   if (!clientInstance) {
-    const url = envUrl || (window as any).__SUPABASE_URL__ || '';
-    const anonKey = envAnonKey || (window as any).__SUPABASE_ANON_KEY__ || '';
+    const url = envUrl || (window as any).__SUPABASE_URL__ || 'https://placeholder.supabase.co';
+    const anonKey = envAnonKey || (window as any).__SUPABASE_ANON_KEY__ || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder';
 
-    if (!url || !anonKey) {
-      console.warn('[Supabase Client] URL ou Anon Key não configuradas no ambiente.');
+    if (!envUrl || !envAnonKey) {
+      console.warn('[Supabase Client] Variáveis VITE_SUPABASE_URL ou VITE_SUPABASE_ANON_KEY não configuradas. Usando cliente em modo de espera.');
     }
 
-    clientInstance = createClient(url, anonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true
-      }
-    });
+    try {
+      clientInstance = createClient(url, anonKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true
+        }
+      });
+    } catch (e) {
+      console.error('[Supabase Client] Erro ao inicializar cliente Supabase:', e);
+      // Fallback seguro para evitar tela branca
+      clientInstance = createClient('https://placeholder.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder');
+    }
   }
   return clientInstance;
 }
 
 export const supabase = getSupabase();
+
