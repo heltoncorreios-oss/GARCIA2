@@ -23,15 +23,20 @@ export function resetSupabaseClient() {
 }
 
 export function isSupabaseConfigured(): boolean {
-  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
-  return Boolean(url && key);
+  let url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
+  let key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+  url = url.trim().replace(/^["']|["']$/g, '');
+  key = key.trim().replace(/^["']|["']$/g, '');
+  return Boolean(url && key && url.startsWith('http'));
 }
 
 export function getSupabaseClient(): SupabaseClient | null {
-  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
-  if (!url || !key) return null;
+  let url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
+  let key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+  
+  url = url.trim().replace(/^["']|["']$/g, '');
+  key = key.trim().replace(/^["']|["']$/g, '');
+  if (!url || !key || !url.startsWith('http')) return null;
 
   if (!supabaseInstance || url !== lastUrl || key !== lastKey) {
     lastUrl = url;

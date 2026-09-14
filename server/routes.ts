@@ -95,9 +95,12 @@ apiRouter.post('/supabase/configure', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'URL e Anon Key do Supabase são obrigatórias.' });
     }
 
-    const cleanUrl = supabaseUrl.trim();
-    const cleanAnon = supabaseAnonKey.trim();
-    const cleanService = supabaseServiceRoleKey ? supabaseServiceRoleKey.trim() : '';
+    let cleanUrl = supabaseUrl.trim().replace(/^["']|["']$/g, '');
+    if (cleanUrl && !cleanUrl.startsWith('http')) {
+      cleanUrl = 'https://' + cleanUrl;
+    }
+    const cleanAnon = supabaseAnonKey.trim().replace(/^["']|["']$/g, '');
+    const cleanService = supabaseServiceRoleKey ? supabaseServiceRoleKey.trim().replace(/^["']|["']$/g, '') : '';
 
     process.env.SUPABASE_URL = cleanUrl;
     process.env.SUPABASE_ANON_KEY = cleanAnon;
