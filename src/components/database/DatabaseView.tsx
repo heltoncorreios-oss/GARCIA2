@@ -17,6 +17,35 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({
   const [supabaseStatus, setSupabaseStatus] = useState<any>(null);
   const [sqliteStatus, setSqliteStatus] = useState<any>(null);
   const [checkingStatus, setCheckingStatus] = useState<boolean>(false);
+  const [showConfig, setShowConfig] = useState<boolean>(false);
+  const [inputUrl, setInputUrl] = useState<string>('');
+  const [inputAnonKey, setInputAnonKey] = useState<string>('');
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [configError, setConfigError] = useState<string | null>(null);
+  const [configSuccess, setConfigSuccess] = useState<string | null>(null);
+
+  const handleSaveConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setIsSaving(true);
+      setConfigError(null);
+      setConfigSuccess(null);
+      const res = await apiService.configureSupabase({
+        supabaseUrl: inputUrl,
+        supabaseAnonKey: inputAnonKey
+      });
+      if (res.success) {
+        setConfigSuccess('Supabase configurado e conectado com sucesso!');
+        await checkStatus();
+      } else {
+        setConfigError(res.error || 'Erro ao conectar ao Supabase.');
+      }
+    } catch (err: any) {
+      setConfigError(err.message || 'Erro ao configurar Supabase.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const checkStatus = async () => {
     try {
@@ -206,7 +235,55 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({
               </p>
             </div>
           </div>
+          <button
+            onClick={() => setShowConfig(!showConfig)}
+            className="px-3.5 py-2 text-xs font-bold text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-xl transition-colors cursor-pointer shrink-0"
+          >
+            {showConfig ? 'Fechar Configuração' : '⚙️ Configurar Nuvem'}
+          </button>
         </div>
+
+        {showConfig && (
+          <form onSubmit={handleSaveConfig} className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl space-y-3">
+            <h4 className="text-xs font-bold text-zinc-950">Configurar Credenciais do Supabase no Servidor</h4>
+            <p className="text-[11px] text-zinc-600">
+              Isso salvará as credenciais no arquivo .env do servidor, garantindo conexão ativa tanto no preview quanto ao abrir em qualquer aba ou navegador.
+            </p>
+            <div>
+              <label className="block text-[11px] font-semibold text-zinc-700 mb-1">Supabase URL</label>
+              <input
+                type="text"
+                placeholder="https://seu-projeto.supabase.co"
+                value={inputUrl}
+                onChange={e => setInputUrl(e.target.value)}
+                className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-zinc-700 mb-1">Supabase Anon / Public Key</label>
+              <input
+                type="password"
+                placeholder="eyJhbGciOiJIUzI1NiIsIn..."
+                value={inputAnonKey}
+                onChange={e => setInputAnonKey(e.target.value)}
+                className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white font-mono"
+                required
+              />
+            </div>
+            {configError && <div className="text-xs text-rose-600 font-semibold">{configError}</div>}
+            {configSuccess && <div className="text-xs text-emerald-600 font-semibold">{configSuccess}</div>}
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="px-4 py-2 bg-zinc-900 hover:bg-black text-white text-xs font-bold rounded-lg shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {isSaving ? 'Salvando e testando...' : 'Salvar e Conectar'}
+              </button>
+            </div>
+          </form>
+        )}
 
         {supabaseStatus && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

@@ -548,6 +548,19 @@ export const apiService = {
     return await parseJsonResponse(res, 'Erro ao verificar status do Supabase');
   },
 
+  async configureSupabase(credentials: {
+    supabaseUrl: string;
+    supabaseAnonKey: string;
+    supabaseServiceRoleKey?: string;
+  }): Promise<{ success: boolean; connected: boolean; error?: string }> {
+    const res = await authFetch(`${API_BASE}/supabase/configure`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials)
+    });
+    return await parseJsonResponse(res, 'Erro ao configurar Supabase');
+  },
+
   async getSqliteStatus(): Promise<{
     success: boolean;
     engine: string;

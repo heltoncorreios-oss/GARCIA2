@@ -87,6 +87,67 @@ apiRouter.get('/supabase/status', async (req: Request, res: Response) => {
   });
 });
 
+// Endpoint para configurar credenciais do Supabase dinamicamente e salvar no .env
+apiRouter.post('/supabase/configure', async (req: Request, res: Response) => {
+  try {
+    const { supabaseUrl, supabaseAnonKey, supabaseServiceRoleKey } = req.body || {};
+    if (!supabaseUrl || !supabaseAnonKey) {
+      return res.status(400).json({ error: 'URL e Anon Key do Supabase são obrigatórias.' });
+    }
+
+    const cleanUrl = supabaseUrl.trim();
+    const cleanAnon = supabaseAnonKey.trim();
+    const cleanService = supabaseServiceRoleKey ? supabaseServiceRoleKey.trim() : '';
+
+    process.env.SUPABASE_URL = cleanUrl;
+    process.env.SUPABASE_ANON_KEY = cleanAnon;
+    if (cleanService) {
+      process.env.SUPABASE_SERVICE_ROLE_KEY = cleanService;
+    }
+
+    const envPath = path.join(process.cwd(), '.env');
+    let envContent = '';
+    try {
+      if (fs.existsSync(envPath)) {
+        envContent = fs.readFileSync(envPath, 'utf8');
+      }
+    } catch {}
+
+    const updateEnvVar = (content: string, key: string, val: string) => {
+      const regex = new RegExp(`^${key}=.*`, 'm');
+      if (regex.test(content)) {
+        return content.replace(regex, `${key}="${val}"`);
+      } else {
+        return content + `\n${key}="${val}"\n`;
+      }
+    };
+
+    envContent = updateEnvVar(envContent, 'SUPABASE_URL', cleanUrl);
+    envContent = updateEnvVar(envContent, 'SUPABASE_ANON_KEY', cleanAnon);
+    if (cleanService) {
+      envContent = updateEnvVar(envContent, 'SUPABASE_SERVICE_ROLE_KEY', cleanService);
+    }
+
+    fs.writeFileSync(envPath, envContent, 'utf8');
+
+    const client = getSupabaseClient();
+    let connected = false;
+    let errorMsg = null;
+    if (client) {
+      const { error } = await client.from('bank_accounts').select('id').limit(1);
+      if (!error || error.code === 'PGRST116' || error.message.includes('relation')) {
+        connected = true;
+      } else {
+        errorMsg = error.message;
+      }
+    }
+
+    res.json({ success: true, connected, error: errorMsg });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Erro ao salvar configuração do Supabase.' });
+  }
+});
+
 // Endpoint para verificar status do banco SQLite local
 apiRouter.get('/sqlite/status', (req: Request, res: Response) => {
   try {
