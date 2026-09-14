@@ -128,6 +128,17 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="h-7 w-px bg-zinc-200" />
         </div>
 
+        {/* Mobile Quick Balance Pill */}
+        <div className="flex md:hidden items-center gap-1.5 px-2.5 py-1 bg-zinc-100/90 border border-zinc-200 rounded-xl text-right shrink-0">
+          <Wallet className="w-3.5 h-3.5 text-orange-600 shrink-0" />
+          <div className="flex flex-col text-right">
+            <span className="text-[8px] uppercase tracking-wider text-zinc-500 font-bold leading-none">Saldo</span>
+            <span className="text-xs font-black text-zinc-950 leading-tight">
+              {formatCurrency(consolidatedBalance)}
+            </span>
+          </div>
+        </div>
+
         {/* Right: Actions, Reset, Demo & Pending badge */}
         <div className="flex items-center gap-2 sm:gap-3">
           {userRole === 'ADMINISTRADOR' && (

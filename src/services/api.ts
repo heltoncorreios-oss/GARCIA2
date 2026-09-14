@@ -495,11 +495,29 @@ export const apiService = {
     return await parseJsonResponse(res, 'Erro ao carregar convites');
   },
 
-  async createAdminInvite(role: string, expirationDays: number = 7): Promise<{ success: boolean; invite: any }> {
+  async createAdminInvite(options: {
+    role: string;
+    expirationDays?: number;
+    customCode?: string;
+    recipientEmail?: string;
+    autoActivate?: boolean;
+    notes?: string;
+  } | string, expirationDaysLegacy: number = 7): Promise<{ success: boolean; invite: any }> {
+    const payload = typeof options === 'string'
+      ? { role: options, expirationDays: expirationDaysLegacy }
+      : {
+          role: options.role,
+          expirationDays: options.expirationDays ?? 7,
+          customCode: options.customCode,
+          recipientEmail: options.recipientEmail,
+          autoActivate: options.autoActivate,
+          notes: options.notes
+        };
+
     const res = await authFetch(`${API_BASE}/admin/invites`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role, expirationDays })
+      body: JSON.stringify(payload)
     });
     return await parseJsonResponse(res, 'Erro ao gerar código de convite');
   },
@@ -528,5 +546,19 @@ export const apiService = {
   }> {
     const res = await authFetch(`${API_BASE}/supabase/status`);
     return await parseJsonResponse(res, 'Erro ao verificar status do Supabase');
+  },
+
+  async getSqliteStatus(): Promise<{
+    success: boolean;
+    engine: string;
+    status: string;
+    path: string;
+    sizeBytes: number;
+    sizeFormatted: string;
+    tables: Record<string, number>;
+    error?: string;
+  }> {
+    const res = await authFetch(`${API_BASE}/sqlite/status`);
+    return await parseJsonResponse(res, 'Erro ao verificar status do SQLite');
   }
 };

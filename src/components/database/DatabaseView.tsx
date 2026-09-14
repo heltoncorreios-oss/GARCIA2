@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Database, Copy, Check, Terminal, Trash2, RotateCcw, RefreshCw, AlertCircle, CheckCircle2, ShieldCheck, Github } from 'lucide-react';
+import { Database, Copy, Check, Terminal, Trash2, RotateCcw, RefreshCw, AlertCircle, CheckCircle2, ShieldCheck, Github, Download, HardDrive, Server } from 'lucide-react';
 import { apiService } from '../../services/api';
 
 interface DatabaseViewProps {
@@ -15,37 +15,44 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({
   const [copied, setCopied] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [supabaseStatus, setSupabaseStatus] = useState<any>(null);
-  const [checkingSupabase, setCheckingSupabase] = useState<boolean>(false);
+  const [sqliteStatus, setSqliteStatus] = useState<any>(null);
+  const [checkingStatus, setCheckingStatus] = useState<boolean>(false);
 
-  const checkSupabase = async () => {
+  const checkStatus = async () => {
     try {
-      setCheckingSupabase(true);
-      const st = await apiService.getSupabaseStatus();
-      setSupabaseStatus(st);
+      setCheckingStatus(true);
+      const [supa, lite] = await Promise.all([
+        apiService.getSupabaseStatus(),
+        apiService.getSqliteStatus().catch(() => null)
+      ]);
+      setSupabaseStatus(supa);
+      setSqliteStatus(lite);
     } catch (err) {
       console.error(err);
     } finally {
-      setCheckingSupabase(false);
+      setCheckingStatus(false);
     }
   };
 
   useEffect(() => {
-    const fetchSQL = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
-        const [script, st] = await Promise.all([
+        const [script, supa, lite] = await Promise.all([
           apiService.getSchemaSQL(),
-          apiService.getSupabaseStatus()
+          apiService.getSupabaseStatus(),
+          apiService.getSqliteStatus().catch(() => null)
         ]);
         setSql(script);
-        setSupabaseStatus(st);
+        setSupabaseStatus(supa);
+        setSqliteStatus(lite);
       } catch (err) {
         console.error(err);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchSQL();
+    fetchData();
   }, []);
 
   const handleCopy = () => {
@@ -61,10 +68,10 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({
         <div>
           <h2 className="text-xl font-bold text-zinc-950 tracking-tight flex items-center gap-2">
             <Database className="w-6 h-6 text-orange-700" />
-            Arquitetura de Dados PostgreSQL & Supabase
+            Banco de Dados & Persistência Local (SQLite)
           </h2>
           <p className="text-xs text-zinc-600 font-medium mt-0.5">
-            Gerenciamento de banco de dados relacional, migração de repositório e script DDL completo
+            Armazenamento relacional local nativo (SQLite), backup e sincronização em nuvem
           </p>
         </div>
 
@@ -91,17 +98,101 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({
             </button>
           )}
 
+          <a
+            href="/api/sqlite/download"
+            download
+            className="inline-flex items-center gap-2 px-3.5 py-2 bg-zinc-900 hover:bg-black text-white text-xs font-bold rounded-xl shadow-xs transition-colors"
+            title="Baixar arquivo supermarket.sqlite completo para backup local"
+          >
+            <Download className="w-4 h-4 text-emerald-400" />
+            <span>Baixar Banco SQLite</span>
+          </a>
+
           <button
             onClick={handleCopy}
             className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl shadow-sm transition-colors cursor-pointer"
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            <span>{copied ? 'Copiado!' : 'Copiar DDL Completo'}</span>
+            <span>{copied ? 'Copiado!' : 'Copiar DDL'}</span>
           </button>
         </div>
       </div>
 
-      {/* Supabase & GitHub Migration Assistant Card */}
+      {/* SQLite Local Engine Card */}
+      <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+              <HardDrive className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-zinc-950">Motor de Banco de Dados Local: SQLite</h3>
+                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold rounded-full">ATIVO & PERSISTENTE</span>
+              </div>
+              <p className="text-xs text-zinc-600">
+                O sistema roda de forma independente com banco de dados SQLite local, garantindo integridade ACID e modo WAL.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={checkStatus}
+            disabled={checkingStatus}
+            className="px-3.5 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${checkingStatus ? 'animate-spin' : ''}`} />
+            <span>Atualizar Status</span>
+          </button>
+        </div>
+
+        {sqliteStatus && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-3.5 rounded-xl border bg-emerald-50 border-emerald-300 text-emerald-950 flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                <div>
+                  <div className="text-xs font-bold">Status do SQLite</div>
+                  <div className="text-[11px] text-emerald-800 font-medium">Online (WAL Mode)</div>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl border bg-zinc-50 border-zinc-200 text-zinc-900 flex items-center gap-3">
+                <HardDrive className="w-5 h-5 text-zinc-700 shrink-0" />
+                <div>
+                  <div className="text-xs font-bold">Tamanho do Arquivo</div>
+                  <div className="text-[11px] text-zinc-600 font-medium">{sqliteStatus.sizeFormatted || '0 B'}</div>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl border bg-zinc-50 border-zinc-200 text-zinc-900 flex items-center gap-3">
+                <Server className="w-5 h-5 text-zinc-700 shrink-0" />
+                <div>
+                  <div className="text-xs font-bold">Transações Gravadas</div>
+                  <div className="text-[11px] text-zinc-600 font-medium">{sqliteStatus.tables?.transactions ?? 0} registros</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-zinc-50 rounded-xl border border-zinc-200 text-xs text-zinc-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="font-mono text-[11px] text-zinc-800 truncate">
+                <span className="font-bold text-zinc-950 mr-1">Caminho:</span>
+                {sqliteStatus.path || 'data/supermarket.sqlite'}
+              </div>
+              <a
+                href="/api/sqlite/download"
+                download
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-orange-700 hover:text-orange-900 shrink-0"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Exportar cópia .sqlite</span>
+              </a>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Supabase & Cloud Sync Card */}
       <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-200">
           <div className="flex items-center gap-3">
@@ -109,97 +200,41 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-zinc-950">Status de Conexão com o Supabase (Troca de Repositório GitHub)</h3>
+              <h3 className="text-sm font-bold text-zinc-950">Nuvem & Backup Supabase (Opcional)</h3>
               <p className="text-xs text-zinc-600">
-                Ao alterar o repositório no GitHub ou migrar de ambiente, certifique-se de atualizar as credenciais do Supabase.
+                Se desejar sincronização com PostgreSQL na nuvem além do SQLite local, configure as credenciais.
               </p>
             </div>
           </div>
-
-          <button
-            onClick={checkSupabase}
-            disabled={checkingSupabase}
-            className="px-3.5 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${checkingSupabase ? 'animate-spin' : ''}`} />
-            <span>Testar Conexão</span>
-          </button>
         </div>
 
         {supabaseStatus && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${supabaseStatus.configured ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-rose-50 border-rose-300 text-rose-900'}`}>
-              {supabaseStatus.configured ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" /> : <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />}
+            <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${supabaseStatus.configured ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-zinc-50 border-zinc-300 text-zinc-700'}`}>
+              {supabaseStatus.configured ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" /> : <AlertCircle className="w-5 h-5 text-zinc-400 shrink-0" />}
               <div>
                 <div className="text-xs font-bold">Variáveis de Ambiente</div>
-                <div className="text-[11px] opacity-90">{supabaseStatus.configured ? 'Configuradas corretamente' : 'Ausentes ou incompletas'}</div>
+                <div className="text-[11px] opacity-90">{supabaseStatus.configured ? 'Configuradas' : 'Não configuradas (Modo 100% Local)'}</div>
               </div>
             </div>
 
-            <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${supabaseStatus.connected ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-amber-50 border-amber-300 text-amber-900'}`}>
-              {supabaseStatus.connected ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" /> : <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />}
+            <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${supabaseStatus.connected ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-zinc-50 border-zinc-300 text-zinc-700'}`}>
+              {supabaseStatus.connected ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" /> : <AlertCircle className="w-5 h-5 text-zinc-400 shrink-0" />}
               <div>
-                <div className="text-xs font-bold">Conexão com API Supabase</div>
-                <div className="text-[11px] opacity-90">{supabaseStatus.connected ? 'Conectado com sucesso' : (supabaseStatus.error || 'Falha na conexão')}</div>
+                <div className="text-xs font-bold">Conexão Nuvem</div>
+                <div className="text-[11px] opacity-90">{supabaseStatus.connected ? 'Conectado com sucesso' : 'Usando SQLite localmente'}</div>
               </div>
             </div>
 
-            <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${supabaseStatus.tablesReady ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-zinc-50 border-zinc-300 text-zinc-800'}`}>
-              {supabaseStatus.tablesReady ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" /> : <AlertCircle className="w-5 h-5 text-zinc-500 shrink-0" />}
+            <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${supabaseStatus.tablesReady ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-zinc-50 border-zinc-300 text-zinc-700'}`}>
+              {supabaseStatus.tablesReady ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" /> : <AlertCircle className="w-5 h-5 text-zinc-400 shrink-0" />}
               <div>
-                <div className="text-xs font-bold">Tabelas no Banco</div>
-                <div className="text-[11px] opacity-90">{supabaseStatus.tablesReady ? 'Prontas e operacionais' : 'Executar script DDL'}</div>
+                <div className="text-xs font-bold">Tabelas Nuvem</div>
+                <div className="text-[11px] opacity-90">{supabaseStatus.tablesReady ? 'Sincronizadas' : 'Opcional'}</div>
               </div>
             </div>
           </div>
         )}
-
-        <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-200 text-xs text-zinc-700 space-y-2">
-          <div className="font-bold text-zinc-950 flex items-center gap-1.5">
-            <Github className="w-4 h-4 text-zinc-900" />
-            <span>Como corrigir o acesso após trocar de repositório no GitHub:</span>
-          </div>
-          <ol className="list-decimal pl-5 space-y-1 text-zinc-600">
-            <li>Acesse o painel do seu projeto no <strong>Supabase</strong> (Project Settings &gt; API) para obter a nova <code className="bg-white px-1.5 py-0.5 rounded border border-zinc-300 font-mono text-[11px]">SUPABASE_URL</code> e <code className="bg-white px-1.5 py-0.5 rounded border border-zinc-300 font-mono text-[11px]">SUPABASE_ANON_KEY</code>.</li>
-            <li>Adicione essas credenciais nas configurações de segredos / variáveis de ambiente do seu novo repositório ou plataforma de deploy (ou arquivo <code className="bg-white px-1.5 py-0.5 rounded border border-zinc-300 font-mono text-[11px]">.env</code>).</li>
-            <li>Copie o script DDL abaixo e execute-o no <strong>SQL Editor</strong> do seu Supabase para recriar as tabelas de contas, transações e perfis.</li>
-          </ol>
-        </div>
-      </div>
-
-      {/* Schema Highlights Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-xs">
-          <div className="text-[11px] font-bold text-zinc-500 uppercase">Tabelas Relacionais</div>
-          <div className="text-xl font-extrabold text-zinc-950 mt-1">8 Tabelas</div>
-          <div className="text-[10px] text-zinc-500 mt-0.5">
-            transactions, bank_accounts, categories, rules...
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-xs">
-          <div className="text-[11px] font-bold text-zinc-500 uppercase">Antiduplicação</div>
-          <div className="text-xl font-extrabold text-emerald-700 mt-1">SHA-256 Hash</div>
-          <div className="text-[10px] text-zinc-500 mt-0.5">
-            UNIQUE(transaction_hash, bank_account_id)
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-xs">
-          <div className="text-[11px] font-bold text-zinc-500 uppercase">Gatilhos / Triggers</div>
-          <div className="text-xl font-extrabold text-blue-600 mt-1">Saldos Automáticos</div>
-          <div className="text-[10px] text-zinc-500 mt-0.5">
-            Atualização atômica em insert/update/delete
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-xs">
-          <div className="text-[11px] font-bold text-zinc-500 uppercase">Segurança & RLS</div>
-          <div className="text-xl font-extrabold text-purple-700 mt-1">Políticas Ativas</div>
-          <div className="text-[10px] text-zinc-500 mt-0.5">
-            Controle de acesso por papéis (RBAC)
-          </div>
-        </div>
       </div>
 
       {/* SQL Code Box */}
@@ -209,7 +244,7 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({
             <Terminal className="w-4 h-4 text-orange-600" />
             <span className="font-mono text-zinc-950 font-bold">database/schema.sql</span>
           </div>
-          <span className="text-[11px] text-zinc-500 font-medium">PostgreSQL 14+ / Supabase / Neon / RDS</span>
+          <span className="text-[11px] text-zinc-500 font-medium">Estrutura de Tabelas & Migração</span>
         </div>
 
         <pre className="p-5 overflow-x-auto text-xs font-mono text-zinc-800 leading-relaxed max-h-[600px] select-all">

@@ -146,18 +146,18 @@ export const OperationTypesView: React.FC<OperationTypesViewProps> = ({
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-zinc-800 text-zinc-950 font-bold border border border-black">
+                <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-zinc-100 text-zinc-800 border border-zinc-200">
                   {item.code}
                 </span>
-                <span className="text-xs font-bold text-zinc-950 font-bold">{item.name}</span>
+                <span className="text-xs font-bold text-zinc-950">{item.name}</span>
               </div>
               <span
-                className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
                   item.nature === 'ENTRADA'
-                    ? 'bg-emerald-500/15 text-emerald-700 font-bold border border border-black'
+                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                     : item.nature === 'SAIDA'
-                    ? 'bg-rose-500/15 text-rose-700 font-bold border border border-black'
-                    : 'bg-zinc-800 text-zinc-950 font-bold border border border-black'
+                    ? 'bg-rose-50 text-rose-800 border border-rose-200'
+                    : 'bg-zinc-100 text-zinc-800 border border-zinc-200'
                 }`}
               >
                 {item.nature}

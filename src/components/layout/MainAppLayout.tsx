@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Sidebar, ActiveTab } from './Sidebar';
+import { MobileBottomNav } from './MobileBottomNav';
 import { CompanySettingsModal } from './CompanySettingsModal';
 import { DashboardView } from '../dashboard/DashboardView';
 import { ConsolidatedBalanceView } from '../consolidated/ConsolidatedBalanceView';
@@ -226,7 +227,7 @@ export const MainAppLayout: React.FC = () => {
         />
 
         {/* Dynamic Page Views */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto pb-24 lg:pb-8">
           {/* RBAC Access Denied Fallbacks (Req 6 & Req 10) */}
           {activeTab === 'usuarios' && profile?.role !== 'ADMINISTRADOR' && (
             <div className="bg-white p-8 rounded-2xl border border-rose-300 text-center max-w-md mx-auto space-y-4 my-12 shadow-sm">
@@ -393,7 +394,7 @@ export const MainAppLayout: React.FC = () => {
 
       {/* Notification Toast */}
       {notification && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 bg-white border border-black text-zinc-950 font-bold rounded-2xl shadow-2xl shadow-black animate-in slide-in-from-bottom-5 duration-200">
+        <div className="fixed bottom-20 lg:bottom-6 right-3 sm:right-6 z-50 flex items-center gap-3 px-4 py-3 bg-white border border-zinc-300 text-zinc-950 font-bold rounded-2xl shadow-2xl animate-in slide-in-from-bottom-5 duration-200">
           {notification.type === 'success' ? (
             <div className="p-1 rounded-xl bg-emerald-500/20 text-emerald-700">
               <CheckCircle2 className="w-5 h-5" />
@@ -412,6 +413,15 @@ export const MainAppLayout: React.FC = () => {
           </button>
         </div>
       )}
+
+      {/* Mobile Bottom Navigation Bar */}
+      <MobileBottomNav
+        activeTab={activeTab}
+        onSelectTab={handleSelectTab}
+        onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+        pendingCount={pendingReconciliationCount}
+        userRole={profile?.role || 'ADMINISTRADOR'}
+      />
     </div>
   );
 };

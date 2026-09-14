@@ -1399,7 +1399,11 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
 
                       {/* Operação */}
                       <td className="p-3.5 whitespace-nowrap">
-                        <span className={`px-2 py-0.5 rounded-md text-[11px] font-semibold ${isSaldoInicial ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-[#1a1a1f] text-zinc-950 font-bold border border border-black'}`}>
+                        <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold inline-flex items-center gap-1 ${
+                          isSaldoInicial
+                            ? 'bg-blue-50 text-blue-800 border border-blue-200'
+                            : 'bg-zinc-100 text-zinc-800 border border-zinc-200 shadow-2xs'
+                        }`}>
                           {tx.operationType || (isSaldoInicial ? 'Saldo Inicial' : '-')}
                         </span>
                       </td>
@@ -1820,8 +1824,8 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                                   </span>
                                   <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
                                     isWeekend
-                                      ? 'bg-amber-500/15 text-amber-700 font-bold border border-black'
-                                      : 'bg-zinc-800 text-zinc-900 font-semibold border-zinc-700'
+                                      ? 'bg-amber-50 text-amber-900 border-amber-200'
+                                      : 'bg-zinc-100 text-zinc-700 border-zinc-200'
                                   }`}>
                                     {dayOfWeek}
                                   </span>
@@ -2024,13 +2028,13 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                   onChange={(e) =>
                     setEditingTx({ ...editingTx, description: e.target.value })
                   }
-                  className="w-full px-3 py-2 bg-[#1a1a1f] border border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 text-zinc-950 font-bold"
+                  className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-zinc-900"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-zinc-950 font-bold mb-1">
+                  <label className="block font-semibold text-zinc-800 mb-1">
                     Tipo:
                   </label>
                   <select
@@ -2041,7 +2045,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                         type: e.target.value as 'ENTRADA' | 'SAIDA'
                       })
                     }
-                    className="w-full px-3 py-2 bg-[#1a1a1f] border border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 text-zinc-950 font-bold"
+                    className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-zinc-900"
                   >
                     <option value="ENTRADA">ENTRADA (+)</option>
                     <option value="SAIDA">SAÍDA (-)</option>
@@ -2049,7 +2053,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-zinc-950 font-bold mb-1">
+                  <label className="block font-semibold text-zinc-800 mb-1">
                     Valor (R$):
                   </label>
                   <input
@@ -2062,14 +2066,14 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                         amount: parseFloat(e.target.value) || 0
                       })
                     }
-                    className="w-full px-3 py-2 bg-[#1a1a1f] border border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 font-bold text-zinc-950 font-bold"
+                    className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-bold text-zinc-900"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-zinc-950 font-bold mb-1">
+                  <label className="block font-semibold text-zinc-800 mb-1">
                     Tipo de Operação:
                   </label>
                   <select
@@ -2080,7 +2084,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                         operationType: e.target.value
                       })
                     }
-                    className="w-full px-3 py-2 bg-[#1a1a1f] border border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 text-zinc-950 font-bold"
+                    className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-zinc-900"
                   >
                     {operationTypes.map((op) => (
                       <option key={op.id} value={op.code}>
@@ -2091,7 +2095,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-zinc-950 font-bold mb-1">
+                  <label className="block font-semibold text-zinc-800 mb-1">
                     Duplicidade / Status:
                   </label>
                   <select
@@ -2102,7 +2106,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                         reconciliationStatus: e.target.value as ReconciliationStatus
                       })
                     }
-                    className="w-full px-3 py-2 bg-[#1a1a1f] border border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 text-zinc-950 font-bold"
+                    className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-zinc-900"
                   >
                     <option value="PENDENTE">Normal</option>
                     <option value="DUPLICADO">Duplicado</option>
@@ -2112,7 +2116,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
 
               {/* Category selector */}
               <div>
-                <label className="block font-semibold text-zinc-950 font-bold mb-1">
+                <label className="block font-semibold text-zinc-800 mb-1">
                   Categoria:
                 </label>
                 <select
@@ -2127,7 +2131,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                       subcategoryName: undefined
                     });
                   }}
-                  className="w-full px-3 py-2 bg-[#1a1a1f] border border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 text-zinc-950 font-bold"
+                  className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-zinc-900"
                 >
                   <option value="">Não classificado</option>
                   {categories
@@ -2143,7 +2147,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
               {/* Subcategory selector */}
               {editingTx.categoryId && (
                 <div>
-                  <label className="block font-semibold text-zinc-950 font-bold mb-1">
+                  <label className="block font-semibold text-zinc-800 mb-1">
                     Subcategoria:
                   </label>
                   <select
@@ -2157,7 +2161,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                         subcategoryName: sub?.name
                       });
                     }}
-                    className="w-full px-3 py-2 bg-[#1a1a1f] border border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 text-zinc-950 font-bold"
+                    className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-zinc-900"
                   >
                     <option value="">Nenhuma</option>
                     {categories
@@ -2183,40 +2187,40 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                   onChange={(e) =>
                     setEditingTx({ ...editingTx, observation: e.target.value })
                   }
-                  className="w-full px-3 py-2 bg-[#1a1a1f] border border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 text-zinc-950 font-bold"
+                  className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-zinc-900"
                 />
               </div>
 
               {/* Learn Rule Checkbox (Requirement from Prompt) */}
-              <div className="p-3 bg-orange-500/10 border border-orange-500/20 rounded-xl flex items-center gap-2">
+              <div className="p-3 bg-orange-50 border border-orange-200 rounded-xl flex items-center gap-2">
                 <input
                   type="checkbox"
                   id="learnRuleCheck"
                   checked={learnRule}
                   onChange={(e) => setLearnRule(e.target.checked)}
-                  className="rounded text-orange-600 focus:ring-orange-500 bg-[#1a1a1f] border border-black"
+                  className="rounded text-orange-600 focus:ring-orange-500 bg-white border-zinc-300"
                 />
                 <label
                   htmlFor="learnRuleCheck"
-                  className="text-orange-700 font-bold font-semibold cursor-pointer select-none"
+                  className="text-orange-950 font-semibold cursor-pointer select-none text-xs"
                 >
                   Memorizar e aplicar esta classificação aos futuros extratos
                 </label>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border border-black">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-200">
               <button
                 type="button"
                 onClick={() => setEditingTx(null)}
-                className="px-4 py-2 text-xs font-semibold text-zinc-900 font-semibold hover:text-white rounded-xl"
+                className="px-4 py-2 text-xs font-semibold text-zinc-600 hover:text-zinc-900 rounded-xl"
               >
                 Cancelar
               </button>
               <button
                 type="button"
                 onClick={handleSaveEdit}
-                className="px-5 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-xl shadow-md shadow-orange-950/40 border border-orange-500/30"
+                className="px-5 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-xl shadow-xs"
               >
                 Salvar Alterações
               </button>
@@ -2226,15 +2230,15 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       )}
 
       {isCreating && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full border border border-black shadow-2xl p-6 space-y-4 text-zinc-950 font-bold">
-            <div className="flex items-center justify-between border-b border border-black pb-3">
-              <h3 className="text-base font-bold text-zinc-950 font-bold">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full border border-zinc-200 shadow-2xl p-6 space-y-4 text-zinc-900">
+            <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
+              <h3 className="text-base font-bold text-zinc-950">
                 Novo Lançamento Manual
               </h3>
               <button
                 onClick={() => setIsCreating(false)}
-                className="p-1 text-zinc-900 font-semibold hover:text-white rounded-lg"
+                className="p-1 text-zinc-500 hover:text-zinc-900 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2242,19 +2246,19 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
 
             <div className="space-y-3 text-xs">
               <div>
-                <label className="block font-semibold text-zinc-950 font-bold mb-1">
+                <label className="block font-semibold text-zinc-800 mb-1">
                   Data da Movimentação:
                 </label>
                 <input
                   type="date"
                   value={newTx.date}
                   onChange={(e) => setNewTx({ ...newTx, date: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#1a1a1f] border border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 text-zinc-950 font-bold"
+                  className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-zinc-900"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-zinc-950 font-bold mb-1">
+                <label className="block font-semibold text-zinc-800 mb-1">
                   Descrição / Histórico:
                 </label>
                 <input
@@ -2264,13 +2268,13 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                   onChange={(e) =>
                     setNewTx({ ...newTx, description: e.target.value })
                   }
-                  className="w-full px-3 py-2 bg-[#1a1a1f] border border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 text-zinc-950 font-bold"
+                  className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-zinc-900"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-zinc-950 font-bold mb-1">
+                  <label className="block font-semibold text-zinc-800 mb-1">
                     Tipo:
                   </label>
                   <select
@@ -2281,7 +2285,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                         type: e.target.value as 'ENTRADA' | 'SAIDA'
                       })
                     }
-                    className="w-full px-3 py-2 bg-[#1a1a1f] border border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 text-zinc-950 font-bold"
+                    className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-zinc-900"
                   >
                     <option value="ENTRADA">ENTRADA (+)</option>
                     <option value="SAIDA">SAÍDA (-)</option>
@@ -2289,7 +2293,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-zinc-950 font-bold mb-1">
+                  <label className="block font-semibold text-zinc-800 mb-1">
                     Valor (R$):
                   </label>
                   <input
@@ -2303,14 +2307,14 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                         amount: parseFloat(e.target.value) || 0
                       })
                     }
-                    className="w-full px-3 py-2 bg-[#1a1a1f] border border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 font-bold text-zinc-950 font-bold"
+                    className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 font-bold text-zinc-900"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-zinc-950 font-bold mb-1">
+                  <label className="block font-semibold text-zinc-800 mb-1">
                     Tipo de Operação:
                   </label>
                   <select
@@ -2318,7 +2322,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                     onChange={(e) =>
                       setNewTx({ ...newTx, operationType: e.target.value })
                     }
-                    className="w-full px-3 py-2 bg-[#1a1a1f] border border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 text-zinc-950 font-bold"
+                    className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-zinc-900"
                   >
                     {operationTypes.map((op) => (
                       <option key={op.id} value={op.code}>
@@ -2329,7 +2333,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-zinc-950 font-bold mb-1">
+                  <label className="block font-semibold text-zinc-800 mb-1">
                     Categoria:
                   </label>
                   <select
@@ -2342,7 +2346,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                         categoryName: cat?.name
                       });
                     }}
-                    className="w-full px-3 py-2 bg-[#1a1a1f] border border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 text-zinc-950 font-bold"
+                    className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-zinc-900"
                   >
                     <option value="">Selecione categoria</option>
                     {categories
@@ -2357,7 +2361,7 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
               </div>
 
               <div>
-                <label className="block font-semibold text-zinc-950 font-bold mb-1">
+                <label className="block font-semibold text-zinc-800 mb-1">
                   Observação:
                 </label>
                 <input
@@ -2367,23 +2371,23 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                   onChange={(e) =>
                     setNewTx({ ...newTx, observation: e.target.value })
                   }
-                  className="w-full px-3 py-2 bg-[#1a1a1f] border border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 text-zinc-950 font-bold"
+                  className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-zinc-900"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border border-black">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-200">
               <button
                 type="button"
                 onClick={() => setIsCreating(false)}
-                className="px-4 py-2 text-xs font-semibold text-zinc-900 font-semibold hover:text-white rounded-xl"
+                className="px-4 py-2 text-xs font-semibold text-zinc-600 hover:text-zinc-900 rounded-xl"
               >
                 Cancelar
               </button>
               <button
                 type="button"
                 onClick={handleSaveNew}
-                className="px-5 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-xl shadow-md shadow-orange-950/40 border border-orange-500/30"
+                className="px-5 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-xl shadow-xs"
               >
                 Cadastrar Lançamento
               </button>

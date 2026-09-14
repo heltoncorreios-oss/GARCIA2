@@ -571,17 +571,21 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                             <span
                               className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                                 isCredit
-                                  ? 'bg-emerald-500/15 text-emerald-700 font-bold border border border-black'
-                                  : 'bg-rose-500/15 text-rose-700 font-bold border border border-black'
+                                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                  : 'bg-rose-50 text-rose-800 border border-rose-200'
                               }`}
                             >
                               {tx.type}
                             </span>
                           </td>
-                          <td className="p-3 text-zinc-950 font-bold">{tx.operationType}</td>
-                          <td className="p-3 text-zinc-900 font-semibold">{tx.categoryName || '-'}</td>
                           <td className="p-3">
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-800 text-zinc-900 font-semibold border border border-black">
+                            <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-zinc-100 text-zinc-800 border border-zinc-200">
+                              {tx.operationType || '-'}
+                            </span>
+                          </td>
+                          <td className="p-3 text-zinc-900 font-medium">{tx.categoryName || '-'}</td>
+                          <td className="p-3">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-zinc-100 text-zinc-800 border border-zinc-200">
                               {tx.reconciliationStatus}
                             </span>
                           </td>

@@ -21,6 +21,13 @@ import {
   deleteFromSupabase
 } from './supabaseService.js';
 import {
+  loadAllFromSqlite,
+  saveAllToSqlite,
+  upsertTransactionSqlite,
+  deleteTransactionSqlite,
+  getSqliteDatabaseInfo
+} from './sqliteService.js';
+import {
   BankAccount,
   Category,
   ClassificationRule,
@@ -205,6 +212,14 @@ class SupermarketDatabase {
 
   private loadDatabase(): DatabaseSchema {
     try {
+      // 1. Tenta carregar primeiro do SQLite nativo local
+      const sqliteData = loadAllFromSqlite();
+      if (sqliteData && sqliteData.bankAccounts && sqliteData.bankAccounts.length > 0) {
+        console.log('[SQLite] Dados carregados com sucesso do banco de dados SQLite local!');
+        return sqliteData;
+      }
+
+      // 2. Se o SQLite for novo/vazio, carrega do JSON existente para migrar automaticamente
       const { dataDir, dbFile } = getDbPaths();
       if (!fs.existsSync(dataDir)) {
         try {
@@ -255,12 +270,10 @@ class SupermarketDatabase {
         parsed.classificationRules = [...INITIAL_RULES, ...customRules];
 
         // STRICT REQUIREMENT: Bank statement balance lines must NEVER be transactions/entradas
-        // Purge legacy balance rows from transactions array and record statement balances on accounts
         if (parsed.transactions && Array.isArray(parsed.transactions)) {
           const validTransactions: Transaction[] = [];
           for (const tx of parsed.transactions) {
             if (isStatementBalanceRow(tx.description)) {
-              // Extract to the account statement balance instead of keeping as an entrada/transaction!
               const acc = (parsed.bankAccounts || []).find((a: any) => a.id === tx.bankAccountId);
               if (acc) {
                 const upper = tx.description.toUpperCase();
@@ -307,6 +320,15 @@ class SupermarketDatabase {
 
   private saveDatabase(dataToSave?: DatabaseSchema) {
     const data = dataToSave || this.data;
+
+    // 1. Salvar no banco SQLite local (Transacional)
+    try {
+      saveAllToSqlite(data);
+    } catch (sqliteErr) {
+      console.error('[SQLite] Erro ao persistir dados no SQLite:', sqliteErr);
+    }
+
+    // 2. Salvar backup no arquivo JSON para compatibilidade e segurança
     try {
       const { dataDir, dbFile } = getDbPaths();
       if (!fs.existsSync(dataDir)) {
@@ -322,7 +344,7 @@ class SupermarketDatabase {
         const tmpFile = path.join('/tmp', 'supermarket_db.json');
         fs.writeFileSync(tmpFile, JSON.stringify(data, null, 2), 'utf-8');
       } catch (fallbackErr) {
-        console.error('Falha ao salvar banco de dados local:', fallbackErr);
+        console.error('Falha ao salvar backup JSON do banco:', fallbackErr);
       }
     }
 

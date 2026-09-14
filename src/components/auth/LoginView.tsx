@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { apiService } from '../../services/api';
 import {
   Building2,
   Mail,
@@ -15,23 +16,24 @@ import {
   ArrowLeft,
   Ticket,
   User,
-  UserPlus
+  UserPlus,
+  ShieldCheck
 } from 'lucide-react';
 
 const REMEMBERED_EMAIL_KEY = 'supermarket_remembered_email';
 
 export const LoginView: React.FC = () => {
-  const { user, session, loading: authLoading, signIn, signUpWithInvite, resetPassword } = useAuth();
+  const {
+    user,
+    session,
+    loading: authLoading,
+    signIn,
+    signUpWithInvite,
+    resetPassword,
+    loginAsPreviewAdmin
+  } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Redirect if already logged in
-  useEffect(() => {
-    if (!authLoading && session && user) {
-      const from = (location.state as any)?.from?.pathname || '/dashboard';
-      navigate(from, { replace: true });
-    }
-  }, [authLoading, session, user, navigate, location]);
 
   const [email, setEmail] = useState<string>(() => {
     try {
@@ -69,6 +71,81 @@ export const LoginView: React.FC = () => {
   const [showRegisterPassword, setShowRegisterPassword] = useState<boolean>(false);
   const [registerError, setRegisterError] = useState<string | null>(null);
   const [registerSuccess, setRegisterSuccess] = useState<string | null>(null);
+
+  // Live Invite Code Validation
+  const [isCheckingInvite, setIsCheckingInvite] = useState<boolean>(false);
+  const [inviteStatusInfo, setInviteStatusInfo] = useState<{
+    valid: boolean;
+    role?: string;
+    error?: string;
+  } | null>(null);
+
+  // Read invite query param from URL (e.g. /login?invite=FIN-XXXX-XXXX)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const inviteParam = params.get('invite') || params.get('convite') || params.get('code');
+    if (inviteParam) {
+      setIsRegisterMode(true);
+      setRegisterInviteCode(inviteParam.toUpperCase().trim());
+    }
+  }, [location.search]);
+
+  // Live check invite code with debounce
+  useEffect(() => {
+    const cleanCode = registerInviteCode.trim().toUpperCase();
+    if (!cleanCode || cleanCode.length < 5 || !isRegisterMode) {
+      setInviteStatusInfo(null);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        setIsCheckingInvite(true);
+        const res = await apiService.verifyInvite(cleanCode);
+        if (res.valid && res.invite) {
+          setInviteStatusInfo({
+            valid: true,
+            role: res.invite.role
+          });
+        } else {
+          setInviteStatusInfo({
+            valid: false,
+            error: res.error || 'Código inválido ou expirado'
+          });
+        }
+      } catch (err: any) {
+        setInviteStatusInfo({
+          valid: false,
+          error: err.message || 'Erro ao validar código'
+        });
+      } finally {
+        setIsCheckingInvite(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [registerInviteCode, isRegisterMode]);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && session && user) {
+      const from = (location.state as any)?.from?.pathname || '/dashboard';
+      navigate(from, { replace: true });
+    }
+  }, [authLoading, session, user, navigate, location]);
+
+  const handlePreviewAccess = async () => {
+    setIsSubmitting(true);
+    try {
+      await loginAsPreviewAdmin();
+      const from = (location.state as any)?.from?.pathname || '/dashboard';
+      navigate(from, { replace: true });
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Erro ao entrar no modo preview.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -338,6 +415,28 @@ export const LoginView: React.FC = () => {
               )}
             </button>
 
+            {/* Divisor Modo Preview */}
+            <div className="relative my-2">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-zinc-200" />
+              </div>
+              <div className="relative flex justify-center text-[10px] uppercase">
+                <span className="bg-white px-2 text-zinc-600 font-bold tracking-wider">Acesso Rápido no Preview</span>
+              </div>
+            </div>
+
+            {/* Botão de Acesso Imediato no Preview */}
+            <button
+              type="button"
+              id="btn-login-preview"
+              onClick={handlePreviewAccess}
+              disabled={isSubmitting}
+              className="w-full py-3 px-4 bg-zinc-900 hover:bg-zinc-800 active:bg-black text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer border border-zinc-700"
+            >
+              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>Entrar como Administrador (Modo Preview)</span>
+            </button>
+
             {/* Link para Criar Conta com Convite */}
             <div className="pt-3 border-t border-zinc-200 text-center">
               <p className="text-xs text-zinc-600 font-medium">
@@ -499,9 +598,17 @@ export const LoginView: React.FC = () => {
 
             {/* Invitation Code */}
             <div className="space-y-1">
-              <label htmlFor="reg-invite-code" className="block text-xs font-bold text-zinc-950 uppercase tracking-wider">
-                Código de Convite da Administração *
-              </label>
+              <div className="flex items-center justify-between">
+                <label htmlFor="reg-invite-code" className="block text-xs font-bold text-zinc-950 uppercase tracking-wider">
+                  Código de Convite da Administração *
+                </label>
+                {isCheckingInvite && (
+                  <span className="text-[10px] text-zinc-500 flex items-center gap-1 font-semibold">
+                    <Loader2 className="w-3 h-3 animate-spin text-orange-600" />
+                    Verificando...
+                  </span>
+                )}
+              </div>
               <div className="relative flex items-center">
                 <div className="absolute left-3.5 pointer-events-none text-zinc-500">
                   <Ticket className="w-4 h-4 text-orange-600" />
@@ -517,6 +624,28 @@ export const LoginView: React.FC = () => {
                   className="w-full pl-10 pr-3.5 py-2.5 text-xs font-mono font-bold tracking-wider text-orange-950 bg-orange-50/50 border border-black rounded-xl placeholder:text-zinc-400 placeholder:font-sans focus:outline-hidden focus:ring-2 focus:ring-orange-600 focus:border-orange-600"
                 />
               </div>
+
+              {/* Status do Convite em Tempo Real */}
+              {inviteStatusInfo && (
+                <div className={`mt-1.5 p-2 rounded-lg text-[11px] font-bold flex items-center gap-1.5 border ${
+                  inviteStatusInfo.valid
+                    ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
+                    : 'bg-rose-50 text-rose-900 border-rose-300'
+                }`}>
+                  {inviteStatusInfo.valid ? (
+                    <>
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span>Convite Válido! Perfil autorizado: <strong className="underline">{inviteStatusInfo.role}</strong></span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                      <span>{inviteStatusInfo.error || 'Código inválido ou expirado.'}</span>
+                    </>
+                  )}
+                </div>
+              )}
+
               <p className="text-[10px] text-zinc-500 font-medium">
                 O convite é intransferível e define seu nível de acesso inicial.
               </p>

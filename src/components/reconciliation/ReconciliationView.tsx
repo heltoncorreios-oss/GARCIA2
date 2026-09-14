@@ -223,10 +223,10 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
               : 'text-zinc-900 font-semibold hover:text-white'
           }`}
         >
-          <Clock className="w-3.5 h-3.5 text-zinc-900 font-semibold" />
+          <Clock className="w-3.5 h-3.5 text-zinc-600" />
           <span>Pendentes</span>
           {countPending > 0 && (
-            <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-zinc-800 text-zinc-950 font-bold border border border-black">
+            <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-bold">
               {countPending}
             </span>
           )}
@@ -236,13 +236,13 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
           onClick={() => setActiveTab('CONCILIADO')}
           className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeTab === 'CONCILIADO'
-              ? 'bg-white text-white shadow-sm border border border-black'
-              : 'text-zinc-900 font-semibold hover:text-white'
+              ? 'bg-orange-50 text-orange-950 shadow-xs border border-orange-200'
+              : 'text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50'
           }`}
         >
           <CheckCheck className="w-3.5 h-3.5 text-emerald-700 font-bold" />
           <span>Conciliados</span>
-          <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-emerald-500/15 text-emerald-700 font-bold border border border-black">
+          <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold">
             {countConciliated}
           </span>
         </button>
@@ -251,14 +251,14 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
           onClick={() => setActiveTab('NAO_CLASSIFICADO')}
           className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeTab === 'NAO_CLASSIFICADO'
-              ? 'bg-white text-white shadow-sm border border border-black'
-              : 'text-zinc-900 font-semibold hover:text-white'
+              ? 'bg-orange-50 text-orange-950 shadow-xs border border-orange-200'
+              : 'text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50'
           }`}
         >
-          <HelpCircle className="w-3.5 h-3.5 text-purple-400" />
+          <HelpCircle className="w-3.5 h-3.5 text-purple-600" />
           <span>Não Classificados</span>
           {countUnclassified > 0 && (
-            <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30">
+            <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-purple-100 text-purple-900 border border-purple-300 font-bold">
               {countUnclassified}
             </span>
           )}
@@ -268,14 +268,14 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
           onClick={() => setActiveTab('DUPLICADO')}
           className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeTab === 'DUPLICADO'
-              ? 'bg-white text-white shadow-sm border border border-black'
-              : 'text-zinc-900 font-semibold hover:text-white'
+              ? 'bg-orange-50 text-orange-950 shadow-xs border border-orange-200'
+              : 'text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50'
           }`}
         >
           <AlertTriangle className="w-3.5 h-3.5 text-amber-700 font-bold" />
           <span>Duplicados</span>
           {countDuplicate > 0 && (
-            <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-amber-500/15 text-amber-700 font-bold border border border-black">
+            <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-bold">
               {countDuplicate}
             </span>
           )}
@@ -285,14 +285,14 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
           onClick={() => setActiveTab('SUSPEITO')}
           className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeTab === 'SUSPEITO'
-              ? 'bg-white text-white shadow-sm border border border-black'
-              : 'text-zinc-900 font-semibold hover:text-white'
+              ? 'bg-orange-50 text-orange-950 shadow-xs border border-orange-200'
+              : 'text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50'
           }`}
         >
           <AlertCircle className="w-3.5 h-3.5 text-rose-700 font-bold" />
           <span>Suspeitos</span>
           {countSuspicious > 0 && (
-            <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-rose-500/15 text-rose-700 font-bold border border border-black">
+            <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-rose-100 text-rose-900 border border-rose-300 font-bold">
               {countSuspicious}
             </span>
           )}
@@ -426,7 +426,7 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => toggleSelect(tx.id)}
-                          className="rounded text-orange-600 focus:ring-orange-500 bg-[#1a1a1f] border border-black cursor-pointer"
+                          className="rounded text-orange-600 focus:ring-orange-500 border-zinc-300 cursor-pointer"
                         />
                       </td>
 
@@ -454,8 +454,8 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
                       </td>
 
                       <td className="p-3 whitespace-nowrap">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-800 text-zinc-950 font-bold border border border-black">
-                          {tx.operationType}
+                        <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-zinc-100 text-zinc-800 border border-zinc-200">
+                          {tx.operationType || '-'}
                         </span>
                       </td>
 
@@ -464,17 +464,17 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
                         <select
                           value={tx.categoryId || ''}
                           onChange={(e) => handleUpdateCategory(tx.id, e.target.value)}
-                          className={`w-full text-xs px-2 py-1 border rounded-lg focus:outline-none ${
+                          className={`w-full text-xs px-2.5 py-1.5 border rounded-lg focus:outline-none ${
                             !tx.categoryId
-                              ? 'border-purple-500/30 bg-purple-500/10 text-purple-300 font-semibold'
-                              : 'border border-black bg-white text-zinc-950 font-bold'
+                              ? 'border-purple-200 bg-purple-50 text-purple-900 font-semibold'
+                              : 'border-zinc-200 bg-white text-zinc-900 font-medium'
                           }`}
                         >
-                          <option value="" className="bg-white text-zinc-950 font-bold">Não classificado</option>
+                          <option value="" className="bg-white text-zinc-700">Não classificado</option>
                           {categories
                             .filter((c) => c.type === tx.type)
                             .map((cat) => (
-                              <option key={cat.id} value={cat.id} className="bg-white text-zinc-950 font-bold">
+                              <option key={cat.id} value={cat.id} className="bg-white text-zinc-900">
                                 {cat.name}
                               </option>
                             ))}
@@ -484,14 +484,14 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
                       {/* Status */}
                       <td className="p-3 whitespace-nowrap">
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
                             tx.reconciliationStatus === 'CONCILIADO'
-                              ? 'bg-emerald-500/15 text-emerald-700 font-bold border border border-black'
+                              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                               : tx.reconciliationStatus === 'SUSPEITO'
-                              ? 'bg-rose-500/15 text-rose-700 font-bold border border border-black'
+                              ? 'bg-rose-50 text-rose-800 border border-rose-200'
                               : tx.reconciliationStatus === 'DUPLICADO'
-                              ? 'bg-amber-500/15 text-amber-700 font-bold border border border-black'
-                              : 'bg-zinc-800 text-zinc-950 font-bold border border border-black'
+                              ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                              : 'bg-zinc-100 text-zinc-800 border border-zinc-200'
                           }`}
                         >
                           {tx.reconciliationStatus}

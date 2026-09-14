@@ -1,5 +1,13 @@
 import crypto from 'crypto';
 import { getSupabaseClient } from './supabaseService.js';
+import {
+  loadUserProfilesSqlite,
+  saveUserProfileSqlite,
+  loadUserInvitesSqlite,
+  saveUserInviteSqlite,
+  loadAuditLogsSqlite,
+  saveAuditLogSqlite
+} from './sqliteService.js';
 import { UserProfile, UserRole, UserStatus, UserInvite, InviteStatus, AuditLogEntry } from '../src/types';
 
 // In-memory cache for fast, reliable access and local fallback
@@ -46,6 +54,13 @@ export async function addAuditLog(entry: {
     cachedAuditLogs = cachedAuditLogs.slice(0, 500);
   }
 
+  // Persistir no SQLite local
+  try {
+    saveAuditLogSqlite(log);
+  } catch (err) {
+    console.error('[SQLite] Erro ao persistir log de auditoria no SQLite:', err);
+  }
+
   const supabase = getSupabaseClient();
   if (supabase) {
     try {
@@ -70,59 +85,97 @@ export async function getAuditLogs(limit = 100): Promise<AuditLogEntry[]> {
 export async function ensureInitialized(): Promise<void> {
   if (isInitialized) return;
 
-  const supabase = getSupabaseClient();
-  if (!supabase) {
-    isInitialized = true;
-    return;
-  }
-
+  // 1. Carregar primeiro dados do SQLite local
   try {
-    // 1. Carregar perfis existentes
-    const { data: profRows, error: profErr } = await supabase.from('user_profiles').select('*');
-    if (!profErr && profRows) {
-      for (const row of profRows) {
-        if (row.data) {
-          cachedProfiles.set(row.data.id, row.data);
-        }
-      }
+    const sqliteProfiles = loadUserProfilesSqlite();
+    for (const p of sqliteProfiles) {
+      cachedProfiles.set(p.id, p);
     }
 
-    // 2. Carregar convites existentes
-    const { data: invRows, error: invErr } = await supabase.from('user_invites').select('*');
-    if (!invErr && invRows) {
-      for (const row of invRows) {
-        if (row.data) {
-          cachedInvites.set(row.data.id, row.data);
-        }
-      }
+    const sqliteInvites = loadUserInvitesSqlite();
+    for (const inv of sqliteInvites) {
+      cachedInvites.set(inv.id, inv);
     }
 
-    // 3. Carregar logs de auditoria
-    const { data: auditRows, error: auditErr } = await supabase
-      .from('audit_logs')
-      .select('*')
-      .order('updated_at', { ascending: false })
-      .limit(200);
-    if (!auditErr && auditRows) {
-      cachedAuditLogs = auditRows.map(r => r.data).filter(Boolean);
+    const sqliteLogs = loadAuditLogsSqlite(200);
+    if (sqliteLogs && sqliteLogs.length > 0) {
+      cachedAuditLogs = sqliteLogs;
     }
-
-    // 4. Garantir que os administradores iniciais do sistema estejam cadastrados no banco
-    await seedInitialAdmins();
-
-    // 5. Garantir pelo menos 2 convites iniciais ativos para testes e uso imediato
-    await seedInitialInvitesIfEmpty();
-
-    isInitialized = true;
   } catch (err) {
-    console.error('[UserManagement] Erro na inicialização:', err);
-    isInitialized = true;
+    console.error('[SQLite] Erro ao carregar dados iniciais de usuários do SQLite:', err);
   }
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      // Carregar perfis existentes do Supabase
+      const { data: profRows, error: profErr } = await supabase.from('user_profiles').select('*');
+      if (!profErr && profRows) {
+        for (const row of profRows) {
+          if (row.data) {
+            cachedProfiles.set(row.data.id, row.data);
+            saveUserProfileSqlite(row.data);
+          }
+        }
+      }
+
+      // Carregar convites existentes do Supabase
+      const { data: invRows, error: invErr } = await supabase.from('user_invites').select('*');
+      if (!invErr && invRows) {
+        for (const row of invRows) {
+          if (row.data) {
+            cachedInvites.set(row.data.id, row.data);
+            saveUserInviteSqlite(row.data);
+          }
+        }
+      }
+
+      // Carregar logs de auditoria
+      const { data: auditRows, error: auditErr } = await supabase
+        .from('audit_logs')
+        .select('*')
+        .order('updated_at', { ascending: false })
+        .limit(200);
+      if (!auditErr && auditRows) {
+        const remoteLogs = auditRows.map(r => r.data).filter(Boolean);
+        if (remoteLogs.length > 0) {
+          cachedAuditLogs = remoteLogs;
+        }
+      }
+    } catch (err) {
+      console.error('[UserManagement] Erro ao sincronizar com Supabase:', err);
+    }
+  }
+
+  // Garantir administradores iniciais padrão
+  await seedInitialAdmins();
+
+  // Garantir convites iniciais ativos se não houver convites
+  await seedInitialInvitesIfEmpty();
+
+  isInitialized = true;
 }
 
 async function seedInitialAdmins(): Promise<void> {
   const supabase = getSupabaseClient();
-  if (!supabase) return;
+  if (!supabase) {
+    if (cachedProfiles.size === 0) {
+      const defaultAdmin: UserProfile = {
+        id: 'user_admin_local',
+        name: 'Administrador Financeiro',
+        email: 'admin@supermercado.com',
+        role: 'ADMINISTRADOR',
+        status: 'ATIVO',
+        createdAt: new Date().toISOString(),
+        lastSignInAt: null
+      };
+      cachedProfiles.set(defaultAdmin.id, defaultAdmin);
+      try {
+        saveUserProfileSqlite(defaultAdmin);
+      } catch {}
+    }
+    return;
+  }
 
   try {
     const { data: authData, error: authErr } = await supabase.auth.admin.listUsers();
@@ -152,6 +205,10 @@ async function seedInitialAdmins(): Promise<void> {
         };
 
         cachedProfiles.set(adminProfile.id, adminProfile);
+        try {
+          saveUserProfileSqlite(adminProfile);
+        } catch {}
+
         await supabase.from('user_profiles').upsert([{
           id: adminProfile.id,
           data: adminProfile,
@@ -269,6 +326,13 @@ export async function updateUserStatus(
   target.status = newStatus;
   cachedProfiles.set(target.id, target);
 
+  // Persistir no SQLite local
+  try {
+    saveUserProfileSqlite(target);
+  } catch (err) {
+    console.error('[SQLite] Erro ao salvar status de perfil no SQLite:', err);
+  }
+
   const supabase = getSupabaseClient();
   if (supabase) {
     await supabase.from('user_profiles').upsert([{
@@ -318,6 +382,13 @@ export async function updateUserRole(
   target.role = newRole;
   cachedProfiles.set(target.id, target);
 
+  // Persistir no SQLite local
+  try {
+    saveUserProfileSqlite(target);
+  } catch (err) {
+    console.error('[SQLite] Erro ao salvar novo perfil no SQLite:', err);
+  }
+
   const supabase = getSupabaseClient();
   if (supabase) {
     await supabase.from('user_profiles').upsert([{
@@ -359,17 +430,26 @@ export async function getInvites(): Promise<UserInvite[]> {
 export async function createInvite(
   adminEmail: string,
   role: UserRole = 'CONSULTA',
-  expirationDays: number = 7
+  expirationDays: number = 7,
+  customCode?: string,
+  recipientEmail?: string,
+  autoActivate: boolean = true,
+  notes?: string
 ): Promise<UserInvite> {
-  const code = generateInviteCode();
-  return createInviteWithCode(code, adminEmail, role, expirationDays);
+  const code = (customCode && customCode.trim())
+    ? customCode.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '')
+    : generateInviteCode();
+  return createInviteWithCode(code, adminEmail, role, expirationDays, recipientEmail, autoActivate, notes);
 }
 
 async function createInviteWithCode(
   code: string,
   adminEmail: string,
   role: UserRole = 'CONSULTA',
-  expirationDays: number = 7
+  expirationDays: number = 7,
+  recipientEmail?: string,
+  autoActivate: boolean = true,
+  notes?: string
 ): Promise<UserInvite> {
   await ensureInitialized();
 
@@ -387,10 +467,20 @@ async function createInviteWithCode(
     used: false,
     usedBy: null,
     usedAt: null,
-    status: 'DISPONIVEL'
+    status: 'DISPONIVEL',
+    recipientEmail: recipientEmail?.trim() || null,
+    autoActivate: autoActivate !== false,
+    notes: notes?.trim() || null
   };
 
   cachedInvites.set(id, invite);
+
+  // Persistir no SQLite local
+  try {
+    saveUserInviteSqlite(invite);
+  } catch (err) {
+    console.error('[SQLite] Erro ao salvar convite no SQLite:', err);
+  }
 
   const supabase = getSupabaseClient();
   if (supabase) {
@@ -408,10 +498,10 @@ async function createInviteWithCode(
   await addAuditLog({
     user: adminEmail,
     action: 'CONVITE_GERADO',
-    description: `Administrador ${adminEmail} gerou convite de acesso ${code} para o perfil ${role} (Validade: ${expirationDays} dias).`,
+    description: `Administrador ${adminEmail} gerou convite de acesso ${code} para o perfil ${role} (Validade: ${expirationDays} dias, Ativação imediata: ${invite.autoActivate ? 'SIM' : 'NÃO'}).`,
     entityType: 'INVITE',
     entityId: id,
-    metadata: { code, role, expirationDays }
+    metadata: { code, role, expirationDays, recipientEmail: invite.recipientEmail, autoActivate: invite.autoActivate }
   });
 
   return invite;
@@ -446,12 +536,12 @@ export async function verifyInviteCode(rawCode: string): Promise<{
   }
 
   if (foundInvite.status === 'REVOGADO') {
-    return { valid: false, error: 'Código de convite inválido ou expirado.' };
+    return { valid: false, error: 'Código de convite revogado pela administração.' };
   }
 
   if (new Date(foundInvite.expiresAt) < new Date()) {
     foundInvite.status = 'EXPIRADO';
-    return { valid: false, error: 'Código de convite inválido ou expirado.' };
+    return { valid: false, error: 'Código de convite expirado.' };
   }
 
   return { valid: true, invite: foundInvite };
@@ -478,14 +568,15 @@ export async function consumeInviteAndCreateProfile(data: {
   invite.status = 'UTILIZADO';
   cachedInvites.set(invite.id, invite);
 
-  // 2. Criar perfil com status PENDENTE (conforme Requisitos 14 e 15)
-  // Novos usuários cadastrados por convite iniciam PENDENTES para validação do administrador
+  // 2. Criar perfil: se autoActivate for true, usuário entra ATIVO; se false, entra PENDENTE
+  const initialStatus: UserStatus = (invite.autoActivate === false) ? 'PENDENTE' : 'ATIVO';
+
   const newProfile: UserProfile = {
     id: data.userId,
     name: data.name.trim(),
     email: data.email.trim().toLowerCase(),
     role: invite.role || 'CONSULTA',
-    status: 'PENDENTE',
+    status: initialStatus,
     createdAt: now,
     lastSignInAt: now,
     inviteCode: invite.code,
@@ -493,6 +584,14 @@ export async function consumeInviteAndCreateProfile(data: {
   };
 
   cachedProfiles.set(newProfile.id, newProfile);
+
+  // Persistir no SQLite local
+  try {
+    saveUserInviteSqlite(invite);
+    saveUserProfileSqlite(newProfile);
+  } catch (err) {
+    console.error('[SQLite] Erro ao persistir cadastro e convite no SQLite:', err);
+  }
 
   const supabase = getSupabaseClient();
   if (supabase) {
@@ -518,7 +617,7 @@ export async function consumeInviteAndCreateProfile(data: {
     user: newProfile.email,
     userName: newProfile.name,
     action: 'NOVO_CADASTRO',
-    description: `Novo usuário ${newProfile.name} (${newProfile.email}) realizou cadastro com o convite ${invite.code}. Cadastro aguardando aprovação (PENDENTE).`,
+    description: `Novo usuário ${newProfile.name} (${newProfile.email}) realizou cadastro com o convite ${invite.code}. Status inicial: ${newProfile.status} (Perfil: ${newProfile.role}).`,
     entityType: 'USER',
     entityId: newProfile.id,
     metadata: { inviteCode: invite.code, role: newProfile.role, status: newProfile.status }
@@ -543,6 +642,13 @@ export async function revokeInvite(
 
   invite.status = 'REVOGADO';
   cachedInvites.set(invite.id, invite);
+
+  // Persistir no SQLite local
+  try {
+    saveUserInviteSqlite(invite);
+  } catch (err) {
+    console.error('[SQLite] Erro ao revogar convite no SQLite:', err);
+  }
 
   const supabase = getSupabaseClient();
   if (supabase) {

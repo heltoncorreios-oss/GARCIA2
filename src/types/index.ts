@@ -448,6 +448,9 @@ export interface UserInvite {
   usedBy?: string | null;
   usedAt?: string | null;
   status: InviteStatus;
+  recipientEmail?: string | null;
+  autoActivate?: boolean;
+  notes?: string | null;
 }
 
 export interface AuditLogEntry {
