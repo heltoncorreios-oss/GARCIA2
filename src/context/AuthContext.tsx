@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { getSupabase, configureSupabase } from '../services/supabaseClient';
 import { setApiAuthToken, apiService } from '../services/api';
+import { safeStorage } from '../utils/safeStorage';
 import { UserProfile } from '../types';
 
 interface AuthContextType {
@@ -106,7 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     async function initSession() {
       try {
         // Se a sessão de preview estiver ativa, restaura imediatamente
-        if (localStorage.getItem('preview_session_active') === 'true') {
+        if (safeStorage.getItem('preview_session_active') === 'true') {
           const previewAdminUser: any = {
             id: 'preview-admin-id',
             email: 'heltoncorreios@gmail.com',
@@ -252,13 +253,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Opção "Lembrar acesso": salvar apenas o e-mail no storage local seguro para conveniência
         if (rememberMe) {
-          try {
-            localStorage.setItem(REMEMBERED_EMAIL_KEY, cleanEmail);
-          } catch {}
+          safeStorage.setItem(REMEMBERED_EMAIL_KEY, cleanEmail);
         } else {
-          try {
-            localStorage.removeItem(REMEMBERED_EMAIL_KEY);
-          } catch {}
+          safeStorage.removeItem(REMEMBERED_EMAIL_KEY);
         }
 
         await loadUserProfile();
@@ -415,7 +412,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async (): Promise<void> => {
     try {
-      localStorage.removeItem('preview_session_active');
+      safeStorage.removeItem('preview_session_active');
       const supabase = getSupabase();
       await supabase.auth.signOut();
     } catch (err) {
@@ -449,7 +446,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user: previewAdminUser
     };
 
-    localStorage.setItem('preview_session_active', 'true');
+    safeStorage.setItem('preview_session_active', 'true');
     setSession(previewSession);
     setUser(previewAdminUser);
     setProfile(previewAdminProfile);

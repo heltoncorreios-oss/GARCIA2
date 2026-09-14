@@ -20,7 +20,7 @@ import { ColumnMapping, ImportPreviewItem, StatementFileType } from '../src/type
 import { calculateConsolidatedBalance } from '../src/utils/consolidatedBalance';
 import { runFinancialUnitTests } from './financialTests';
 import { getSupabaseClient, isSupabaseConfigured } from './supabaseService';
-import { getSqliteDatabaseInfo, getSqliteDbPath } from './sqliteService';
+import { getSqliteDatabaseInfo, getSqliteDbPath, saveUserProfileSqlite } from './sqliteService';
 import {
   getUserProfiles,
   getUserProfileById,
@@ -237,10 +237,11 @@ apiRouter.use(async (req: Request, res: Response, next) => {
       profile = await getUserProfileByEmail(user.email);
     }
 
+    const email = (user.email || '').toLowerCase();
+    const isAdminEmail = email === 'admin@supermercado.com' || email === 'heltoncorreios@gmail.com';
+
     // Inicialização segura de administrador inicial caso ainda não cadastrado na base de perfis
     if (!profile) {
-      const email = (user.email || '').toLowerCase();
-      const isAdminEmail = email === 'admin@supermercado.com' || email === 'heltoncorreios@gmail.com';
       profile = {
         id: user.id,
         name: user.user_metadata?.name || (isAdminEmail ? 'Administrador Financeiro' : email.split('@')[0]),
@@ -250,6 +251,10 @@ apiRouter.use(async (req: Request, res: Response, next) => {
         createdAt: user.created_at || new Date().toISOString(),
         lastSignInAt: new Date().toISOString()
       };
+      saveUserProfileSqlite(profile);
+    } else if (isAdminEmail && profile.role !== 'ADMINISTRADOR') {
+      profile.role = 'ADMINISTRADOR';
+      saveUserProfileSqlite(profile);
     }
 
     (req as any).user = user;
@@ -380,6 +385,7 @@ apiRouter.post('/admin/invites', async (req: Request, res: Response) => {
     );
     res.json({ success: true, invite });
   } catch (err: unknown) {
+    console.error('[API] Erro ao gerar convite:', err);
     res.status(500).json({ error: (err as Error).message });
   }
 });

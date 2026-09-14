@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import os from 'os';
 import { createServer as createViteServer } from 'vite';
 import { apiRouter } from './server/routes';
 
@@ -35,7 +36,25 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[Supermercado Financeiro] Servidor ativo em http://0.0.0.0:${PORT}`);
+    let localIp = 'localhost';
+    try {
+      const nets = os.networkInterfaces();
+      for (const name of Object.keys(nets)) {
+        for (const net of nets[name]!) {
+          if (net.family === 'IPv4' && !net.internal) {
+            localIp = net.address;
+            break;
+          }
+        }
+        if (localIp !== 'localhost') break;
+      }
+    } catch {}
+
+    console.log(`\n============================================================`);
+    console.log(`[Supermercado Financeiro] Servidor ativo e rodando!`);
+    console.log(`> Neste computador:  http://localhost:${PORT}`);
+    console.log(`> Na rede local:     http://${localIp}:${PORT}`);
+    console.log(`============================================================\n`);
   });
 }
 

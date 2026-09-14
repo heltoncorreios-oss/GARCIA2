@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { apiService } from '../../services/api';
+import { safeStorage } from '../../utils/safeStorage';
 import {
   Building2,
   Mail,
@@ -36,19 +37,11 @@ export const LoginView: React.FC = () => {
   const location = useLocation();
 
   const [email, setEmail] = useState<string>(() => {
-    try {
-      return localStorage.getItem(REMEMBERED_EMAIL_KEY) || '';
-    } catch {
-      return '';
-    }
+    return safeStorage.getItem(REMEMBERED_EMAIL_KEY) || '';
   });
   const [password, setPassword] = useState<string>('');
   const [rememberMe, setRememberMe] = useState<boolean>(() => {
-    try {
-      return Boolean(localStorage.getItem(REMEMBERED_EMAIL_KEY));
-    } catch {
-      return false;
-    }
+    return Boolean(safeStorage.getItem(REMEMBERED_EMAIL_KEY));
   });
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);

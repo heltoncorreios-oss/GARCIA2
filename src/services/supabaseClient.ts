@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { safeStorage } from '../utils/safeStorage';
 
 function cleanEnvVar(val: any): string {
   if (!val || typeof val !== 'string') return '';
@@ -28,6 +29,7 @@ export function configureSupabase(rawUrl: string, rawKey: string): SupabaseClien
     try {
       clientInstance = createClient(url, anonKey, {
         auth: {
+          storage: safeStorage,
           persistSession: true,
           autoRefreshToken: true,
           detectSessionInUrl: true
@@ -53,6 +55,7 @@ export function getSupabase(): SupabaseClient {
     try {
       clientInstance = createClient(url, anonKey, {
         auth: {
+          storage: safeStorage,
           persistSession: true,
           autoRefreshToken: true,
           detectSessionInUrl: true
@@ -60,7 +63,12 @@ export function getSupabase(): SupabaseClient {
       });
     } catch (e) {
       console.error('[Supabase Client] Erro ao inicializar cliente Supabase:', e);
-      clientInstance = createClient('https://placeholder.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder');
+      clientInstance = createClient('https://placeholder.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder', {
+        auth: {
+          storage: safeStorage,
+          persistSession: false
+        }
+      });
     }
   }
   return clientInstance;

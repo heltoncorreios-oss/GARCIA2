@@ -14,6 +14,11 @@ import {
   AuditLogEntry
 } from '../src/types';
 
+function safeVal(val: any, defaultVal: any = null): any {
+  if (val === undefined || val === null) return defaultVal;
+  return val;
+}
+
 export interface SqliteDatabaseSchema {
   bankAccounts: BankAccount[];
   categories: Category[];
@@ -201,53 +206,96 @@ export function saveAllToSqlite(data: SqliteDatabaseSchema): void {
     db.exec('BEGIN TRANSACTION;');
 
     try {
-      // 1. Bank Accounts
+       // 1. Bank Accounts
       db.exec('DELETE FROM bank_accounts;');
       const insertAccount = db.prepare('INSERT INTO bank_accounts (id, name, bank_code, account_number, data, updated_at) VALUES (?, ?, ?, ?, ?, ?)');
       for (const item of data.bankAccounts) {
-        insertAccount.run(item.id, item.accountName || item.bankName || '', item.bankCode || '', item.accountNumber || '', JSON.stringify(item), now);
+        insertAccount.run(
+          safeVal(item.id),
+          safeVal(item.accountName || item.bankName || ''),
+          safeVal(item.bankCode || ''),
+          safeVal(item.accountNumber || ''),
+          JSON.stringify(item),
+          safeVal(now)
+        );
       }
 
       // 2. Categories
       db.exec('DELETE FROM categories;');
       const insertCategory = db.prepare('INSERT INTO categories (id, name, type, data, updated_at) VALUES (?, ?, ?, ?, ?)');
       for (const item of data.categories) {
-        insertCategory.run(item.id, item.name, item.type, JSON.stringify(item), now);
+        insertCategory.run(
+          safeVal(item.id),
+          safeVal(item.name || ''),
+          safeVal(item.type || ''),
+          JSON.stringify(item),
+          safeVal(now)
+        );
       }
 
       // 3. Operation Types
       db.exec('DELETE FROM operation_types;');
       const insertOpType = db.prepare('INSERT INTO operation_types (id, code, name, data, updated_at) VALUES (?, ?, ?, ?, ?)');
       for (const item of data.operationTypes) {
-        insertOpType.run(item.id, item.code, item.name, JSON.stringify(item), now);
+        insertOpType.run(
+          safeVal(item.id),
+          safeVal(item.code || ''),
+          safeVal(item.name || ''),
+          JSON.stringify(item),
+          safeVal(now)
+        );
       }
 
       // 4. Classification Rules
       db.exec('DELETE FROM classification_rules;');
       const insertRule = db.prepare('INSERT INTO classification_rules (id, priority, data, updated_at) VALUES (?, ?, ?, ?)');
       for (const item of data.classificationRules) {
-        insertRule.run(item.id, item.priority || 0, JSON.stringify(item), now);
+        insertRule.run(
+          safeVal(item.id),
+          safeVal(item.priority, 0),
+          JSON.stringify(item),
+          safeVal(now)
+        );
       }
 
       // 5. Transactions
       db.exec('DELETE FROM transactions;');
       const insertTx = db.prepare('INSERT INTO transactions (id, account_id, date, type, amount, status, data, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
       for (const item of data.transactions) {
-        insertTx.run(item.id, item.bankAccountId, item.date, item.type, item.amount, item.reconciliationStatus || 'PENDING', JSON.stringify(item), now);
+        insertTx.run(
+          safeVal(item.id),
+          safeVal(item.bankAccountId),
+          safeVal(item.date, new Date().toISOString()),
+          safeVal(item.type, 'OUT'),
+          safeVal(item.amount, 0),
+          safeVal(item.reconciliationStatus || 'PENDING'),
+          JSON.stringify(item),
+          safeVal(now)
+        );
       }
 
       // 6. Bank Statements
       db.exec('DELETE FROM bank_statements;');
       const insertSt = db.prepare('INSERT INTO bank_statements (id, account_id, data, updated_at) VALUES (?, ?, ?, ?)');
       for (const item of data.bankStatements) {
-        insertSt.run(item.id, item.bankAccountId, JSON.stringify(item), now);
+        insertSt.run(
+          safeVal(item.id),
+          safeVal(item.bankAccountId),
+          JSON.stringify(item),
+          safeVal(now)
+        );
       }
 
       // 7. Mapping Templates
       db.exec('DELETE FROM mapping_templates;');
       const insertTmpl = db.prepare('INSERT INTO mapping_templates (id, bank_name_or_code, data, updated_at) VALUES (?, ?, ?, ?)');
       for (const item of data.mappingTemplates) {
-        insertTmpl.run(item.id, item.bankNameOrCode || '', JSON.stringify(item), now);
+        insertTmpl.run(
+          safeVal(item.id),
+          safeVal(item.bankNameOrCode || ''),
+          JSON.stringify(item),
+          safeVal(now)
+        );
       }
 
       db.exec('COMMIT;');
@@ -276,7 +324,16 @@ export function upsertTransactionSqlite(tx: Transaction): void {
         data = excluded.data,
         updated_at = excluded.updated_at
     `);
-    stmt.run(tx.id, tx.bankAccountId, tx.date, tx.type, tx.amount, tx.reconciliationStatus || 'PENDING', JSON.stringify(tx), now);
+    stmt.run(
+      safeVal(tx.id),
+      safeVal(tx.bankAccountId),
+      safeVal(tx.date, new Date().toISOString()),
+      safeVal(tx.type, 'OUT'),
+      safeVal(tx.amount, 0),
+      safeVal(tx.reconciliationStatus || 'PENDING'),
+      JSON.stringify(tx),
+      safeVal(now)
+    );
   } catch (err) {
     console.error('[SQLite] Erro ao salvar transação no SQLite:', err);
   }
@@ -286,7 +343,7 @@ export function deleteTransactionSqlite(id: string): void {
   try {
     const db = getSqliteDb();
     const stmt = db.prepare('DELETE FROM transactions WHERE id = ?');
-    stmt.run(id);
+    stmt.run(safeVal(id));
   } catch (err) {
     console.error('[SQLite] Erro ao deletar transação no SQLite:', err);
   }
@@ -321,7 +378,14 @@ export function saveUserProfileSqlite(profile: UserProfile): void {
         data = excluded.data,
         updated_at = excluded.updated_at
     `);
-    stmt.run(profile.id, profile.email, profile.role, profile.status, JSON.stringify(profile), now);
+    stmt.run(
+      safeVal(profile.id),
+      safeVal(profile.email),
+      safeVal(profile.role, 'CONSULTA'),
+      safeVal(profile.status, 'ATIVO'),
+      JSON.stringify(profile),
+      safeVal(now)
+    );
   } catch (err) {
     console.error('[SQLite] Erro ao salvar perfil no SQLite:', err);
   }
@@ -352,7 +416,14 @@ export function saveUserInviteSqlite(invite: UserInvite): void {
         data = excluded.data,
         updated_at = excluded.updated_at
     `);
-    stmt.run(invite.id, invite.code, invite.role, invite.status, JSON.stringify(invite), now);
+    stmt.run(
+      safeVal(invite.id),
+      safeVal(invite.code),
+      safeVal(invite.role, 'CONSULTA'),
+      safeVal(invite.status, 'DISPONIVEL'),
+      JSON.stringify(invite),
+      safeVal(now)
+    );
   } catch (err) {
     console.error('[SQLite] Erro ao salvar convite no SQLite:', err);
   }
@@ -361,7 +432,7 @@ export function saveUserInviteSqlite(invite: UserInvite): void {
 export function loadAuditLogsSqlite(limit = 100): AuditLogEntry[] {
   try {
     const db = getSqliteDb();
-    const rows = db.prepare('SELECT data FROM audit_logs ORDER BY timestamp DESC LIMIT ?').all(limit) as Array<{ data: string }>;
+    const rows = db.prepare('SELECT data FROM audit_logs ORDER BY timestamp DESC LIMIT ?').all(safeVal(limit, 100)) as Array<{ data: string }>;
     return rows.map(r => JSON.parse(r.data));
   } catch (err) {
     console.error('[SQLite] Erro ao carregar logs de auditoria do SQLite:', err);
@@ -378,7 +449,13 @@ export function saveAuditLogSqlite(entry: AuditLogEntry): void {
       ON CONFLICT(id) DO UPDATE SET
         data = excluded.data
     `);
-    stmt.run(entry.id, entry.action, entry.user || '', entry.timestamp, JSON.stringify(entry));
+    stmt.run(
+      safeVal(entry.id),
+      safeVal(entry.action, 'ACAO'),
+      safeVal(entry.user || ''),
+      safeVal(entry.timestamp, new Date().toISOString()),
+      JSON.stringify(entry)
+    );
   } catch (err) {
     console.error('[SQLite] Erro ao salvar log de auditoria no SQLite:', err);
   }
