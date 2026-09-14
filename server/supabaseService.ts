@@ -34,16 +34,21 @@ export function getSupabaseClient(): SupabaseClient | null {
   let url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
   let key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
   
-  url = url.trim().replace(/^["']|["']$/g, '');
-  key = key.trim().replace(/^["']|["']$/g, '');
+  url = url.trim().replace(/^["']|["']$/g, '').replace(/[\r\n]/g, '').replace(/\/$/, '');
+  key = key.trim().replace(/^["']|["']$/g, '').replace(/[\r\n]/g, '');
   if (!url || !key || !url.startsWith('http')) return null;
 
   if (!supabaseInstance || url !== lastUrl || key !== lastKey) {
     lastUrl = url;
     lastKey = key;
-    supabaseInstance = createClient(url, key, {
-      auth: { persistSession: false }
-    });
+    try {
+      supabaseInstance = createClient(url, key, {
+        auth: { persistSession: false }
+      });
+    } catch (err) {
+      supabaseInstance = null;
+      return null;
+    }
   }
   return supabaseInstance;
 }
