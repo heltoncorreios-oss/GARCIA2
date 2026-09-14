@@ -166,14 +166,22 @@ CREATE TABLE IF NOT EXISTS reconciliation_logs (
 -- 12. Tabela de Logs de Auditoria (Audit Logs)
 CREATE TABLE IF NOT EXISTS audit_logs (
     id VARCHAR(36) PRIMARY KEY,
-    user_name VARCHAR(120) NOT NULL,
-    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    operation VARCHAR(50) NOT NULL, -- CRIACAO, EDICAO, EXCLUSAO, IMPORTACAO, CONCILIACAO
-    entity VARCHAR(50) NOT NULL,    -- TRANSAÇÃO, CONTA, REGRA, CATEGORIA
-    entity_id VARCHAR(50) NOT NULL,
-    description TEXT,
-    previous_value JSONB,
-    new_value JSONB
+    data JSONB NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 13. Tabela de Perfis de Usuário (User Profiles)
+CREATE TABLE IF NOT EXISTS user_profiles (
+    id VARCHAR(36) PRIMARY KEY,
+    data JSONB NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 14. Tabela de Convites de Acesso (User Invites)
+CREATE TABLE IF NOT EXISTS user_invites (
+    id VARCHAR(36) PRIMARY KEY,
+    data JSONB NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Índices para Máxima Performance de Consultas Financeiras
