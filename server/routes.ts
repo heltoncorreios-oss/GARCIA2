@@ -33,7 +33,7 @@ import {
   revokeInvite,
   addAuditLog,
   getAuditLogs
-} from './userManagement.js';
+} from './userManagement';
 
 export const apiRouter = Router();
 

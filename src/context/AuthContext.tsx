@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
-import { getSupabase } from '../services/supabaseClient';
+import { getSupabase, configureSupabase } from '../services/supabaseClient';
 import { setApiAuthToken, apiService } from '../services/api';
 import { UserProfile } from '../types';
 
@@ -59,6 +59,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (
+      msg.includes('invalid api key') ||
+      msg.includes('invalid_api_key') ||
+      msg.includes('invalid apikey')
+    ) {
+      return 'Chave de API do Supabase inválida. Verifique se a variável VITE_SUPABASE_ANON_KEY no Vercel contém a chave "anon / public" correta do seu projeto no Supabase (copiada em Project Settings > API).';
+    }
+
+    if (
       msg.includes('failed to fetch') ||
       msg.includes('network') ||
       msg.includes('timeout') ||
@@ -96,7 +104,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // 1. Obter sessão inicial persistida oficialmente pelo Supabase
     async function initSession() {
       try {
-        const { data, error } = await supabase.auth.getSession();
+        // Tenta sincronizar configuração ativa do servidor caso o frontend não tenha as variáveis no build
+        try {
+          const configRes = await fetch('/api/auth/config');
+          if (configRes.ok) {
+            const cfg = await configRes.json();
+            if (cfg.supabaseUrl && cfg.supabaseAnonKey) {
+              configureSupabase(cfg.supabaseUrl, cfg.supabaseAnonKey);
+            }
+          }
+        } catch {
+          // Servidor offline ou rota indisponível, segue normalmente
+        }
+
+        const client = getSupabase();
+        const { data, error } = await client.auth.getSession();
         if (error) {
           console.warn('[AuthContext] Erro ao recuperar sessão inicial:', error.message);
         }
@@ -160,10 +182,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const cleanEmail = email.trim();
       const supabase = getSupabase();
 
-      const { data, error } = await supabase.auth.signInWithPassword({
+      let { data, error } = await supabase.auth.signInWithPassword({
         email: cleanEmail,
         password
       });
+
+      // Se falhar por chave de API ou conexão, tenta obter chaves atualizadas do servidor e tenta mais uma vez
+      if (
+        error &&
+        (error.message?.toLowerCase().includes('invalid api key') ||
+          error.message?.toLowerCase().includes('failed to fetch'))
+      ) {
+        try {
+          const configRes = await fetch('/api/auth/config');
+          if (configRes.ok) {
+            const cfg = await configRes.json();
+            if (cfg.supabaseUrl && cfg.supabaseAnonKey) {
+              const freshClient = configureSupabase(cfg.supabaseUrl, cfg.supabaseAnonKey);
+              const retryResult = await freshClient.auth.signInWithPassword({
+                email: cleanEmail,
+                password
+              });
+              if (!retryResult.error && retryResult.data?.session) {
+                data = retryResult.data;
+                error = null;
+              } else if (retryResult.error) {
+                error = retryResult.error;
+              }
+            }
+          }
+        } catch {
+          // Segue com o erro original
+        }
+      }
 
       if (error) {
         return { success: false, error: mapAuthError(error) };
