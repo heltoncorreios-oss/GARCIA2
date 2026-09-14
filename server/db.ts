@@ -232,23 +232,37 @@ class SupermarketDatabase {
       let parsed: any = null;
 
       if (fs.existsSync(dbFile)) {
-        const content = fs.readFileSync(dbFile, 'utf-8');
-        parsed = JSON.parse(content);
+        try {
+          const content = fs.readFileSync(dbFile, 'utf-8');
+          if (content && content.trim().length > 2) {
+            parsed = JSON.parse(content);
+          }
+        } catch (e) {
+          console.warn('[DB] Arquivo JSON de fallback corrompido ou vazio, ignorando.');
+        }
       } else if (isVercelEnvironment) {
         try {
           parsed = customRequire('../data/supermarket_db.json');
         } catch {
           const bundledSeed = path.join(process.cwd(), 'data', 'supermarket_db.json');
           if (fs.existsSync(bundledSeed)) {
-            const content = fs.readFileSync(bundledSeed, 'utf-8');
-            parsed = JSON.parse(content);
+            try {
+              const content = fs.readFileSync(bundledSeed, 'utf-8');
+              if (content && content.trim().length > 2) {
+                parsed = JSON.parse(content);
+              }
+            } catch {}
           }
         }
       } else {
         const localSeed = path.join(process.cwd(), 'data', 'supermarket_db.json');
         if (fs.existsSync(localSeed)) {
-          const content = fs.readFileSync(localSeed, 'utf-8');
-          parsed = JSON.parse(content);
+          try {
+            const content = fs.readFileSync(localSeed, 'utf-8');
+            if (content && content.trim().length > 2) {
+              parsed = JSON.parse(content);
+            }
+          } catch {}
         }
       }
 
