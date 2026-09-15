@@ -17,11 +17,11 @@ if not exist node_modules (
 )
 
 echo [INFO] Iniciando o servidor local na porta 3000...
-echo [INFO] O navegador abrira automaticamente em: http://localhost:3000
+echo [INFO] O navegador abrira automaticamente assim que o servidor estiver pronto...
 echo.
 
-:: Aguarda 3 segundos em segundo plano para o servidor Node.js subir antes de abrir o navegador
-start /b cmd /c "timeout /t 3 >nul && start http://localhost:3000"
+:: Polling inteligente em segundo plano: Aguarda o servidor responder OK antes de abrir o navegador
+start /b powershell -NoProfile -ExecutionPolicy Bypass -Command "$attempts=0; do { Start-Sleep -Seconds 1; $attempts++; try { $res = Invoke-WebRequest -Uri 'http://localhost:3000/api/health' -UseBasicParsing -TimeoutSec 2; if ($res.StatusCode -eq 200) { Start-Process 'http://localhost:3000'; break; } } catch {} } while ($attempts -lt 30)"
 
 call npm run dev
 pause
