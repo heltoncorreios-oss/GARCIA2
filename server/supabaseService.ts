@@ -494,6 +494,10 @@ export async function syncToSupabase(schema: DatabaseSchema): Promise<boolean> {
             const error = upsertRes?.error;
             if (error) {
               const cat = categorizeSupabaseError(error);
+              if (cat.category === 'TABLE_MISSING' || cat.category === 'SCHEMA_CACHE' || error.code === 'PGRST205') {
+                console.log(`[SUPABASE] Tabela '${tableName}' ausente na nuvem para upsert. Coleção ignorada.`);
+                break;
+              }
               if (cat.isRetryable && attempts < 1) {
                 attempts++;
                 await new Promise(r => setTimeout(r, 1000));
@@ -506,6 +510,10 @@ export async function syncToSupabase(schema: DatabaseSchema): Promise<boolean> {
             }
           } catch (err: any) {
             const cat = categorizeSupabaseError(err);
+            if (cat.category === 'TABLE_MISSING' || cat.category === 'SCHEMA_CACHE' || err?.code === 'PGRST205') {
+              console.log(`[SUPABASE] Tabela '${tableName}' indisponível para upsert (${err?.message || err}). Ignorada.`);
+              break;
+            }
             if (cat.isRetryable && attempts < 1) {
               attempts++;
               await new Promise(r => setTimeout(r, 1000));
