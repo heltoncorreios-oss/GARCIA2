@@ -233,14 +233,34 @@ export async function syncToSupabase(schema: DatabaseSchema): Promise<boolean> {
       const chunkSize = 100;
       for (let i = 0; i < rows.length; i += chunkSize) {
         const chunk = rows.slice(i, i + chunkSize);
-        const { error } = await client.from(tableName).upsert(chunk, { onConflict: 'id' });
-        if (error) {
-          hadError = true;
-          if (error.code === '42501' || error.message.includes('row-level security')) {
-            console.error(`[Supabase RLS] Erro 42501 na tabela '${tableName}': O Supabase está bloqueando a inserção devido a Row Level Security (RLS). Execute "ALTER TABLE ${tableName} DISABLE ROW LEVEL SECURITY;" no SQL Editor do Supabase ou forneça a Service Role Key.`);
+        
+        let attempts = 0;
+        let success = false;
+        
+        while (attempts < 5 && !success) {
+          const { error } = await client.from(tableName).upsert(chunk, { onConflict: 'id' });
+          if (error) {
+            if (error.message && error.message.includes('schema cache')) {
+              attempts++;
+              console.warn(`[Supabase] Schema cache error on ${tableName}. Retrying in 1.5s (Attempt ${attempts}/5)...`);
+              await new Promise(resolve => setTimeout(resolve, 1500));
+            } else {
+              hadError = true;
+              if (error.code === '42501' || error.message.includes('row-level security')) {
+                console.error(`[Supabase RLS] Erro 42501 na tabela '${tableName}': O Supabase está bloqueando a inserção devido a Row Level Security (RLS). Execute "ALTER TABLE ${tableName} DISABLE ROW LEVEL SECURITY;" no SQL Editor do Supabase ou forneça a Service Role Key.`);
+              } else {
+                console.error(`Erro ao salvar no Supabase (${tableName}):`, error.message);
+              }
+              break; // Break the retry loop on non-schema cache errors
+            }
           } else {
-            console.error(`Erro ao salvar no Supabase (${tableName}):`, error.message);
+            success = true;
           }
+        }
+        
+        if (!success && attempts >= 5) {
+          hadError = true;
+          console.error(`Erro ao salvar no Supabase (${tableName}): Schema cache timeout após 5 tentativas.`);
         }
       }
     };
