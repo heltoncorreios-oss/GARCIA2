@@ -342,61 +342,52 @@ export async function ensureSupabaseTables(): Promise<boolean> {
   try {
     pool = createPostgresPool(connectionString);
 
-    const checkRes = await withTimeout(
-      pool.query("SELECT count(*) as count FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'transactions'"),
-      4000
-    );
-    const exists = parseInt(checkRes.rows[0]?.count || '0', 10) > 0;
+    // Garantir que TODAS as tabelas existam (CREATE TABLE IF NOT EXISTS é seguro e não destrói dados)
+    const schemaQuery = `
+      GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+      
+      CREATE TABLE IF NOT EXISTS bank_accounts (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
+      ALTER TABLE bank_accounts DISABLE ROW LEVEL SECURITY;
+      GRANT ALL ON bank_accounts TO anon, authenticated, service_role;
+      
+      CREATE TABLE IF NOT EXISTS categories (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
+      ALTER TABLE categories DISABLE ROW LEVEL SECURITY;
+      GRANT ALL ON categories TO anon, authenticated, service_role;
+      
+      CREATE TABLE IF NOT EXISTS operation_types (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
+      ALTER TABLE operation_types DISABLE ROW LEVEL SECURITY;
+      GRANT ALL ON operation_types TO anon, authenticated, service_role;
+      
+      CREATE TABLE IF NOT EXISTS classification_rules (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
+      ALTER TABLE classification_rules DISABLE ROW LEVEL SECURITY;
+      GRANT ALL ON classification_rules TO anon, authenticated, service_role;
+      
+      CREATE TABLE IF NOT EXISTS mapping_templates (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
+      ALTER TABLE mapping_templates DISABLE ROW LEVEL SECURITY;
+      GRANT ALL ON mapping_templates TO anon, authenticated, service_role;
+      
+      CREATE TABLE IF NOT EXISTS transactions (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
+      ALTER TABLE transactions DISABLE ROW LEVEL SECURITY;
+      GRANT ALL ON transactions TO anon, authenticated, service_role;
+      
+      CREATE TABLE IF NOT EXISTS bank_statements (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
+      ALTER TABLE bank_statements DISABLE ROW LEVEL SECURITY;
+      GRANT ALL ON bank_statements TO anon, authenticated, service_role;
+      
+      CREATE TABLE IF NOT EXISTS audit_logs (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
+      ALTER TABLE audit_logs DISABLE ROW LEVEL SECURITY;
+      GRANT ALL ON audit_logs TO anon, authenticated, service_role;
+      
+      CREATE TABLE IF NOT EXISTS user_profiles (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
+      ALTER TABLE user_profiles DISABLE ROW LEVEL SECURITY;
+      GRANT ALL ON user_profiles TO anon, authenticated, service_role;
+      
+      CREATE TABLE IF NOT EXISTS user_invites (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
+      ALTER TABLE user_invites DISABLE ROW LEVEL SECURITY;
+      GRANT ALL ON user_invites TO anon, authenticated, service_role;
+    `;
 
-    if (!exists) {
-      console.log('[SUPABASE] Tabelas não encontradas no PostgreSQL. Executando criação do schema...');
-      const schemaQuery = `
-        GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
-        
-        CREATE TABLE IF NOT EXISTS bank_accounts (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
-        ALTER TABLE bank_accounts DISABLE ROW LEVEL SECURITY;
-        GRANT ALL ON bank_accounts TO anon, authenticated, service_role;
-        
-        CREATE TABLE IF NOT EXISTS categories (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
-        ALTER TABLE categories DISABLE ROW LEVEL SECURITY;
-        GRANT ALL ON categories TO anon, authenticated, service_role;
-        
-        CREATE TABLE IF NOT EXISTS operation_types (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
-        ALTER TABLE operation_types DISABLE ROW LEVEL SECURITY;
-        GRANT ALL ON operation_types TO anon, authenticated, service_role;
-        
-        CREATE TABLE IF NOT EXISTS classification_rules (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
-        ALTER TABLE classification_rules DISABLE ROW LEVEL SECURITY;
-        GRANT ALL ON classification_rules TO anon, authenticated, service_role;
-        
-        CREATE TABLE IF NOT EXISTS mapping_templates (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
-        ALTER TABLE mapping_templates DISABLE ROW LEVEL SECURITY;
-        GRANT ALL ON mapping_templates TO anon, authenticated, service_role;
-        
-        CREATE TABLE IF NOT EXISTS transactions (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
-        ALTER TABLE transactions DISABLE ROW LEVEL SECURITY;
-        GRANT ALL ON transactions TO anon, authenticated, service_role;
-        
-        CREATE TABLE IF NOT EXISTS bank_statements (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
-        ALTER TABLE bank_statements DISABLE ROW LEVEL SECURITY;
-        GRANT ALL ON bank_statements TO anon, authenticated, service_role;
-        
-        CREATE TABLE IF NOT EXISTS audit_logs (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
-        ALTER TABLE audit_logs DISABLE ROW LEVEL SECURITY;
-        GRANT ALL ON audit_logs TO anon, authenticated, service_role;
-        
-        CREATE TABLE IF NOT EXISTS user_profiles (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
-        ALTER TABLE user_profiles DISABLE ROW LEVEL SECURITY;
-        GRANT ALL ON user_profiles TO anon, authenticated, service_role;
-        
-        CREATE TABLE IF NOT EXISTS user_invites (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
-        ALTER TABLE user_invites DISABLE ROW LEVEL SECURITY;
-        GRANT ALL ON user_invites TO anon, authenticated, service_role;
-      `;
-
-      await withTimeout(pool.query(schemaQuery), 5000);
-      // Removido NOTIFY síncrono que provocava reconstrução constante do cache no PostgREST
-    }
+    await withTimeout(pool.query(schemaQuery), 6000);
     
     await pool.end().catch(() => {});
     tablesEnsured = true;
@@ -415,15 +406,21 @@ export async function loadFromSupabase(): Promise<DatabaseSchema | null> {
   if (!client) return null;
 
   try {
-    const fetchTable = async (tableName: string) => {
-      const res: any = await withTimeout(
-        client.from(tableName).select('*') as any,
-        6000
-      );
-      if (res?.error) {
-        throw res.error;
+    const fetchTable = async (tableName: string): Promise<any[]> => {
+      try {
+        const res: any = await withTimeout(
+          client.from(tableName).select('*') as any,
+          6000
+        );
+        if (res?.error) {
+          console.log(`[SUPABASE] Tabela '${tableName}' vazia ou indisponível na nuvem (${res.error.message || 'sem erro'}). Assumindo [].`);
+          return [];
+        }
+        return Array.isArray(res?.data) ? res.data : [];
+      } catch (err: any) {
+        console.log(`[SUPABASE] Tabela '${tableName}' não consultada (${err?.message || err}). Assumindo [].`);
+        return [];
       }
-      return res?.data || [];
     };
 
     // Carregamento sequencial controlado para evitar tempestade de requisições paralelas ao PostgREST
@@ -435,19 +432,33 @@ export async function loadFromSupabase(): Promise<DatabaseSchema | null> {
     const bankStatementsData = await fetchTable('bank_statements');
     const mappingTemplatesData = await fetchTable('mapping_templates');
 
+    const extractItem = (r: any) => {
+      if (!r) return null;
+      if (typeof r.data === 'object' && r.data !== null) return r.data;
+      return r;
+    };
+
     return {
-      bankAccounts: bankAccountsData.map((r: any) => r.data),
-      categories: categoriesData.map((r: any) => r.data),
-      operationTypes: operationTypesData.map((r: any) => r.data),
-      classificationRules: classificationRulesData.map((r: any) => r.data),
-      transactions: transactionsData.map((r: any) => r.data),
-      bankStatements: bankStatementsData.map((r: any) => r.data),
-      mappingTemplates: mappingTemplatesData.map((r: any) => r.data)
+      bankAccounts: bankAccountsData.map(extractItem).filter(Boolean),
+      categories: categoriesData.map(extractItem).filter(Boolean),
+      operationTypes: operationTypesData.map(extractItem).filter(Boolean),
+      classificationRules: classificationRulesData.map(extractItem).filter(Boolean),
+      transactions: transactionsData.map(extractItem).filter(Boolean),
+      bankStatements: bankStatementsData.map(extractItem).filter(Boolean),
+      mappingTemplates: mappingTemplatesData.map(extractItem).filter(Boolean)
     };
   } catch (err: any) {
-    const cat = categorizeSupabaseError(err);
-    console.warn(`[SUPABASE] Falha controlada em loadFromSupabase: ${cat.category} - ${cat.message}`);
-    return null;
+    console.warn(`[SUPABASE] Aviso em loadFromSupabase: ${err?.message || err}`);
+    // Retornar schema vazio em vez de null para não bloquear inicialização caso seja erro não-fatídico
+    return {
+      bankAccounts: [],
+      categories: [],
+      operationTypes: [],
+      classificationRules: [],
+      transactions: [],
+      bankStatements: [],
+      mappingTemplates: []
+    };
   }
 }
 
