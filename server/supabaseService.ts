@@ -237,13 +237,13 @@ export async function syncToSupabase(schema: DatabaseSchema): Promise<boolean> {
         let attempts = 0;
         let success = false;
         
-        while (attempts < 5 && !success) {
+        while (attempts < 10 && !success) {
           const { error } = await client.from(tableName).upsert(chunk, { onConflict: 'id' });
           if (error) {
             if (error.message && error.message.includes('schema cache')) {
               attempts++;
-              console.warn(`[Supabase] Schema cache error on ${tableName}. Retrying in 1.5s (Attempt ${attempts}/5)...`);
-              await new Promise(resolve => setTimeout(resolve, 1500));
+              console.warn(`[Supabase] Schema cache error on ${tableName}. Retrying in 2s (Attempt ${attempts}/10)...`);
+              await new Promise(resolve => setTimeout(resolve, 2000));
             } else {
               hadError = true;
               if (error.code === '42501' || error.message.includes('row-level security')) {
@@ -258,9 +258,9 @@ export async function syncToSupabase(schema: DatabaseSchema): Promise<boolean> {
           }
         }
         
-        if (!success && attempts >= 5) {
+        if (!success && attempts >= 10) {
           hadError = true;
-          console.error(`Erro ao salvar no Supabase (${tableName}): Schema cache timeout após 5 tentativas.`);
+          console.error(`Erro ao salvar no Supabase (${tableName}): Schema cache timeout após 10 tentativas.`);
         }
       }
     };
