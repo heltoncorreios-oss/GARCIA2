@@ -1124,7 +1124,7 @@ apiRouter.post('/import/preview', async (req: Request, res: Response) => {
       });
     }
 
-    const preview = db.processImportPreview(parsedRows, finalBankAccountId, extractedBalance);
+    const preview = db.processImportPreview(parsedRows, finalBankAccountId, extractedBalance, fileName);
     res.json({ preview, fileName, fileType: typeUpper, extractedBalance: preview.extractedBalance, assignedBankAccountId: finalBankAccountId });
   } catch (err: unknown) {
     res.status(500).json({ error: (err as Error).message });

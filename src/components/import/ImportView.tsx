@@ -92,7 +92,32 @@ export const ImportView: React.FC<ImportViewProps> = ({
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState<boolean>(false);
   const [duplicateIndex, setDuplicateIndex] = useState<number>(0);
 
+  // Already Imported Statement Warning Modal State
+  const [isAlreadyImportedModalOpen, setIsAlreadyImportedModalOpen] = useState<boolean>(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const applyPreviewResult = (preview: ImportPreviewSummary) => {
+    setPreviewSummary(preview);
+    setItems(preview.items);
+    if (preview.isPreviouslyImportedStatement) {
+      setIsAlreadyImportedModalOpen(true);
+    }
+  };
+
+  const handleCancelImport = () => {
+    setPreviewSummary(null);
+    setItems([]);
+    setFile(null);
+    setRawFileContent(null);
+    setRawFileBase64(null);
+    setIsAlreadyImportedModalOpen(false);
+    setError(null);
+    setPdfWarning(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   useEffect(() => {
     if (!selectedAccountId && bankAccounts.length > 0) {
@@ -125,8 +150,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
         bankAccountId: selectedAccountId
       });
 
-      setPreviewSummary(res.preview);
-      setItems(res.preview.items);
+      applyPreviewResult(res.preview);
     } catch (err: unknown) {
       console.error(err);
       setError((err as Error).message || 'Erro ao carregar modelo de extrato.');
@@ -170,8 +194,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
               bankAccountId: selectedAccountId
             });
 
-            setPreviewSummary(res.preview);
-            setItems(res.preview.items);
+            applyPreviewResult(res.preview);
           } catch (err: unknown) {
             console.warn('PDF parsing error:', err);
             setPdfWarning(
@@ -218,8 +241,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
               customMapping: mappingToUse
             });
 
-            setPreviewSummary(res.preview);
-            setItems(res.preview.items);
+            applyPreviewResult(res.preview);
           } catch (err: unknown) {
             console.error(err);
             setError((err as Error).message);
@@ -264,8 +286,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
           fileType: 'OFX',
           bankAccountId: selectedAccountId
         });
-        setPreviewSummary(res.preview);
-        setItems(res.preview.items);
+        applyPreviewResult(res.preview);
         setIsProcessing(false);
         return;
       }
@@ -293,8 +314,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
         customMapping: mappingToUse
       });
 
-      setPreviewSummary(res.preview);
-      setItems(res.preview.items);
+      applyPreviewResult(res.preview);
       setIsProcessing(false);
     } catch (err: unknown) {
       console.error(err);
@@ -343,8 +363,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
         customMapping: newMapping
       });
 
-      setPreviewSummary(res.preview);
-      setItems(res.preview.items);
+      applyPreviewResult(res.preview);
       setSuccessMessage('Mapeamento aplicado com sucesso! Pré-visualização recalculada.');
     } catch (err: unknown) {
       console.error(err);
@@ -934,6 +953,56 @@ export const ImportView: React.FC<ImportViewProps> = ({
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Alerta de Extrato Já Importado Anteriormente */}
+          {previewSummary?.isPreviouslyImportedStatement && (
+            <div className="bg-amber-500/10 border-2 border-amber-500/40 p-4 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-lg">
+              <div className="flex items-start gap-3.5">
+                <div className="p-2.5 bg-amber-500/20 border border-amber-500/40 rounded-xl text-amber-400 shrink-0 mt-0.5">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-black text-amber-400 uppercase tracking-wide">
+                      Atenção: Extrato Já Importado Anteriormente
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                      {previewSummary.previouslyImportedDetails?.duplicatePercentage || 0}% de Duplicidade
+                    </span>
+                    {previewSummary.previouslyImportedDetails?.reason === 'SAME_FILENAME' && (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
+                        Mesmo Nome de Arquivo
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-zinc-300 mt-1.5 leading-relaxed">
+                    {previewSummary.previouslyImportedDetails?.reason === 'SAME_FILENAME'
+                      ? `O arquivo "${previewSummary.previouslyImportedDetails?.existingStatementFileName || fileName}" já consta registrado nas importações anteriores desta conta.`
+                      : `Este extrato (${previewSummary.previouslyImportedDetails?.minDate || ''} a ${previewSummary.previouslyImportedDetails?.maxDate || ''}) possui lançamentos idênticos aos já registrados nesta conta.`}{' '}
+                    Para preservar a integridade contábil, os lançamentos coincidentes foram automaticamente <strong>desmarcados</strong> para evitar duplicidade de saldos.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0 self-end md:self-center flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setIsAlreadyImportedModalOpen(true)}
+                  className="px-3.5 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                >
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  Ver Alerta
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancelImport}
+                  className="px-3.5 py-2 bg-zinc-800 hover:bg-red-500/20 text-zinc-300 hover:text-red-300 border border-zinc-700 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  <XCircle className="w-3.5 h-3.5" />
+                  Cancelar e Trocar Arquivo
+                </button>
               </div>
             </div>
           )}
@@ -1856,6 +1925,142 @@ export const ImportView: React.FC<ImportViewProps> = ({
                 </div>
               );
             })()}
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação: Extrato Já Importado Anteriormente */}
+      {isAlreadyImportedModalOpen && previewSummary?.isPreviouslyImportedStatement && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-zinc-900 border-2 border-amber-500/50 rounded-2xl max-w-xl w-full p-6 shadow-2xl relative text-zinc-100 space-y-5">
+            {/* Header */}
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-amber-500/20 text-amber-400 rounded-2xl border border-amber-500/40 shrink-0">
+                <AlertTriangle className="w-8 h-8" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                    Aviso de Duplicidade
+                  </span>
+                  {previewSummary.previouslyImportedDetails?.reason === 'SAME_FILENAME' && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
+                      Mesmo Nome de Arquivo
+                    </span>
+                  )}
+                  {previewSummary.previouslyImportedDetails?.reason === 'SAME_PERIOD' && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
+                      Mesmo Período
+                    </span>
+                  )}
+                  {previewSummary.previouslyImportedDetails?.reason === 'HIGH_DUPLICATE_RATIO' && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
+                      Lançamentos Coincidentes
+                    </span>
+                  )}
+                </div>
+                <h3 className="text-lg font-bold text-white mt-1">
+                  Este extrato bancário já foi importado anteriormente?
+                </h3>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Identificamos fortes indícios de que esta movimentação já foi processada nesta conta.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAlreadyImportedModalOpen(false)}
+                className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer"
+                title="Fechar aviso"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Informative Box */}
+            <div className="bg-zinc-950/80 border border-zinc-800 rounded-xl p-4 space-y-3 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-2.5 bg-zinc-900/90 rounded-lg border border-zinc-800/80">
+                  <span className="text-zinc-500 block uppercase text-[10px] font-bold">Conta Bancária</span>
+                  <span className="text-zinc-200 font-semibold">{selectedAccount?.accountName || 'Conta Selecionada'}</span>
+                </div>
+                <div className="p-2.5 bg-zinc-900/90 rounded-lg border border-zinc-800/80">
+                  <span className="text-zinc-500 block uppercase text-[10px] font-bold">Arquivo Carregado</span>
+                  <span className="text-zinc-200 font-semibold truncate block" title={fileName}>{fileName}</span>
+                </div>
+              </div>
+
+              {previewSummary.previouslyImportedDetails && (
+                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-2 text-xs">
+                  {previewSummary.previouslyImportedDetails.reason === 'SAME_FILENAME' && (
+                    <p className="text-amber-200 leading-relaxed">
+                      📁 O arquivo <strong className="text-white">"{previewSummary.previouslyImportedDetails.existingStatementFileName || fileName}"</strong> já consta registrado nas importações anteriores desta conta
+                      {previewSummary.previouslyImportedDetails.existingStatementImportedAt && (
+                        <span> (importado em {new Date(previewSummary.previouslyImportedDetails.existingStatementImportedAt).toLocaleDateString('pt-BR')} às {new Date(previewSummary.previouslyImportedDetails.existingStatementImportedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })})</span>
+                      )}.
+                    </p>
+                  )}
+                  {previewSummary.previouslyImportedDetails.minDate && previewSummary.previouslyImportedDetails.maxDate && (
+                    <p className="text-amber-200">
+                      📅 <strong>Período detectado:</strong> de {previewSummary.previouslyImportedDetails.minDate} até {previewSummary.previouslyImportedDetails.maxDate}.
+                    </p>
+                  )}
+                  <p className="text-amber-200">
+                    ⚡ <strong>{previewSummary.previouslyImportedDetails.duplicatePercentage}% dos lançamentos</strong> ({previewSummary.previouslyImportedDetails.totalDuplicates} de {previewSummary.totalRecords}) coincidem com registros já cadastrados.
+                  </p>
+                </div>
+              )}
+
+              <div className="flex items-start gap-2 text-xs text-zinc-400 bg-zinc-900/60 p-3 rounded-xl border border-zinc-800">
+                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <p>
+                  <strong>Proteção Contábil Ativa:</strong> Todos os lançamentos idênticos já foram automaticamente <strong>desmarcados</strong> para evitar duplicidade de receitas, despesas e saldos.
+                </p>
+              </div>
+            </div>
+
+            {/* Question Callout */}
+            <div className="text-center py-1">
+              <p className="text-sm font-bold text-zinc-100">
+                Deseja revisar e importar este extrato mesmo assim?
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-2 border-t border-zinc-800">
+              <button
+                type="button"
+                onClick={handleCancelImport}
+                className="w-full sm:w-auto px-4 py-2.5 bg-zinc-800 hover:bg-red-500/20 text-zinc-300 hover:text-red-300 hover:border-red-500/40 border border-zinc-700 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <XCircle className="w-4 h-4" />
+                Cancelar e Trocar Arquivo
+              </button>
+
+              <div className="flex-1 w-full flex flex-col sm:flex-row items-center justify-end gap-2.5">
+                {previewSummary.duplicateRecords > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAlreadyImportedModalOpen(false);
+                      handleOpenDuplicateModal();
+                    }}
+                    className="w-full sm:w-auto px-4 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <GitCompare className="w-4 h-4" />
+                    Comparar Duplicados Lado a Lado ({previewSummary.duplicateRecords})
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setIsAlreadyImportedModalOpen(false)}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  Sim, Continuar e Revisar
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

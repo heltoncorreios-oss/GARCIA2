@@ -243,6 +243,16 @@ export interface ImportPreviewSummary {
   detectedAccountName?: string;
   detectedStatementBalance?: ExtractedStatementBalance;
   extractedBalance?: ExtractedStatementBalance;
+  isPreviouslyImportedStatement?: boolean;
+  previouslyImportedDetails?: {
+    totalDuplicates: number;
+    duplicatePercentage: number;
+    minDate?: string;
+    maxDate?: string;
+    existingStatementFileName?: string;
+    existingStatementImportedAt?: string;
+    reason?: 'SAME_FILENAME' | 'SAME_PERIOD' | 'HIGH_DUPLICATE_RATIO';
+  };
   items: ImportPreviewItem[];
 }
 

@@ -1452,7 +1452,8 @@ class SupermarketDatabase {
       sourceLineNumber?: number;
     }>,
     bankAccountId: string,
-    extractedBalanceParam?: ExtractedStatementBalance
+    extractedBalanceParam?: ExtractedStatementBalance,
+    fileNameParam?: string
   ): ImportPreviewSummary {
     const account = this.getBankAccountById(bankAccountId);
     const extractedBalance: ExtractedStatementBalance = { ...(extractedBalanceParam || {}) };
@@ -1808,6 +1809,49 @@ class SupermarketDatabase {
       }
     }
 
+    const nonInitialItems = items.filter(it => it.type !== 'SALDO_INICIAL');
+    const nonInitialCount = nonInitialItems.length;
+    const nonInitialDuplicates = nonInitialItems.filter(it => it.isDuplicate).length;
+
+    const sortedDates = nonInitialItems.map(it => it.date).sort();
+    const rawMinDate = sortedDates[0];
+    const rawMaxDate = sortedDates[sortedDates.length - 1];
+    const minDate = rawMinDate ? rawMinDate.split('-').reverse().join('/') : undefined;
+    const maxDate = rawMaxDate ? rawMaxDate.split('-').reverse().join('/') : undefined;
+
+    const dupRatio = nonInitialCount > 0 ? (nonInitialDuplicates / nonInitialCount) : 0;
+
+    // Check past imported bank statements
+    const matchingFileNameStatement = fileNameParam
+      ? this.data.bankStatements.find(
+          s => s.bankAccountId === bankAccountId && s.fileName.toLowerCase() === fileNameParam.toLowerCase()
+        )
+      : undefined;
+
+    const matchingPeriodStatement = (rawMinDate && rawMaxDate)
+      ? this.data.bankStatements.find(
+          s => s.bankAccountId === bankAccountId && s.startDate === rawMinDate && s.endDate === rawMaxDate
+        )
+      : undefined;
+
+    let isPreviouslyImportedStatement = false;
+    let reason: 'SAME_FILENAME' | 'SAME_PERIOD' | 'HIGH_DUPLICATE_RATIO' | undefined = undefined;
+    let existingStatement = matchingFileNameStatement || matchingPeriodStatement;
+
+    if (matchingFileNameStatement) {
+      isPreviouslyImportedStatement = true;
+      reason = 'SAME_FILENAME';
+    } else if (matchingPeriodStatement && (dupRatio >= 0.4 || nonInitialDuplicates > 0)) {
+      isPreviouslyImportedStatement = true;
+      reason = 'SAME_PERIOD';
+    } else if (
+      nonInitialCount > 0 &&
+      ((nonInitialCount >= 3 && dupRatio >= 0.70) || (nonInitialCount < 3 && nonInitialDuplicates === nonInitialCount))
+    ) {
+      isPreviouslyImportedStatement = true;
+      reason = 'HIGH_DUPLICATE_RATIO';
+    }
+
     return {
       totalRecords,
       newRecords,
@@ -1821,6 +1865,16 @@ class SupermarketDatabase {
       totalSaidasCount,
       detectedAccountName: account?.accountName,
       extractedBalance,
+      isPreviouslyImportedStatement,
+      previouslyImportedDetails: isPreviouslyImportedStatement ? {
+        totalDuplicates: nonInitialDuplicates,
+        duplicatePercentage: Math.round(dupRatio * 100),
+        minDate,
+        maxDate,
+        existingStatementFileName: existingStatement?.fileName,
+        existingStatementImportedAt: existingStatement?.importedAt,
+        reason
+      } : undefined,
       items
     };
   }
