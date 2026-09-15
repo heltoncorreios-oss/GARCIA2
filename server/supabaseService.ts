@@ -105,7 +105,11 @@ function withTimeout<T>(promise: Promise<T>, ms = 3000): Promise<T> {
   ]);
 }
 
+let tablesEnsured = false;
+
 export async function ensureSupabaseTables(): Promise<boolean> {
+  if (tablesEnsured) return true;
+
   const connectionString = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL;
   if (!connectionString) return false;
 
@@ -160,6 +164,9 @@ export async function ensureSupabaseTables(): Promise<boolean> {
 
     await withTimeout(pool.query(schemaQuery), 2500);
     await pool.end();
+    
+    // Set to true so we don't spam 'reload schema' on every sync
+    tablesEnsured = true;
     return true;
   } catch (err) {
     console.warn('[Supabase] Aviso: DDL tables check skipped or not supported on pooler connection:', (err as Error).message);
