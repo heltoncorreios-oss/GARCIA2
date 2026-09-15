@@ -219,6 +219,7 @@ export interface ImportPreviewItem {
   duplicateReason?: string;
   existingTransaction?: Transaction;
   forceImport?: boolean;
+  resolvedDuplicate?: 'KEPT_EXISTING' | 'FORCED_IMPORT';
   hasError: boolean;
   errorMessage?: string;
   isAutoClassified: boolean;

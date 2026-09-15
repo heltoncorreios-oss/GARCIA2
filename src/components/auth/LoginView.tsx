@@ -46,6 +46,9 @@ export const LoginView: React.FC = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [inactivityNotice, setInactivityNotice] = useState<boolean>(() => {
+    return safeStorage.getItem('session_expired_inactivity') === 'true';
+  });
 
   // Password Recovery Mode State
   const [isForgotPasswordMode, setIsForgotPasswordMode] = useState<boolean>(false);
@@ -286,6 +289,19 @@ export const LoginView: React.FC = () => {
         {/* 1. Normal Login Form */}
         {!isForgotPasswordMode && !isRegisterMode && (
           <form onSubmit={handleLogin} className="space-y-4 pt-1">
+            {/* Inactivity Warning Banner */}
+            {inactivityNotice && (
+              <div
+                id="inactivity-notice-message"
+                className="p-3.5 rounded-xl bg-amber-50 border border-amber-300 flex items-start gap-2.5 text-xs text-amber-900 font-bold animate-in fade-in duration-200"
+              >
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <span className="leading-snug">
+                  Sua sessão foi encerrada automaticamente por 5 minutos de inatividade por motivos de segurança financeira. Faça login novamente para prosseguir.
+                </span>
+              </div>
+            )}
+
             {/* Error banner */}
             {errorMessage && (
               <div

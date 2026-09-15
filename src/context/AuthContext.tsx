@@ -200,6 +200,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [loadUserProfile]);
 
+  // Monitoramento de inatividade de 5 minutos (300.000 ms)
+  useEffect(() => {
+    if (!user && !session) return;
+
+    const INACTIVITY_LIMIT_MS = 5 * 60 * 1000;
+    let lastActivityTime = Date.now();
+
+    const updateActivity = () => {
+      lastActivityTime = Date.now();
+    };
+
+    const events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    events.forEach((evt) => window.addEventListener(evt, updateActivity, { passive: true }));
+
+    const timer = setInterval(() => {
+      if (Date.now() - lastActivityTime >= INACTIVITY_LIMIT_MS) {
+        console.warn('[AuthContext] Sessão encerrada automaticamente por 5 minutos de inatividade.');
+        safeStorage.setItem('session_expired_inactivity', 'true');
+        signOut();
+      }
+    }, 10000);
+
+    return () => {
+      events.forEach((evt) => window.removeEventListener(evt, updateActivity));
+      clearInterval(timer);
+    };
+  }, [user, session]);
+
   const signIn = async (
     email: string,
     password: string,
@@ -248,6 +276,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data?.session) {
+        safeStorage.removeItem('session_expired_inactivity');
         setSession(data.session);
         setUser(data.user);
         setApiAuthToken(data.session.access_token);
@@ -447,6 +476,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user: previewAdminUser
     };
 
+    safeStorage.removeItem('session_expired_inactivity');
     safeStorage.setItem('preview_session_active', 'true');
     setSession(previewSession);
     setUser(previewAdminUser);

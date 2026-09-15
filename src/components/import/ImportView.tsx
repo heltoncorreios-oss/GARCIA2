@@ -27,7 +27,8 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  ShieldAlert
+  ShieldAlert,
+  ShieldCheck
 } from 'lucide-react';
 import {
   BankAccount,
@@ -404,17 +405,20 @@ export const ImportView: React.FC<ImportViewProps> = ({
     setSuccessMessage(`${errorCount} operação(ões) com colunas vazias ou dados incompletos foram excluídas do lote. Nenhum valor fictício foi adicionado.`);
   };
 
-  // List of all items currently flagged as duplicate or forced
-  const duplicateItemsList = items.filter((i) => i.isDuplicate || i.forceImport);
+  // List of all items currently flagged as duplicate or resolved duplicates
+  const duplicateItemsList = items.filter(
+    (i) => i.isDuplicate || i.forceImport || i.resolvedDuplicate === 'KEPT_EXISTING'
+  );
 
   const handleOpenDuplicateModal = (tempId?: string) => {
-    const dups = items.filter((i) => i.isDuplicate || i.forceImport);
+    const dups = items.filter((i) => i.isDuplicate || i.forceImport || i.resolvedDuplicate === 'KEPT_EXISTING');
     if (dups.length === 0) return;
     if (tempId) {
       const idx = dups.findIndex((i) => i.tempId === tempId);
       setDuplicateIndex(idx >= 0 ? idx : 0);
     } else {
-      setDuplicateIndex(0);
+      const unresolvedIdx = dups.findIndex((i) => i.isDuplicate);
+      setDuplicateIndex(unresolvedIdx >= 0 ? unresolvedIdx : 0);
     }
     setIsDuplicateModalOpen(true);
   };
@@ -423,7 +427,13 @@ export const ImportView: React.FC<ImportViewProps> = ({
     setItems((prev) => {
       const next = prev.map((it) =>
         it.tempId === tempId
-          ? { ...it, selected: false, forceImport: false, isDuplicate: true }
+          ? {
+              ...it,
+              selected: false,
+              forceImport: false,
+              isDuplicate: false,
+              resolvedDuplicate: 'KEPT_EXISTING' as const
+            }
           : it
       );
       const remaining = next.filter((i) => i.isDuplicate);
@@ -440,7 +450,14 @@ export const ImportView: React.FC<ImportViewProps> = ({
     setItems((prev) => {
       const next = prev.map((it) =>
         it.tempId === tempId
-          ? { ...it, selected: true, forceImport: true, isDuplicate: false, duplicateReason: undefined }
+          ? {
+              ...it,
+              selected: true,
+              forceImport: true,
+              isDuplicate: false,
+              resolvedDuplicate: 'FORCED_IMPORT' as const,
+              duplicateReason: undefined
+            }
           : it
       );
       const remaining = next.filter((i) => i.isDuplicate);
@@ -454,21 +471,40 @@ export const ImportView: React.FC<ImportViewProps> = ({
   };
 
   const handleIgnoreAllDuplicates = () => {
+    let count = 0;
     setItems((prev) =>
-      prev.map((it) =>
-        it.isDuplicate ? { ...it, selected: false, forceImport: false } : it
-      )
+      prev.map((it) => {
+        if (it.isDuplicate || it.forceImport) {
+          count++;
+          return {
+            ...it,
+            selected: false,
+            forceImport: false,
+            isDuplicate: false,
+            resolvedDuplicate: 'KEPT_EXISTING' as const
+          };
+        }
+        return it;
+      })
     );
-    setSuccessMessage('Lançamentos duplicados foram desmarcados e mantidos apenas os já existentes no sistema.');
+    setSuccessMessage(`${count} lançamento(s) duplicado(s) foram desmarcados e mantidos apenas os já existentes no sistema.`);
+    setIsDuplicateModalOpen(false);
   };
 
   const handleForceAllDuplicates = () => {
     let count = 0;
     setItems((prev) =>
       prev.map((it) => {
-        if (it.isDuplicate || it.forceImport) {
+        if (it.isDuplicate || it.resolvedDuplicate === 'KEPT_EXISTING' || it.forceImport) {
           count++;
-          return { ...it, isDuplicate: false, selected: true, forceImport: true, duplicateReason: undefined };
+          return {
+            ...it,
+            isDuplicate: false,
+            selected: true,
+            forceImport: true,
+            resolvedDuplicate: 'FORCED_IMPORT' as const,
+            duplicateReason: undefined
+          };
         }
         return it;
       })
@@ -652,8 +688,8 @@ export const ImportView: React.FC<ImportViewProps> = ({
 
   // Filter items in preview table
   const filteredItems = items.filter((it) => {
-    if (activeFilter === 'NOVOS') return !it.isDuplicate && !it.hasError;
-    if (activeFilter === 'DUPLICADOS') return it.isDuplicate;
+    if (activeFilter === 'NOVOS') return !it.isDuplicate && !it.hasError && it.resolvedDuplicate !== 'KEPT_EXISTING';
+    if (activeFilter === 'DUPLICADOS') return it.isDuplicate || it.forceImport || it.resolvedDuplicate === 'KEPT_EXISTING';
     if (activeFilter === 'ERROS') return it.hasError;
     if (activeFilter === 'AUTO') return it.isAutoClassified && !it.hasError;
     if (activeFilter === 'NAO_CLASSIFICADOS') return !it.isAutoClassified || it.operationType === 'NAO_CLASSIFICADO';
@@ -1460,7 +1496,22 @@ export const ImportView: React.FC<ImportViewProps> = ({
                                 onClick={() => handleResolveDuplicateKeepExisting(it.tempId)}
                                 className="text-[9px] text-zinc-900 font-semibold hover:text-amber-700 font-bold underline mt-0.5 cursor-pointer"
                               >
-                                Desfazer
+                                Desfazer / Manter Existente
+                              </button>
+                            </div>
+                          ) : it.resolvedDuplicate === 'KEPT_EXISTING' ? (
+                            <div className="flex flex-col items-center justify-center gap-1 p-1.5 rounded-xl bg-zinc-800/80 border border-zinc-700 text-zinc-300 max-w-[210px] mx-auto text-center">
+                              <span className="text-[10px] font-extrabold text-zinc-300 flex items-center gap-1 uppercase tracking-wider">
+                                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                                Mantido Existente
+                              </span>
+                              <span className="text-[9px] text-zinc-400">Não será importado</span>
+                              <button
+                                type="button"
+                                onClick={() => handleResolveDuplicateForceImport(it.tempId)}
+                                className="text-[9px] text-amber-400 font-bold hover:underline mt-0.5 cursor-pointer"
+                              >
+                                Forçar Importação
                               </button>
                             </div>
                           ) : it.duplicateLevel === 'SIMILAR' ? (
