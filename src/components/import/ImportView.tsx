@@ -420,35 +420,37 @@ export const ImportView: React.FC<ImportViewProps> = ({
   };
 
   const handleResolveDuplicateKeepExisting = (tempId: string) => {
-    setItems((prev) =>
-      prev.map((it) =>
+    setItems((prev) => {
+      const next = prev.map((it) =>
         it.tempId === tempId
           ? { ...it, selected: false, forceImport: false, isDuplicate: true }
           : it
-      )
-    );
-    const updatedDups = items.filter((i) => (i.isDuplicate || i.forceImport) && i.tempId !== tempId);
-    if (updatedDups.length > 0) {
-      setDuplicateIndex((prev) => Math.min(prev, updatedDups.length - 1));
-    } else {
-      setIsDuplicateModalOpen(false);
-    }
+      );
+      const remaining = next.filter((i) => i.isDuplicate);
+      if (remaining.length === 0) {
+        setIsDuplicateModalOpen(false);
+      } else {
+        setDuplicateIndex((oldIdx) => Math.min(oldIdx, remaining.length - 1));
+      }
+      return next;
+    });
   };
 
   const handleResolveDuplicateForceImport = (tempId: string) => {
-    setItems((prev) =>
-      prev.map((it) =>
+    setItems((prev) => {
+      const next = prev.map((it) =>
         it.tempId === tempId
           ? { ...it, selected: true, forceImport: true, isDuplicate: false, duplicateReason: undefined }
           : it
-      )
-    );
-    const updatedDups = items.filter((i) => (i.isDuplicate || i.forceImport) && i.tempId !== tempId);
-    if (updatedDups.length > 0) {
-      setDuplicateIndex((prev) => Math.min(prev, updatedDups.length - 1));
-    } else {
-      setIsDuplicateModalOpen(false);
-    }
+      );
+      const remaining = next.filter((i) => i.isDuplicate);
+      if (remaining.length === 0) {
+        setIsDuplicateModalOpen(false);
+      } else {
+        setDuplicateIndex((oldIdx) => Math.min(oldIdx, remaining.length - 1));
+      }
+      return next;
+    });
   };
 
   const handleIgnoreAllDuplicates = () => {
@@ -483,6 +485,9 @@ export const ImportView: React.FC<ImportViewProps> = ({
     itemOpType?: string
   ) => {
     try {
+      setIsProcessing(true);
+      setError(null);
+
       // Extract clean supplier name / meaningful keyword
       let cleanKeyword = description.trim();
       const tokens = cleanKeyword
@@ -500,14 +505,39 @@ export const ImportView: React.FC<ImportViewProps> = ({
         userName: 'Administrador'
       });
 
-      // Liberar todos os itens do lote que contenham essa palavra-chave
-      let count = 0;
-      setItems((prev) =>
-        prev.map((it) => {
+      if (description.trim().toUpperCase() !== cleanKeyword.toUpperCase()) {
+        await apiService.allowDuplicateForKeyword({
+          keyword: description.trim(),
+          operationType: itemOpType || 'Boleto pago',
+          categoryId: itemCategoryId,
+          categoryName: itemCategoryName,
+          userName: 'Administrador'
+        });
+      }
+
+      const targetKey = cleanKeyword.toUpperCase();
+      const origKey = description.trim().toUpperCase();
+
+      let newlyUnlockedCount = 0;
+
+      // Update items state directly and cleanly
+      setItems((prev) => {
+        const next = prev.map((it) => {
           const itDesc = (it.description || '').toUpperCase();
-          const targetKey = cleanKeyword.toUpperCase();
-          if (itDesc.includes(targetKey) || targetKey.includes(itDesc)) {
-            count++;
+          const normItDesc = (it.normalizedDescription || '').toUpperCase();
+
+          const matches =
+            itDesc.includes(targetKey) ||
+            targetKey.includes(itDesc) ||
+            itDesc.includes(origKey) ||
+            origKey.includes(itDesc) ||
+            normItDesc.includes(targetKey) ||
+            normItDesc.includes(origKey);
+
+          if (matches) {
+            if (it.isDuplicate || !it.selected) {
+              newlyUnlockedCount++;
+            }
             return {
               ...it,
               isDuplicate: false,
@@ -517,26 +547,34 @@ export const ImportView: React.FC<ImportViewProps> = ({
             };
           }
           return it;
-        })
-      );
+        });
 
-      setSuccessMessage(`Regra criada com sucesso para "${cleanKeyword}"! ${count} lançamento(s) foram liberados e habilitados.`);
+        const remainingDups = next.filter((i) => i.isDuplicate);
+        if (remainingDups.length === 0) {
+          setIsDuplicateModalOpen(false);
+        } else {
+          setDuplicateIndex(0);
+        }
 
-      // Update duplicate list
-      const remainingDups = items.filter(
-        (i) =>
-          (i.isDuplicate || i.forceImport) &&
-          !i.description.toUpperCase().includes(cleanKeyword.toUpperCase()) &&
-          !cleanKeyword.toUpperCase().includes(i.description.toUpperCase())
-      );
+        return next;
+      });
 
-      if (remainingDups.length === 0) {
-        setIsDuplicateModalOpen(false);
-      } else {
-        setDuplicateIndex((prev) => Math.min(prev, remainingDups.length - 1));
-      }
+      // Update preview summary metrics
+      setPreviewSummary((prevSummary) => {
+        if (!prevSummary) return prevSummary;
+        return {
+          ...prevSummary,
+          duplicateRecords: Math.max(0, prevSummary.duplicateRecords - newlyUnlockedCount),
+          newRecords: prevSummary.newRecords + newlyUnlockedCount
+        };
+      });
+
+      setSuccessMessage(`Regra criada com sucesso para "${cleanKeyword}"! Os lançamentos correspondentes foram liberados e ativados para importação.`);
     } catch (err: unknown) {
+      console.error(err);
       setError(`Erro ao criar regra de duplicidade: ${(err as Error).message}`);
+    } finally {
+      setIsProcessing(false);
     }
   };
 

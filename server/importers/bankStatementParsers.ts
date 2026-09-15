@@ -12,7 +12,7 @@ const getRequire = () => {
   return createRequire(path.join(process.cwd(), 'package.json'));
 };
 const customRequire = getRequire();
-import { ColumnMapping, ExtractedStatementBalance, StatementFileType } from '../../src/types';
+import { ColumnMapping, ExtractedStatementBalance, StatementFileType } from '../../src/types/index.ts';
 
 export interface RawParsedTransaction {
   date: string; // YYYY-MM-DD (Data da movimentação)

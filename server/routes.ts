@@ -19,7 +19,7 @@ import {
 import { ColumnMapping, ImportPreviewItem, StatementFileType } from '../src/types';
 import { calculateConsolidatedBalance } from '../src/utils/consolidatedBalance';
 import { runFinancialUnitTests } from './financialTests';
-import { getSupabaseClient, isSupabaseConfigured, resetSupabaseClient } from './supabaseService';
+import { getSupabaseClient, isSupabaseConfigured, resetSupabaseClient, diagnoseSupabaseConnection } from './supabaseService';
 import { getSqliteDatabaseInfo, getSqliteDbPath, saveUserProfileSqlite, saveAppSetting } from './sqliteService';
 import {
   getUserProfiles,
@@ -81,62 +81,38 @@ apiRouter.all('/auth/enable-master', async (req: Request, res: Response) => {
   }
 });
 
+// Endpoint de diagnóstico completo do Supabase
+apiRouter.get('/supabase/diagnose', async (req: Request, res: Response) => {
+  try {
+    const diag = await diagnoseSupabaseConnection();
+    res.json(diag);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Erro ao realizar diagnóstico.' });
+  }
+});
+
 // Endpoint para verificar o status de conexão com o Supabase e repositório
 apiRouter.get('/supabase/status', async (req: Request, res: Response) => {
-  const configured = isSupabaseConfigured();
-  let connected = false;
-  let errorMsg = null;
-  let tablesReady = false;
-  let rlsBlocked = false;
-
+  const diag = await diagnoseSupabaseConnection();
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
   const anonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
   const dbUrl = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL || '';
 
-  if (configured) {
-    try {
-      const client = getSupabaseClient();
-      if (client) {
-        const { data, error } = await client.from('bank_accounts').select('id').limit(1);
-        if (!error) {
-          connected = true;
-          tablesReady = true;
-
-          // Testar se gravação de dados está bloqueada pelo RLS (código 42501)
-          const testWrite = await client.from('audit_logs').upsert([{
-            id: 'test_rls_check',
-            data: { type: 'RLS_CHECK', date: new Date().toISOString() },
-            updated_at: new Date().toISOString()
-          }], { onConflict: 'id' });
-
-          if (testWrite.error) {
-            if (testWrite.error.code === '42501' || testWrite.error.message.includes('row-level security')) {
-              rlsBlocked = true;
-              errorMsg = 'Row Level Security (RLS) está bloqueando inserções no Supabase (Erro 42501). Execute o script DDL com "DISABLE ROW LEVEL SECURITY" no SQL Editor do Supabase ou adicione a Service Role Key.';
-            } else {
-              errorMsg = testWrite.error.message;
-            }
-          }
-        } else {
-          errorMsg = error.message;
-        }
-      }
-    } catch (err: any) {
-      errorMsg = err.message;
-    }
-  }
-
   res.json({
-    configured,
-    connected,
-    tablesReady,
-    rlsBlocked,
+    configured: diag.urlConfigured && diag.keyConfigured,
+    connected: diag.connected,
+    tablesReady: diag.transactionsAccessible,
+    rlsBlocked: !diag.insertPermitted,
     supabaseUrl: url ? url.replace(/https:\/\/(.*?)\.supabase\.co/, 'https://[PROJECT_ID].supabase.co') : '',
     hasAnonKey: Boolean(anonKey),
     hasServiceRoleKey: Boolean(serviceRoleKey),
     hasDatabaseUrl: Boolean(dbUrl),
-    error: errorMsg
+    errorCategory: diag.errorCategory,
+    error: diag.detailedError,
+    baseDataInitAllowed: diag.baseDataInitAllowed,
+    baseDataInitReason: diag.baseDataInitReason,
+    diagnostic: diag
   });
 });
 
@@ -1049,10 +1025,14 @@ apiRouter.post('/import/preview', async (req: Request, res: Response) => {
       } else {
         const newAcc = db.createBankAccount({
           accountName: 'Conta Principal',
+          bankName: 'Banco Genérico',
           bankCode: '000',
           agency: '',
           accountNumber: '',
-          initialBalance: 0
+          accountType: 'CORRENTE',
+          initialBalance: 0,
+          initialBalanceDate: new Date().toISOString().substring(0, 10),
+          isActive: true
         }, 'Sistema');
         finalBankAccountId = newAcc.id;
       }
@@ -1168,10 +1148,14 @@ apiRouter.post('/import/confirm', (req: Request, res: Response) => {
       } else {
         const newAcc = db.createBankAccount({
           accountName: 'Conta Principal',
+          bankName: 'Banco Genérico',
           bankCode: '000',
           agency: '',
           accountNumber: '',
-          initialBalance: 0
+          accountType: 'CORRENTE',
+          initialBalance: 0,
+          initialBalanceDate: new Date().toISOString().substring(0, 10),
+          isActive: true
         }, 'Sistema');
         finalBankAccountId = newAcc.id;
       }

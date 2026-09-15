@@ -71,17 +71,15 @@ export async function addAuditLog(entry: {
         updated_at: log.timestamp
       }]),
       2000
-    ).catch(err => {
-      console.warn('[Auditoria] Falha ao persistir no Supabase:', err.message);
-    });
+    ).catch(() => {});
   }
 
   return log;
 }
 
-function withTimeout<T>(promise: Promise<T>, ms = 2500): Promise<T> {
+function withTimeout<T>(promise: PromiseLike<T>, ms = 2500): Promise<T> {
   return Promise.race([
-    promise,
+    Promise.resolve(promise),
     new Promise<T>((_, reject) => {
       const timer = setTimeout(() => reject(new Error('Supabase request timeout')), ms);
       if (timer && typeof (timer as any).unref === 'function') {
@@ -131,9 +129,7 @@ export async function ensureInitialized(): Promise<void> {
     isInitialized = true;
 
     // 5. Em background (sem bloquear requisições da aplicação), sincronizar com Supabase se configurado
-    syncWithSupabaseBackground().catch(err => {
-      console.warn('[UserManagement] Sincronização background com Supabase falhou:', err?.message || err);
-    });
+    syncWithSupabaseBackground().catch(() => {});
   })();
 
   return initPromise;

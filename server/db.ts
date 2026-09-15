@@ -18,7 +18,8 @@ import {
   ensureSupabaseTables,
   loadFromSupabase,
   syncToSupabase,
-  deleteFromSupabase
+  deleteFromSupabase,
+  diagnoseSupabaseConnection
 } from './supabaseService.js';
 import {
   loadAllFromSqlite,
@@ -190,18 +191,55 @@ class SupermarketDatabase {
     this.supabaseSyncPromise = (async () => {
       try {
         await ensureSupabaseTables();
-        const cloudData = await loadFromSupabase();
-        if (cloudData && cloudData.bankAccounts && cloudData.bankAccounts.length > 0) {
-          this.data = cloudData;
-          this.recalculateAllAccountBalances();
-          console.log('[Supabase] Dados do banco de dados em nuvem carregados com sucesso!');
-        } else {
-          await syncToSupabase(this.data);
-          console.log('[Supabase] Banco de dados em nuvem inicializado com dados base.');
+
+        // Executar diagnóstico de conexão antes de qualquer sincronização ou inicialização
+        const diag = await diagnoseSupabaseConnection();
+
+        if (!diag.connected || !diag.transactionsAccessible || !diag.selectWorking) {
+          console.log('[SUPABASE] CONEXÃO FALHOU');
+          console.log(`[SUPABASE] Motivo real: ${diag.detailedError || 'Sem resposta do PostgREST/Supabase'}`);
+          console.log('[SUPABASE] Inicialização de dados base BLOQUEADA');
+          return;
         }
-        this.isSupabaseInit = true;
-      } catch (err) {
-        console.error('[Supabase] Erro ao sincronizar com Supabase:', err);
+
+        console.log('[SUPABASE] bank_accounts acessível');
+        console.log('[SUPABASE] categories acessível');
+        console.log('[SUPABASE] Dados existentes preservados');
+
+        const cloudData = await loadFromSupabase();
+
+        if (cloudData) {
+          const totalRecords =
+            (cloudData.bankAccounts?.length || 0) +
+            (cloudData.categories?.length || 0) +
+            (cloudData.operationTypes?.length || 0) +
+            (cloudData.transactions?.length || 0) +
+            (cloudData.bankStatements?.length || 0);
+
+          if (totalRecords > 0) {
+            this.data = cloudData;
+            this.recalculateAllAccountBalances();
+            console.log('[SUPABASE] Dados do banco de dados em nuvem carregados com sucesso!');
+            console.log('[SUPABASE] Inicialização de dados base: NÃO NECESSÁRIA');
+            this.isSupabaseInit = true;
+          } else {
+            // Nuvem confirmada conectada E totalmente vazia: Inicializar dados base
+            console.log('[SUPABASE] Conexão confirmada e tabelas vazias na nuvem. Sincronizando dados base...');
+            const syncOk = await syncToSupabase(this.data);
+            if (syncOk) {
+              console.log('[SUPABASE] Banco de dados em nuvem inicializado com dados base.');
+              this.isSupabaseInit = true;
+            } else {
+              console.log('[SUPABASE] Inicialização de dados base: PARCIAL OU BLOQUEADA por falha no upsert.');
+            }
+          }
+        } else {
+          console.log('[SUPABASE] CONEXÃO FALHOU');
+          console.log('[SUPABASE] Motivo real: Falha ao consultar registros no Supabase (loadFromSupabase retornou nulo). NENHUM dado local foi sobrescrito.');
+          console.log('[SUPABASE] Inicialização de dados base BLOQUEADA');
+        }
+      } catch (err: any) {
+        console.error('[SUPABASE] Erro no fluxo de inicialização do Supabase:', err.message || err);
       } finally {
         this.supabaseSyncPromise = null;
       }
@@ -602,6 +640,27 @@ class SupermarketDatabase {
   public isDuplicateAllowed(description: string): boolean {
     if (!description) return false;
     const norm = this.normalizeText(description);
+
+    // Auto-allow multiple same-day entries for bank tariffs, fees, yields, PIX, applications and common statement lines
+    if (
+      norm.includes('TARIFA') ||
+      norm.includes('TAXA') ||
+      norm.includes('RENTAB') ||
+      norm.includes('FACILCRED') ||
+      norm.includes('CESTA') ||
+      norm.includes('IOF') ||
+      norm.includes('IMPOSTO') ||
+      norm.includes('PIX') ||
+      norm.includes('COBRANCA') ||
+      norm.includes('RECEBIMENTO') ||
+      norm.includes('PAGTO') ||
+      norm.includes('CHEQUE') ||
+      norm.includes('APLIC') ||
+      norm.includes('RESGATE')
+    ) {
+      return true;
+    }
+
     const rules = this.data.classificationRules.filter(r => r.isActive && r.allowMultipleSameDay);
     for (const rule of rules) {
       const ruleKeywordNorm = this.normalizeText(rule.keyword);
@@ -1540,15 +1599,20 @@ class SupermarketDatabase {
 
           if (bothHaveDoc) {
             if (normDoc === txNormDoc) {
-              // NÍVEL 1 — DUPLICIDADE EXATA COM DOCUMENTO (TESTE 5)
-              exactDbMatch = tx;
-              break;
+              // NÍVEL 1 — DUPLICIDADE EXATA COM MESMO DOCUMENTO
+              if (!allowsMultiple) {
+                exactDbMatch = tx;
+                break;
+              }
             } else {
-              // TESTE 3: Mesma data + mesma descrição + mesmo valor + documentos diferentes -> NÃO considerar duplicidade exata!
+              // Documentos diferentes -> Lançamentos distintos!
               similarDocDbMatch = tx;
             }
+          } else if (normDoc) {
+            // O extrato possui documento próprio e o banco não possui: considerados distintos por haver documento
+            similarDocDbMatch = tx;
           } else {
-            // NÍVEL 2 — SEM DOCUMENTO
+            // NÍVEL 2 — AMBOS SEM DOCUMENTO
             if (!allowsMultiple) {
               noDocDbMatch = tx;
             }
@@ -1563,7 +1627,7 @@ class SupermarketDatabase {
           duplicateLevel = 'EXACT';
           duplicateMatchReason = 'DUPLICIDADE_EXATA';
           duplicateSource = 'BANCO';
-          duplicateReason = `Duplicidade exata: Lançamento de ${inferredType} R$ ${formattedAmountBR} em ${formattedDateBR} com documento "${cleanDoc}" já cadastrado no sistema.`;
+          duplicateReason = `Duplicidade exata: Lançamento de ${inferredType} R$ ${formattedAmountBR} em ${formattedDateBR} com mesmo documento "${cleanDoc}" já cadastrado no sistema.`;
           existingTransaction = exactDbMatch;
         } else if (noDocDbMatch) {
           isDuplicate = true;
@@ -1573,20 +1637,20 @@ class SupermarketDatabase {
           duplicateReason = `Duplicidade exata (sem documento): Lançamento de ${inferredType} R$ ${formattedAmountBR} em ${formattedDateBR} com mesmo valor e histórico já cadastrado no sistema.`;
           existingTransaction = noDocDbMatch;
         } else if (similarDocDbMatch) {
-          // NÍVEL 3: Registros semelhantes com documentos diferentes
-          // Não bloqueia a importação automaticamente (isDuplicate = false, selected = true)
+          // NÍVEL 3: Registros de mesmo valor e data, porém com documentos diferentes
+          // Apto para importação (isDuplicate = false, selected = true)
           isDuplicate = false;
           duplicateLevel = 'SIMILAR';
           duplicateMatchReason = 'REGISTROS_SEMELHANTES';
           duplicateSource = 'BANCO';
-          duplicateReason = `Registros semelhantes, mas não idênticos: Mesma data e valor, porém com números de documentos diferentes (Extrato: "${cleanDoc}" vs Sistema: "${similarDocDbMatch.externalId || similarDocDbMatch.id}").`;
+          duplicateReason = `Lançamentos de mesmo valor e data com números de documentos diferentes (Extrato: "${cleanDoc}" vs Sistema: "${similarDocDbMatch.externalId || similarDocDbMatch.id}"). Liberado para importação.`;
           existingTransaction = similarDocDbMatch;
         }
 
         // B. Check DUPLICIDADE DENTRO DO PRÓPRIO ARQUIVO (ARQUIVO x ARQUIVO)
-        // Regra: Duas linhas no mesmo extrato só são duplicatas se tiverem o MESMO NÚMERO DE DOCUMENTO NÃO-VAZIO.
-        // Se os documentos forem diferentes ou não houver documento, são duas movimentações bancárias legítimas distintas.
-        if (!isDuplicate && normDoc) {
+        // Regra: Duas linhas no mesmo extrato com mesmo valor e data só são duplicatas se tiverem o MESMO NÚMERO DE DOCUMENTO.
+        // Se tiverem números de documento diferentes (ex: boleto 55622 e boleto 55623), são movimentações bancárias legítimas distintas.
+        if (!isDuplicate && !allowsMultiple) {
           const priorItem = items.find(it => {
             if (it.type === 'SALDO_INICIAL') return false;
             const itDate = (it.date || '').substring(0, 10);
@@ -1602,8 +1666,23 @@ class SupermarketDatabase {
             const itDoc = it.externalId ? it.externalId.trim() : '';
             const itNormDoc = itDoc ? this.normalizeText(itDoc).replace(/\s+/g, '') : '';
 
-            // Só considera duplicado interno se ambos tiverem documento preenchido e IDÊNTICO
-            return Boolean(normDoc && itNormDoc && normDoc === itNormDoc);
+            // Se as duas linhas do extrato possuem saldos acumulados diferentes (balanceAfter), são movimentações bancárias distintas legítimas no extrato
+            if (typeof it.balanceAfter === 'number' && typeof row.balanceAfter === 'number' && Math.abs(it.balanceAfter - row.balanceAfter) >= 0.005) {
+              return false;
+            }
+
+            // Se ambos têm documento: são duplicados se os documentos forem IDÊNTICOS
+            if (normDoc && itNormDoc) {
+              return normDoc === itNormDoc;
+            }
+
+            // Se um possui documento e o outro não: têm diferença de documento -> NÃO são duplicados
+            if (normDoc || itNormDoc) {
+              return false;
+            }
+
+            // Se ambos não possuem documento e não há regra para liberar múltiplos: considera duplicado interno
+            return true;
           });
 
           if (priorItem) {

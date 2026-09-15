@@ -12,6 +12,62 @@ export interface DatabaseSchema {
   mappingTemplates: any[];
 }
 
+export type SupabaseErrorCategory =
+  | 'AUTH_CONFIG'
+  | 'NETWORK'
+  | 'TIMEOUT'
+  | 'HTTP_POSTGREST'
+  | 'TABLE_MISSING'
+  | 'COLUMN_MISSING'
+  | 'RLS_PERMISSION'
+  | 'DATA_CONSTRAINT'
+  | 'SCHEMA_CACHE'
+  | 'UNKNOWN';
+
+export interface CategorizedError {
+  category: SupabaseErrorCategory;
+  message: string;
+  code?: string;
+  isRetryable: boolean;
+}
+
+export function categorizeSupabaseError(error: any): CategorizedError {
+  if (!error) {
+    return { category: 'UNKNOWN', message: 'Nenhum erro reportado', isRetryable: false };
+  }
+  const msg = (error.message || error.toString() || '').toLowerCase();
+  const code = (error.code || error.status || '').toString();
+
+  if (code === '42501' || msg.includes('row-level security') || msg.includes('rls')) {
+    return { category: 'RLS_PERMISSION', message: error.message || 'Row Level Security (RLS) bloqueou o acesso', code, isRetryable: false };
+  }
+  if (msg.includes('schema cache') || (msg.includes('pgrst') && msg.includes('cache'))) {
+    return { category: 'SCHEMA_CACHE', message: error.message || 'Cache de esquema PostgREST em atualização', code, isRetryable: true };
+  }
+  if (code === '42P01' || (msg.includes('relation') && msg.includes('does not exist'))) {
+    return { category: 'TABLE_MISSING', message: error.message || 'Tabela não encontrada no PostgreSQL', code, isRetryable: false };
+  }
+  if (code === '42703' || code === 'PGRST204' || (msg.includes('column') && msg.includes('does not exist'))) {
+    return { category: 'COLUMN_MISSING', message: error.message || 'Coluna não encontrada na tabela', code, isRetryable: false };
+  }
+  if (code === '401' || code === '403' || msg.includes('invalid api key') || msg.includes('jwt') || msg.includes('auth')) {
+    return { category: 'AUTH_CONFIG', message: error.message || 'Erro de autenticação ou chave inválida', code, isRetryable: false };
+  }
+  if (msg.includes('econnrefused') || msg.includes('enotfound') || msg.includes('fetch failed') || msg.includes('network')) {
+    return { category: 'NETWORK', message: error.message || 'Erro de conexão de rede com o Supabase', code, isRetryable: true };
+  }
+  if (msg.includes('timeout') || msg.includes('timed out')) {
+    return { category: 'TIMEOUT', message: error.message || 'Tempo limite excedido ao comunicar com o Supabase', code, isRetryable: true };
+  }
+  if (code.startsWith('23')) {
+    return { category: 'DATA_CONSTRAINT', message: error.message || 'Violação de chave ou restrição de banco', code, isRetryable: false };
+  }
+  if (code.startsWith('PGRST') || (error.status && error.status >= 400)) {
+    return { category: 'HTTP_POSTGREST', message: error.message || 'Erro de resposta PostgREST HTTP', code, isRetryable: false };
+  }
+  return { category: 'UNKNOWN', message: error.message || String(error), code, isRetryable: false };
+}
+
 let supabaseInstance: SupabaseClient | null = null;
 let lastUrl = '';
 let lastKey = '';
@@ -51,6 +107,175 @@ export function getSupabaseClient(): SupabaseClient | null {
     }
   }
   return supabaseInstance;
+}
+
+export interface SupabaseDiagnosticResult {
+  urlConfigured: boolean;
+  keyConfigured: boolean;
+  clientCreated: boolean;
+  connected: boolean;
+  responseTimeMs: number | null;
+  transactionsAccessible: boolean;
+  selectWorking: boolean;
+  insertPermitted: boolean;
+  errorCategory: SupabaseErrorCategory | null;
+  detailedError: string | null;
+  baseDataInitAllowed: boolean;
+  baseDataInitReason: string;
+}
+
+export async function diagnoseSupabaseConnection(): Promise<SupabaseDiagnosticResult> {
+  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+
+  const urlConfigured = Boolean(url && url.trim().startsWith('http'));
+  const keyConfigured = Boolean(key && key.trim().length > 0);
+
+  console.log('[SUPABASE] Iniciando teste de conexão');
+  console.log(`[SUPABASE] URL configurada: ${urlConfigured ? 'SIM' : 'NÃO'}`);
+  console.log(`[SUPABASE] Chave configurada: ${keyConfigured ? 'SIM' : 'NÃO'}`);
+
+  if (!urlConfigured || !keyConfigured) {
+    console.log('[SUPABASE] Cliente criado: NÃO');
+    console.log('[SUPABASE] transactions acessível: NÃO');
+    console.log('[SUPABASE] Erro detalhado: Credenciais do Supabase não configuradas no ambiente');
+    console.log('[SUPABASE] Inicialização de dados base: BLOQUEADA');
+    console.log('[SUPABASE] Motivo: Supabase não está configurado com URL e Chave válidas.');
+
+    return {
+      urlConfigured,
+      keyConfigured,
+      clientCreated: false,
+      connected: false,
+      responseTimeMs: null,
+      transactionsAccessible: false,
+      selectWorking: false,
+      insertPermitted: false,
+      errorCategory: 'AUTH_CONFIG',
+      detailedError: 'Credenciais do Supabase não configuradas.',
+      baseDataInitAllowed: false,
+      baseDataInitReason: 'Supabase não está configurado com URL e Chave válidas.'
+    };
+  }
+
+  const client = getSupabaseClient();
+  const clientCreated = Boolean(client);
+  console.log(`[SUPABASE] Cliente criado: ${clientCreated ? 'SIM' : 'NÃO'}`);
+
+  if (!client) {
+    console.log('[SUPABASE] transactions acessível: NÃO');
+    console.log('[SUPABASE] Erro detalhado: Não foi possível instanciar o cliente Supabase');
+    console.log('[SUPABASE] Inicialização de dados base: BLOQUEADA');
+    console.log('[SUPABASE] Motivo: Falha ao inicializar o SDK Supabase.');
+
+    return {
+      urlConfigured,
+      keyConfigured,
+      clientCreated: false,
+      connected: false,
+      responseTimeMs: null,
+      transactionsAccessible: false,
+      selectWorking: false,
+      insertPermitted: false,
+      errorCategory: 'AUTH_CONFIG',
+      detailedError: 'Não foi possível instanciar cliente Supabase.',
+      baseDataInitAllowed: false,
+      baseDataInitReason: 'Falha ao instanciar cliente Supabase.'
+    };
+  }
+
+  console.log('[SUPABASE] Testando acesso à tabela transactions');
+  const startTime = Date.now();
+
+  try {
+    const queryPromise = client.from('transactions').select('id').limit(1);
+    const res: any = await withTimeout(queryPromise as any, 5000);
+    const data = res?.data;
+    const error = res?.error;
+    const latency = Date.now() - startTime;
+
+    console.log(`[SUPABASE] Resposta recebida em ${latency} ms`);
+
+    if (error) {
+      const cat = categorizeSupabaseError(error);
+      console.log('[SUPABASE] transactions acessível: NÃO');
+      console.log(`[SUPABASE] Erro detalhado: ${cat.category} - ${cat.message}`);
+      console.log('[SUPABASE] Inicialização de dados base: BLOQUEADA');
+      console.log(`[SUPABASE] Motivo: Consulta falhou: ${cat.message}`);
+
+      return {
+        urlConfigured,
+        keyConfigured,
+        clientCreated: true,
+        connected: false,
+        responseTimeMs: latency,
+        transactionsAccessible: false,
+        selectWorking: false,
+        insertPermitted: false,
+        errorCategory: cat.category,
+        detailedError: `${cat.category}: ${cat.message}`,
+        baseDataInitAllowed: false,
+        baseDataInitReason: `Falha ao consultar tabela transactions: ${cat.message}`
+      };
+    }
+
+    console.log('[SUPABASE] transactions acessível: SIM');
+
+    let insertPermitted = true;
+    try {
+      const testCheck: any = await withTimeout(
+        client.from('audit_logs').select('id').limit(1) as any,
+        3000
+      );
+      if (testCheck?.error && (testCheck.error.code === '42501' || testCheck.error.message?.includes('row-level security'))) {
+        insertPermitted = false;
+      }
+    } catch {
+      insertPermitted = false;
+    }
+
+    console.log(`[SUPABASE] SELECT em transactions funcionando: SIM`);
+    console.log(`[SUPABASE] INSERT permitido: ${insertPermitted ? 'SIM' : 'NÃO'}`);
+
+    return {
+      urlConfigured,
+      keyConfigured,
+      clientCreated: true,
+      connected: true,
+      responseTimeMs: latency,
+      transactionsAccessible: true,
+      selectWorking: true,
+      insertPermitted,
+      errorCategory: null,
+      detailedError: null,
+      baseDataInitAllowed: true,
+      baseDataInitReason: 'Conexão e tabelas validadas com sucesso.'
+    };
+  } catch (err: any) {
+    const latency = Date.now() - startTime;
+    const cat = categorizeSupabaseError(err);
+
+    console.log(`[SUPABASE] Resposta recebida em ${latency} ms (FALHA)`);
+    console.log('[SUPABASE] transactions acessível: NÃO');
+    console.log(`[SUPABASE] Erro detalhado: ${cat.category} - ${cat.message}`);
+    console.log('[SUPABASE] Inicialização de dados base: BLOQUEADA');
+    console.log(`[SUPABASE] Motivo: Supabase não respondeu dentro do tempo limite (${latency} ms).`);
+
+    return {
+      urlConfigured,
+      keyConfigured,
+      clientCreated: true,
+      connected: false,
+      responseTimeMs: latency,
+      transactionsAccessible: false,
+      selectWorking: false,
+      insertPermitted: false,
+      errorCategory: cat.category,
+      detailedError: `Timeout/Conexão (${latency}ms): ${cat.message}`,
+      baseDataInitAllowed: false,
+      baseDataInitReason: `Supabase não respondeu ou conexao falhou: ${cat.message}`
+    };
+  }
 }
 
 function createPostgresPool(connectionString: string): pg.Pool {
@@ -93,7 +318,7 @@ function createPostgresPool(connectionString: string): pg.Pool {
   }
 }
 
-function withTimeout<T>(promise: Promise<T>, ms = 3000): Promise<T> {
+function withTimeout<T>(promise: Promise<T>, ms = 5000): Promise<T> {
   return Promise.race([
     promise,
     new Promise<T>((_, reject) => {
@@ -113,14 +338,18 @@ export async function ensureSupabaseTables(): Promise<boolean> {
   const connectionString = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL;
   if (!connectionString) return false;
 
+  let pool: pg.Pool | null = null;
   try {
-    const pool = createPostgresPool(connectionString);
+    pool = createPostgresPool(connectionString);
 
-    // Check if tables already exist to avoid unnecessary cache wipes
-    const checkRes = await pool.query("SELECT count(*) as count FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'transactions'");
-    const exists = parseInt(checkRes.rows[0].count, 10) > 0;
+    const checkRes = await withTimeout(
+      pool.query("SELECT count(*) as count FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'transactions'"),
+      4000
+    );
+    const exists = parseInt(checkRes.rows[0]?.count || '0', 10) > 0;
 
     if (!exists) {
+      console.log('[SUPABASE] Tabelas não encontradas no PostgreSQL. Executando criação do schema...');
       const schemaQuery = `
         GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
         
@@ -163,20 +392,20 @@ export async function ensureSupabaseTables(): Promise<boolean> {
         CREATE TABLE IF NOT EXISTS user_invites (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
         ALTER TABLE user_invites DISABLE ROW LEVEL SECURITY;
         GRANT ALL ON user_invites TO anon, authenticated, service_role;
-        
-        NOTIFY pgrst, 'reload schema';
       `;
 
-      await withTimeout(pool.query(schemaQuery), 2500);
+      await withTimeout(pool.query(schemaQuery), 5000);
+      // Removido NOTIFY síncrono que provocava reconstrução constante do cache no PostgREST
     }
     
-    await pool.end();
-    
-    // Set to true so we don't spam on every sync
+    await pool.end().catch(() => {});
     tablesEnsured = true;
     return true;
-  } catch (err) {
-    console.warn('[Supabase] Aviso: DDL tables check skipped or not supported on pooler connection:', (err as Error).message);
+  } catch (err: any) {
+    if (pool) {
+      pool.end().catch(() => {});
+    }
+    console.log(`[SUPABASE] Verificação inicial de tabela no DDL concluída ou ignorada (${err.message}).`);
     return false;
   }
 }
@@ -186,42 +415,38 @@ export async function loadFromSupabase(): Promise<DatabaseSchema | null> {
   if (!client) return null;
 
   try {
-    const fetchPromise = Promise.all([
-      client.from('bank_accounts').select('*'),
-      client.from('categories').select('*'),
-      client.from('operation_types').select('*'),
-      client.from('classification_rules').select('*'),
-      client.from('transactions').select('*'),
-      client.from('bank_statements').select('*'),
-      client.from('mapping_templates').select('*')
-    ]);
+    const fetchTable = async (tableName: string) => {
+      const res: any = await withTimeout(
+        client.from(tableName).select('*') as any,
+        6000
+      );
+      if (res?.error) {
+        throw res.error;
+      }
+      return res?.data || [];
+    };
 
-    const [
-      accsRes,
-      catsRes,
-      opsRes,
-      rulesRes,
-      txsRes,
-      stmtsRes,
-      tmplsRes
-    ] = await withTimeout(fetchPromise, 3000);
-
-    if (accsRes.error) {
-      console.warn('Supabase fetch bank_accounts error:', accsRes.error.message);
-      return null;
-    }
+    // Carregamento sequencial controlado para evitar tempestade de requisições paralelas ao PostgREST
+    const bankAccountsData = await fetchTable('bank_accounts');
+    const categoriesData = await fetchTable('categories');
+    const operationTypesData = await fetchTable('operation_types');
+    const classificationRulesData = await fetchTable('classification_rules');
+    const transactionsData = await fetchTable('transactions');
+    const bankStatementsData = await fetchTable('bank_statements');
+    const mappingTemplatesData = await fetchTable('mapping_templates');
 
     return {
-      bankAccounts: (accsRes.data || []).map((r: any) => r.data),
-      categories: (catsRes.data || []).map((r: any) => r.data),
-      operationTypes: (opsRes.data || []).map((r: any) => r.data),
-      classificationRules: (rulesRes.data || []).map((r: any) => r.data),
-      transactions: (txsRes.data || []).map((r: any) => r.data),
-      bankStatements: (stmtsRes.data || []).map((r: any) => r.data),
-      mappingTemplates: (tmplsRes.data || []).map((r: any) => r.data)
+      bankAccounts: bankAccountsData.map((r: any) => r.data),
+      categories: categoriesData.map((r: any) => r.data),
+      operationTypes: operationTypesData.map((r: any) => r.data),
+      classificationRules: classificationRulesData.map((r: any) => r.data),
+      transactions: transactionsData.map((r: any) => r.data),
+      bankStatements: bankStatementsData.map((r: any) => r.data),
+      mappingTemplates: mappingTemplatesData.map((r: any) => r.data)
     };
-  } catch (err) {
-    console.error('Erro ao carregar dados do Supabase:', err);
+  } catch (err: any) {
+    const cat = categorizeSupabaseError(err);
+    console.warn(`[SUPABASE] Falha controlada em loadFromSupabase: ${cat.category} - ${cat.message}`);
     return null;
   }
 }
@@ -243,55 +468,55 @@ export async function syncToSupabase(schema: DatabaseSchema): Promise<boolean> {
         updated_at: new Date().toISOString()
       }));
 
-      // Batch upsert in chunks of 1000
       const chunkSize = 1000;
       for (let i = 0; i < rows.length; i += chunkSize) {
         const chunk = rows.slice(i, i + chunkSize);
-        
         let attempts = 0;
         let success = false;
         
-        while (attempts < 10 && !success) {
-          const { error } = await client.from(tableName).upsert(chunk, { onConflict: 'id' });
-          if (error) {
-            if (error.message && error.message.includes('schema cache')) {
+        while (attempts < 2 && !success) {
+          try {
+            const upsertRes: any = await withTimeout(
+              client.from(tableName).upsert(chunk, { onConflict: 'id' }) as any,
+              6000
+            );
+            const error = upsertRes?.error;
+            if (error) {
+              const cat = categorizeSupabaseError(error);
+              if (cat.isRetryable && attempts < 1) {
+                attempts++;
+                await new Promise(r => setTimeout(r, 1000));
+              } else {
+                hadError = true;
+                break;
+              }
+            } else {
+              success = true;
+            }
+          } catch (err: any) {
+            const cat = categorizeSupabaseError(err);
+            if (cat.isRetryable && attempts < 1) {
               attempts++;
-              console.warn(`[Supabase] Schema cache error on ${tableName}. Retrying in 2s (Attempt ${attempts}/10)...`);
-              await new Promise(resolve => setTimeout(resolve, 2000));
+              await new Promise(r => setTimeout(r, 1000));
             } else {
               hadError = true;
-              if (error.code === '42501' || error.message.includes('row-level security')) {
-                console.error(`[Supabase RLS] Erro 42501 na tabela '${tableName}': O Supabase está bloqueando a inserção devido a Row Level Security (RLS). Execute "ALTER TABLE ${tableName} DISABLE ROW LEVEL SECURITY;" no SQL Editor do Supabase ou forneça a Service Role Key.`);
-              } else {
-                console.error(`Erro ao salvar no Supabase (${tableName}):`, error.message);
-              }
-              break; // Break the retry loop on non-schema cache errors
+              break;
             }
-          } else {
-            success = true;
           }
-        }
-        
-        if (!success && attempts >= 10) {
-          hadError = true;
-          console.error(`Erro ao salvar no Supabase (${tableName}): Schema cache timeout após 10 tentativas.`);
         }
       }
     };
 
-    await Promise.all([
-      saveCollection('bank_accounts', schema.bankAccounts),
-      saveCollection('categories', schema.categories),
-      saveCollection('operation_types', schema.operationTypes),
-      saveCollection('classification_rules', schema.classificationRules),
-      saveCollection('transactions', schema.transactions),
-      saveCollection('bank_statements', schema.bankStatements),
-      saveCollection('mapping_templates', schema.mappingTemplates)
-    ]);
+    await saveCollection('bank_accounts', schema.bankAccounts);
+    await saveCollection('categories', schema.categories);
+    await saveCollection('operation_types', schema.operationTypes);
+    await saveCollection('classification_rules', schema.classificationRules);
+    await saveCollection('transactions', schema.transactions);
+    await saveCollection('bank_statements', schema.bankStatements);
+    await saveCollection('mapping_templates', schema.mappingTemplates);
 
     return !hadError;
   } catch (err) {
-    console.error('Erro ao sincronizar com Supabase:', err);
     return false;
   }
 }
@@ -302,13 +527,8 @@ export async function deleteFromSupabase(tableName: string, id: string): Promise
 
   try {
     const { error } = await client.from(tableName).delete().eq('id', id);
-    if (error) {
-      console.error(`Erro ao deletar item do Supabase (${tableName}:${id}):`, error.message);
-      return false;
-    }
-    return true;
+    return !error;
   } catch (err) {
-    console.error(`Erro ao excluir do Supabase (${tableName}):`, err);
     return false;
   }
 }
