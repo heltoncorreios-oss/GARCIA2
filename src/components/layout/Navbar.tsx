@@ -32,6 +32,7 @@ interface NavbarProps {
   userName?: string;
   userEmail?: string;
   onSignOut?: () => void;
+  onEnableMaster?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -48,7 +49,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   userRole = 'ADMINISTRADOR',
   userName,
   userEmail,
-  onSignOut
+  onSignOut,
+  onEnableMaster
 }) => {
   return (
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-zinc-200 shadow-xs">
@@ -232,6 +234,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                   >
                     {userRole}
                   </span>
+                  {userRole !== 'ADMINISTRADOR' && onEnableMaster && (
+                    <button
+                      onClick={onEnableMaster}
+                      className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 transition-colors cursor-pointer"
+                      title="Ativar privilégios de Administrador Master para esta conta"
+                    >
+                      👑 Ativar Master
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

@@ -27,6 +27,8 @@ export function configureSupabase(rawUrl: string, rawKey: string): SupabaseClien
 
   if (url && anonKey && !anonKey.includes('placeholder')) {
     try {
+      safeStorage.setItem('supermercado_supabase_url', url);
+      safeStorage.setItem('supermercado_supabase_anon_key', anonKey);
       clientInstance = createClient(url, anonKey, {
         auth: {
           storage: safeStorage,
@@ -45,11 +47,16 @@ export function configureSupabase(rawUrl: string, rawKey: string): SupabaseClien
 
 export function getSupabase(): SupabaseClient {
   if (!clientInstance) {
-    const url = envUrl || (window as any).__SUPABASE_URL__ || 'https://placeholder.supabase.co';
-    const anonKey = envAnonKey || (window as any).__SUPABASE_ANON_KEY__ || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder';
+    const storedUrl = safeStorage.getItem('supermercado_supabase_url') || '';
+    const storedAnonKey = safeStorage.getItem('supermercado_supabase_anon_key') || '';
+    const fallbackUrl = 'https://zvwgukqvtmmtjiqrvhtd.supabase.co';
+    const fallbackAnon = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2d2d1a3F2dG1tdGppcXJ2aHRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzOTkxMDQsImV4cCI6MjEwNDk3NTEwNH0.Hw4KmRxZ8ypl_pvIUQ0N80ii1FuNcjs-uM3sdwhU6-M';
+    
+    const url = envUrl || storedUrl || (window as any).__SUPABASE_URL__ || fallbackUrl;
+    const anonKey = envAnonKey || storedAnonKey || (window as any).__SUPABASE_ANON_KEY__ || fallbackAnon;
 
-    if (!envUrl || !envAnonKey) {
-      console.warn('[Supabase Client] Variáveis VITE_SUPABASE_URL ou VITE_SUPABASE_ANON_KEY não configuradas no build.');
+    if (!envUrl && !storedUrl) {
+      console.warn('[Supabase Client] Usando fallback de conexão do Supabase.');
     }
 
     try {
@@ -63,7 +70,7 @@ export function getSupabase(): SupabaseClient {
       });
     } catch (e) {
       console.error('[Supabase Client] Erro ao inicializar cliente Supabase:', e);
-      clientInstance = createClient('https://placeholder.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder', {
+      clientInstance = createClient(fallbackUrl, fallbackAnon, {
         auth: {
           storage: safeStorage,
           persistSession: false

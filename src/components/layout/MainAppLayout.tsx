@@ -27,7 +27,7 @@ const DEFAULT_COMPANY_PROFILE: CompanyProfile = {
 };
 
 export const MainAppLayout: React.FC = () => {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, enableMaster } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -82,6 +82,23 @@ export const MainAppLayout: React.FC = () => {
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 4000);
+  };
+
+  const handleEnableMaster = async () => {
+    setIsActionLoading(true);
+    try {
+      const res = await enableMaster();
+      if (res.success) {
+        showNotification('Perfil de Administrador Master ativado com sucesso!', 'success');
+        await loadGlobalData();
+      } else {
+        showNotification(res.error || 'Não foi possível ativar perfil master.', 'error');
+      }
+    } catch (err: any) {
+      showNotification(err.message || 'Erro ao comunicar com o servidor.', 'error');
+    } finally {
+      setIsActionLoading(false);
+    }
   };
 
   // Company Profile & Custom Logo State
@@ -224,54 +241,73 @@ export const MainAppLayout: React.FC = () => {
           userName={profile?.name}
           userEmail={profile?.email || user?.email}
           onSignOut={handleSignOut}
+          onEnableMaster={handleEnableMaster}
         />
 
         {/* Dynamic Page Views */}
         <main className="flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto pb-24 lg:pb-8">
-          {/* RBAC Access Denied Fallbacks (Req 6 & Req 10) */}
+          {/* RBAC Access Denied Fallbacks */}
           {activeTab === 'usuarios' && profile?.role !== 'ADMINISTRADOR' && (
-            <div className="bg-white p-8 rounded-2xl border border-rose-300 text-center max-w-md mx-auto space-y-4 my-12 shadow-sm">
-              <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+            <div className="bg-white p-8 rounded-2xl border border-zinc-200 text-center max-w-md mx-auto space-y-4 my-12 shadow-sm">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
                 <ShieldAlert className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-base font-bold text-zinc-950">Acesso Restrito</h2>
+                <h2 className="text-base font-bold text-zinc-950">Acesso Restrito ao Administrador</h2>
                 <p className="text-xs text-zinc-600 mt-1">
-                  Apenas usuários com perfil <strong>ADMINISTRADOR</strong> possuem permissão para gerenciar usuários e convites.
+                  Seu perfil atual está como <strong>{profile?.role || 'CONSULTA'}</strong>. Você pode ativar seus privilégios de Administrador Master agora mesmo:
                 </p>
               </div>
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="px-4 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-700 rounded-xl cursor-pointer"
-              >
-                Voltar ao Dashboard
-              </button>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
+                <button
+                  onClick={handleEnableMaster}
+                  disabled={isActionLoading}
+                  className="px-4 py-2 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 rounded-xl cursor-pointer shadow-xs disabled:opacity-50"
+                >
+                  👑 Habilitar Usuário Master
+                </button>
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="px-4 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl cursor-pointer"
+                >
+                  Voltar ao Dashboard
+                </button>
+              </div>
             </div>
           )}
 
           {activeTab === 'database' && profile?.role !== 'ADMINISTRADOR' && (
-            <div className="bg-white p-8 rounded-2xl border border-rose-300 text-center max-w-md mx-auto space-y-4 my-12 shadow-sm">
-              <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+            <div className="bg-white p-8 rounded-2xl border border-zinc-200 text-center max-w-md mx-auto space-y-4 my-12 shadow-sm">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
                 <ShieldAlert className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-base font-bold text-zinc-950">Acesso Restrito</h2>
+                <h2 className="text-base font-bold text-zinc-950">Acesso ao Banco de Dados</h2>
                 <p className="text-xs text-zinc-600 mt-1">
-                  A infraestrutura e esquema de banco de dados são restritos ao <strong>ADMINISTRADOR</strong>.
+                  Seu perfil atual está como <strong>{profile?.role || 'CONSULTA'}</strong>. Desbloqueie o painel de sincronização ativando seus privilégios de Administrador Master:
                 </p>
               </div>
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="px-4 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-700 rounded-xl cursor-pointer"
-              >
-                Voltar ao Dashboard
-              </button>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
+                <button
+                  onClick={handleEnableMaster}
+                  disabled={isActionLoading}
+                  className="px-4 py-2 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 rounded-xl cursor-pointer shadow-xs disabled:opacity-50"
+                >
+                  👑 Habilitar Usuário Master
+                </button>
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="px-4 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl cursor-pointer"
+                >
+                  Voltar ao Dashboard
+                </button>
+              </div>
             </div>
           )}
 
           {activeTab === 'importar' && profile?.role !== 'ADMINISTRADOR' && profile?.role !== 'FINANCEIRO' && (
-            <div className="bg-white p-8 rounded-2xl border border-rose-300 text-center max-w-md mx-auto space-y-4 my-12 shadow-sm">
-              <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+            <div className="bg-white p-8 rounded-2xl border border-zinc-200 text-center max-w-md mx-auto space-y-4 my-12 shadow-sm">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
                 <ShieldAlert className="w-6 h-6" />
               </div>
               <div>
@@ -280,12 +316,21 @@ export const MainAppLayout: React.FC = () => {
                   Seu perfil atual (<strong>{profile?.role}</strong>) não possui permissão para importar extratos bancários.
                 </p>
               </div>
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="px-4 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-700 rounded-xl cursor-pointer"
-              >
-                Voltar ao Dashboard
-              </button>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
+                <button
+                  onClick={handleEnableMaster}
+                  disabled={isActionLoading}
+                  className="px-4 py-2 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 rounded-xl cursor-pointer shadow-xs disabled:opacity-50"
+                >
+                  👑 Habilitar Usuário Master
+                </button>
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="px-4 py-2 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 rounded-xl cursor-pointer"
+                >
+                  Voltar ao Dashboard
+                </button>
+              </div>
             </div>
           )}
 

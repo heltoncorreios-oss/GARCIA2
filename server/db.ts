@@ -210,6 +210,16 @@ class SupermarketDatabase {
     return this.supabaseSyncPromise;
   }
 
+  public async syncAllToSupabase(): Promise<boolean> {
+    if (!isSupabaseConfigured()) return false;
+    try {
+      return await syncToSupabase(this.data);
+    } catch (err) {
+      console.error('[Supabase] Erro em syncAllToSupabase:', err);
+      return false;
+    }
+  }
+
   private loadDatabase(): DatabaseSchema {
     try {
       // 1. Tenta carregar primeiro do SQLite nativo local

@@ -20,9 +20,13 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({
   const [showConfig, setShowConfig] = useState<boolean>(false);
   const [inputUrl, setInputUrl] = useState<string>('');
   const [inputAnonKey, setInputAnonKey] = useState<string>('');
+  const [inputServiceRoleKey, setInputServiceRoleKey] = useState<string>('');
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isSyncing, setIsSyncSyncing] = useState<boolean>(false);
+  const [syncMessage, setSyncMessage] = useState<{ text: string; isError?: boolean } | null>(null);
   const [configError, setConfigError] = useState<string | null>(null);
   const [configSuccess, setConfigSuccess] = useState<string | null>(null);
+  const [copiedRls, setCopiedRls] = useState<boolean>(false);
 
   const handleSaveConfig = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +36,8 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({
       setConfigSuccess(null);
       const res = await apiService.configureSupabase({
         supabaseUrl: inputUrl,
-        supabaseAnonKey: inputAnonKey
+        supabaseAnonKey: inputAnonKey,
+        supabaseServiceRoleKey: inputServiceRoleKey || undefined
       });
       if (res.success) {
         setConfigSuccess('Supabase configurado e conectado com sucesso!');
@@ -45,6 +50,44 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleSyncNow = async () => {
+    try {
+      setIsSyncSyncing(true);
+      setSyncMessage(null);
+      const res = await apiService.syncNowToSupabase();
+      if (res.success) {
+        setSyncMessage({ text: 'Sincronização concluída! Todas as tabelas foram gravadas com sucesso no Supabase.' });
+        await checkStatus();
+      } else {
+        setSyncMessage({ text: res.error || 'Erro ao sincronizar dados com o Supabase.', isError: true });
+      }
+    } catch (err: any) {
+      setSyncMessage({ text: err.message || 'Falha na sincronização.', isError: true });
+    } finally {
+      setIsSyncSyncing(false);
+    }
+  };
+
+  const handleCopyRlsScript = () => {
+    const rlsScript = `-- SCRIPT PARA LIBERAR INSERÇÃO DE DADOS (CORRIGE ERRO 42501 RLS)
+ALTER TABLE bank_accounts DISABLE ROW LEVEL SECURITY;
+ALTER TABLE categories DISABLE ROW LEVEL SECURITY;
+ALTER TABLE operation_types DISABLE ROW LEVEL SECURITY;
+ALTER TABLE classification_rules DISABLE ROW LEVEL SECURITY;
+ALTER TABLE mapping_templates DISABLE ROW LEVEL SECURITY;
+ALTER TABLE transactions DISABLE ROW LEVEL SECURITY;
+ALTER TABLE bank_statements DISABLE ROW LEVEL SECURITY;
+ALTER TABLE audit_logs DISABLE ROW LEVEL SECURITY;
+ALTER TABLE user_profiles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE user_invites DISABLE ROW LEVEL SECURITY;
+
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;`;
+    navigator.clipboard.writeText(rlsScript);
+    setCopiedRls(true);
+    setTimeout(() => setCopiedRls(false), 3000);
   };
 
   const checkStatus = async () => {
@@ -257,7 +300,7 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({
           <form onSubmit={handleSaveConfig} className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl space-y-3">
             <h4 className="text-xs font-bold text-zinc-950">Configurar Credenciais do Supabase no Servidor</h4>
             <p className="text-[11px] text-zinc-600">
-              Isso salvará as credenciais no arquivo .env do servidor, garantindo conexão ativa tanto no preview quanto ao abrir em qualquer aba ou navegador.
+              As credenciais são salvas no arquivo <code className="bg-zinc-200 px-1 py-0.5 rounded font-mono text-[10px]">.env</code> do sistema, persistindo mesmo após reiniciar o servidor ou fechar o navegador.
             </p>
             <div>
               <label className="block text-[11px] font-semibold text-zinc-700 mb-1">Supabase URL</label>
@@ -266,7 +309,7 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({
                 placeholder="https://seu-projeto.supabase.co"
                 value={inputUrl}
                 onChange={e => setInputUrl(e.target.value)}
-                className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
+                className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white font-mono"
                 required
               />
             </div>
@@ -280,6 +323,23 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({
                 className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white font-mono"
                 required
               />
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-semibold text-zinc-700">
+                  Supabase Service Role Key <span className="text-emerald-600 font-bold">(Recomendado para evitar erro 42501 de RLS)</span>
+                </label>
+              </div>
+              <input
+                type="password"
+                placeholder="eyJhbGciOiJIUzI1NiIsIn... (Chave com permissão total de serviço)"
+                value={inputServiceRoleKey}
+                onChange={e => setInputServiceRoleKey(e.target.value)}
+                className="w-full px-3 py-2 text-xs border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white font-mono"
+              />
+              <span className="text-[10px] text-zinc-500 mt-0.5 block">
+                Encontrada em Supabase Dashboard &gt; Project Settings &gt; API &gt; service_role (secret).
+              </span>
             </div>
             {configError && <div className="text-xs text-rose-600 font-semibold">{configError}</div>}
             {configSuccess && <div className="text-xs text-emerald-600 font-semibold">{configSuccess}</div>}
@@ -295,6 +355,12 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({
           </form>
         )}
 
+        {syncMessage && (
+          <div className={`p-3 rounded-xl border text-xs font-medium ${syncMessage.isError ? 'bg-rose-50 border-rose-300 text-rose-900' : 'bg-emerald-50 border-emerald-300 text-emerald-900'}`}>
+            {syncMessage.text}
+          </div>
+        )}
+
         {supabaseStatus && (
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -302,7 +368,7 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({
                 {supabaseStatus.configured ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" /> : <AlertCircle className="w-5 h-5 text-zinc-400 shrink-0" />}
                 <div>
                   <div className="text-xs font-bold">Variáveis de Ambiente</div>
-                  <div className="text-[11px] opacity-90">{supabaseStatus.configured ? 'Configuradas' : 'Não configuradas (Modo 100% Local)'}</div>
+                  <div className="text-[11px] opacity-90">{supabaseStatus.configured ? 'Configuradas no .env' : 'Não configuradas (Modo 100% Local)'}</div>
                 </div>
               </div>
 
@@ -314,14 +380,70 @@ export const DatabaseView: React.FC<DatabaseViewProps> = ({
                 </div>
               </div>
 
-              <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${supabaseStatus.tablesReady ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-zinc-50 border-zinc-300 text-zinc-700'}`}>
-                {supabaseStatus.tablesReady ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" /> : <AlertCircle className="w-5 h-5 text-zinc-400 shrink-0" />}
+              <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${supabaseStatus.tablesReady && !supabaseStatus.rlsBlocked ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : supabaseStatus.rlsBlocked ? 'bg-amber-50 border-amber-300 text-amber-900' : 'bg-zinc-50 border-zinc-300 text-zinc-700'}`}>
+                {supabaseStatus.tablesReady && !supabaseStatus.rlsBlocked ? (
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                ) : supabaseStatus.rlsBlocked ? (
+                  <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 text-zinc-400 shrink-0" />
+                )}
                 <div>
-                  <div className="text-xs font-bold">Tabelas Nuvem</div>
-                  <div className="text-[11px] opacity-90">{supabaseStatus.tablesReady ? 'Sincronizadas' : 'Opcional'}</div>
+                  <div className="text-xs font-bold">Gravação / Permissão</div>
+                  <div className="text-[11px] opacity-90">
+                    {supabaseStatus.rlsBlocked ? 'Bloqueado por RLS (Erro 42501)' : supabaseStatus.tablesReady ? 'Liberada para Gravação' : 'Pendente'}
+                  </div>
                 </div>
               </div>
             </div>
+
+            {/* Alerta específico e solução instantânea para RLS Bloqueado */}
+            {supabaseStatus.rlsBlocked && (
+              <div className="p-4 bg-amber-50 border border-amber-300 rounded-xl text-amber-950 space-y-3">
+                <div className="flex items-start gap-2.5">
+                  <AlertCircle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-xs font-bold text-amber-900">
+                      Row Level Security (RLS) está bloqueando inserções no Supabase (Erro 42501)
+                    </h4>
+                    <p className="text-[11px] text-amber-800 mt-1 leading-relaxed">
+                      As tabelas foram encontradas no Supabase, porém o Supabase ativou o bloqueio RLS que impede salvar novas movimentações e perfis de usuário com a chave pública.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <button
+                    onClick={handleCopyRlsScript}
+                    className="inline-flex items-center gap-2 px-3.5 py-2 bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold rounded-lg shadow-xs transition-colors cursor-pointer"
+                  >
+                    {copiedRls ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    <span>{copiedRls ? 'Script SQL Copiado!' : 'Copiar Script para Liberar RLS'}</span>
+                  </button>
+                  <span className="text-[11px] text-amber-800 font-medium">
+                    Cole no SQL Editor do Supabase e clique em &quot;Run&quot;. Em seguida, clique em &quot;Sincronizar Dados Agora&quot;.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {supabaseStatus.connected && (
+              <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-zinc-50 border border-zinc-200 rounded-xl">
+                <div>
+                  <div className="text-xs font-bold text-zinc-950">Sincronização Bidirecional</div>
+                  <div className="text-[11px] text-zinc-600">
+                    Transfira imediatamente todas as contas, movimentações e regras do banco local SQLite para a nuvem Supabase.
+                  </div>
+                </div>
+                <button
+                  onClick={handleSyncNow}
+                  disabled={isSyncing}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer disabled:opacity-50 inline-flex items-center gap-2"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                  <span>{isSyncing ? 'Sincronizando com Supabase...' : 'Sincronizar Dados Agora'}</span>
+                </button>
+              </div>
+            )}
 
             {supabaseStatus.configured && !supabaseStatus.connected && (
               <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs space-y-2">

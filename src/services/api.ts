@@ -539,13 +539,32 @@ export const apiService = {
     configured: boolean;
     connected: boolean;
     tablesReady: boolean;
+    rlsBlocked?: boolean;
     supabaseUrl: string;
     hasAnonKey: boolean;
+    hasServiceRoleKey?: boolean;
     hasDatabaseUrl: boolean;
     error?: string;
   }> {
     const res = await authFetch(`${API_BASE}/supabase/status`);
     return await parseJsonResponse(res, 'Erro ao verificar status do Supabase');
+  },
+
+  async syncNowToSupabase(): Promise<{ success: boolean; message?: string; error?: string }> {
+    const res = await authFetch(`${API_BASE}/supabase/sync-now`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    return await parseJsonResponse(res, 'Erro ao sincronizar dados com o Supabase');
+  },
+
+  async enableMasterUser(params?: { email?: string; userId?: string; name?: string }): Promise<{ success: boolean; message?: string; profile?: any; error?: string }> {
+    const res = await authFetch(`${API_BASE}/auth/enable-master`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params || {})
+    });
+    return await parseJsonResponse(res, 'Erro ao habilitar perfil de Administrador Master');
   },
 
   async configureSupabase(credentials: {

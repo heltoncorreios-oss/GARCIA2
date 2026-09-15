@@ -352,6 +352,30 @@ export const AdminUsersView: React.FC = () => {
 
         <div className="flex items-center gap-2.5">
           <button
+            onClick={async () => {
+              try {
+                const res = await apiService.enableMasterUser({
+                  email: currentAuthUser?.email || currentProfile?.email,
+                  userId: currentAuthUser?.id || currentProfile?.id,
+                  name: currentProfile?.name
+                });
+                if (res.success) {
+                  showNotification('Perfil Master confirmado com sucesso no Supabase e no banco local!');
+                  await loadData();
+                } else {
+                  setError(res.error || 'Erro ao habilitar master.');
+                }
+              } catch (e: any) {
+                setError(e.message);
+              }
+            }}
+            className="px-3 py-2 text-xs font-bold text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+            title="Forçar permissões de Administrador Master no Supabase e no SQLite local"
+          >
+            <span>👑 Sincronizar Master</span>
+          </button>
+
+          <button
             onClick={handleRefresh}
             disabled={refreshing}
             className="px-3 py-2 text-xs font-bold text-zinc-700 hover:text-zinc-950 bg-zinc-100 hover:bg-zinc-200 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"

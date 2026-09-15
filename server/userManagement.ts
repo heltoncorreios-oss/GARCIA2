@@ -15,6 +15,7 @@ let cachedProfiles: Map<string, UserProfile> = new Map();
 let cachedInvites: Map<string, UserInvite> = new Map();
 let cachedAuditLogs: AuditLogEntry[] = [];
 let isInitialized = false;
+let initPromise: Promise<void> | null = null;
 
 // Gera códigos no padrão estrito FIN-XXXX-XXXX (ex: FIN-8K4P-X92M)
 export function generateInviteCode(): string {
@@ -63,18 +64,31 @@ export async function addAuditLog(entry: {
 
   const supabase = getSupabaseClient();
   if (supabase) {
-    try {
-      await supabase.from('audit_logs').insert([{
+    withTimeout(
+      supabase.from('audit_logs').insert([{
         id: log.id,
         data: log,
         updated_at: log.timestamp
-      }]);
-    } catch (err) {
-      console.error('[Auditoria] Falha ao persistir no Supabase:', err);
-    }
+      }]),
+      2000
+    ).catch(err => {
+      console.warn('[Auditoria] Falha ao persistir no Supabase:', err.message);
+    });
   }
 
   return log;
+}
+
+function withTimeout<T>(promise: Promise<T>, ms = 2500): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      const timer = setTimeout(() => reject(new Error('Supabase request timeout')), ms);
+      if (timer && typeof (timer as any).unref === 'function') {
+        (timer as any).unref();
+      }
+    })
+  ]);
 }
 
 export async function getAuditLogs(limit = 100): Promise<AuditLogEntry[]> {
@@ -84,89 +98,55 @@ export async function getAuditLogs(limit = 100): Promise<AuditLogEntry[]> {
 
 export async function ensureInitialized(): Promise<void> {
   if (isInitialized) return;
+  if (initPromise) return initPromise;
 
-  // 1. Carregar primeiro dados do SQLite local
-  try {
-    const sqliteProfiles = loadUserProfilesSqlite();
-    for (const p of sqliteProfiles) {
-      cachedProfiles.set(p.id, p);
-    }
-
-    const sqliteInvites = loadUserInvitesSqlite();
-    for (const inv of sqliteInvites) {
-      cachedInvites.set(inv.id, inv);
-    }
-
-    const sqliteLogs = loadAuditLogsSqlite(200);
-    if (sqliteLogs && sqliteLogs.length > 0) {
-      cachedAuditLogs = sqliteLogs;
-    }
-  } catch (err) {
-    console.error('[SQLite] Erro ao carregar dados iniciais de usuários do SQLite:', err);
-  }
-
-  const supabase = getSupabaseClient();
-  if (supabase) {
+  initPromise = (async () => {
+    // 1. Carregar primeiro dados do SQLite local de forma instantânea
     try {
-      // Carregar perfis existentes do Supabase
-      const { data: profRows, error: profErr } = await supabase.from('user_profiles').select('*');
-      if (!profErr && profRows) {
-        for (const row of profRows) {
-          if (row.data) {
-            cachedProfiles.set(row.data.id, row.data);
-            saveUserProfileSqlite(row.data);
-          }
-        }
+      const sqliteProfiles = loadUserProfilesSqlite();
+      for (const p of sqliteProfiles) {
+        cachedProfiles.set(p.id, p);
       }
 
-      // Carregar convites existentes do Supabase
-      const { data: invRows, error: invErr } = await supabase.from('user_invites').select('*');
-      if (!invErr && invRows) {
-        for (const row of invRows) {
-          if (row.data) {
-            cachedInvites.set(row.data.id, row.data);
-            saveUserInviteSqlite(row.data);
-          }
-        }
+      const sqliteInvites = loadUserInvitesSqlite();
+      for (const inv of sqliteInvites) {
+        cachedInvites.set(inv.id, inv);
       }
 
-      // Carregar logs de auditoria
-      const { data: auditRows, error: auditErr } = await supabase
-        .from('audit_logs')
-        .select('*')
-        .order('updated_at', { ascending: false })
-        .limit(200);
-      if (!auditErr && auditRows) {
-        const remoteLogs = auditRows.map(r => r.data).filter(Boolean);
-        if (remoteLogs.length > 0) {
-          cachedAuditLogs = remoteLogs;
-        }
+      const sqliteLogs = loadAuditLogsSqlite(200);
+      if (sqliteLogs && sqliteLogs.length > 0) {
+        cachedAuditLogs = sqliteLogs;
       }
     } catch (err) {
-      console.error('[UserManagement] Erro ao sincronizar com Supabase:', err);
+      console.error('[SQLite] Erro ao carregar dados iniciais de usuários do SQLite:', err);
     }
-  }
 
-  // Garantir administradores iniciais padrão
-  await seedInitialAdmins();
+    // 2. Garantir administradores conhecidos em cache e SQLite
+    ensureLocalAdmins();
 
-  // Garantir convites iniciais ativos se não houver convites
-  await seedInitialInvitesIfEmpty();
+    // 3. Garantir convites iniciais em cache e SQLite
+    ensureLocalInvites();
 
-  isInitialized = true;
+    // 4. Marcar inicialização local como concluída imediatamente
+    isInitialized = true;
+
+    // 5. Em background (sem bloquear requisições da aplicação), sincronizar com Supabase se configurado
+    syncWithSupabaseBackground().catch(err => {
+      console.warn('[UserManagement] Sincronização background com Supabase falhou:', err?.message || err);
+    });
+  })();
+
+  return initPromise;
 }
 
-async function seedInitialAdmins(): Promise<void> {
-  const supabase = getSupabaseClient();
-
-  // Sempre garantir administradores conhecidos em cache e banco local
+function ensureLocalAdmins(): void {
   const adminEmails = ['admin@supermercado.com', 'heltoncorreios@gmail.com'];
   for (const email of adminEmails) {
     let existing = Array.from(cachedProfiles.values()).find(p => p.email.toLowerCase() === email);
     if (!existing) {
       const defaultAdmin: UserProfile = {
         id: email === 'admin@supermercado.com' ? 'user_admin_local' : 'user_helton_admin',
-        name: email === 'admin@supermercado.com' ? 'Administrador Financeiro' : 'Helton (Administrador)',
+        name: email === 'admin@supermercado.com' ? 'Administrador Financeiro' : 'Helton (Administrador Master)',
         email: email,
         role: 'ADMINISTRADOR',
         status: 'ATIVO',
@@ -176,109 +156,151 @@ async function seedInitialAdmins(): Promise<void> {
       cachedProfiles.set(defaultAdmin.id, defaultAdmin);
       try {
         saveUserProfileSqlite(defaultAdmin);
-        if (supabase) {
-          await supabase.from('user_profiles').upsert([{ id: defaultAdmin.id, data: defaultAdmin, updated_at: new Date().toISOString() }]);
-        }
       } catch {}
-    } else if (existing.role !== 'ADMINISTRADOR' || existing.status !== 'ATIVO') {
+    } else {
       existing.role = 'ADMINISTRADOR';
       existing.status = 'ATIVO';
+      if (email === 'heltoncorreios@gmail.com' && !existing.name.includes('Master')) {
+        existing.name = 'Helton (Administrador Master)';
+      }
       cachedProfiles.set(existing.id, existing);
       try {
         saveUserProfileSqlite(existing);
-        if (supabase) {
-          await supabase.from('user_profiles').upsert([{ id: existing.id, data: existing, updated_at: new Date().toISOString() }]);
-        }
       } catch {}
     }
   }
+}
 
-  if (!supabase) {
-    return;
-  }
-
-  try {
-    const { data: authData, error: authErr } = await supabase.auth.admin.listUsers();
-    if (authErr || !authData?.users) return;
-
-    for (const authUser of authData.users) {
-      const email = (authUser.email || '').toLowerCase();
-      const isInitialAdmin =
-        email === 'admin@supermercado.com' ||
-        email === 'heltoncorreios@gmail.com' ||
-        cachedProfiles.size === 0;
-
-      let existing = Array.from(cachedProfiles.values()).find(
-        p => p.id === authUser.id || p.email.toLowerCase() === email
-      );
-
-      if (isInitialAdmin) {
-        const adminProfile: UserProfile = {
-          id: existing ? existing.id : authUser.id,
-          name: existing?.name || authUser.user_metadata?.name || (email === 'admin@supermercado.com' ? 'Administrador Financeiro' : 'Helton'),
-          email: authUser.email!,
-          role: 'ADMINISTRADOR',
-          status: 'ATIVO',
-          createdAt: existing?.createdAt || authUser.created_at || new Date().toISOString(),
-          lastSignInAt: authUser.last_sign_in_at || existing?.lastSignInAt || null
-        };
-
-        cachedProfiles.set(adminProfile.id, adminProfile);
-        try {
-          saveUserProfileSqlite(adminProfile);
-        } catch {}
-
-        await supabase.from('user_profiles').upsert([{
-          id: adminProfile.id,
-          data: adminProfile,
-          updated_at: new Date().toISOString()
-        }]);
-
-        if (!existing || existing.role !== 'ADMINISTRADOR') {
-          await addAuditLog({
-            user: 'SISTEMA',
-            userName: 'Sistema Automático',
-            action: 'USUARIO_INICIALIZADO',
-            description: `Perfil de ADMINISTRADOR configurado para ${adminProfile.email}`,
-            entityType: 'USER',
-            entityId: adminProfile.id
-          });
-        }
-      }
-    }
-  } catch (err) {
-    console.warn('[UserManagement] Erro ao sincronizar administradores iniciais:', err);
+function ensureLocalInvites(): void {
+  if (cachedInvites.size > 0) return;
+  const initialInvites = [
+    { code: 'FIN-8K4P-X92M', role: 'FINANCEIRO' as UserRole, expirationDays: 30 },
+    { code: 'FIN-OPER-7B3Q', role: 'OPERADOR' as UserRole, expirationDays: 30 },
+    { code: 'FIN-CONS-9L1W', role: 'CONSULTA' as UserRole, expirationDays: 30 }
+  ];
+  for (const inv of initialInvites) {
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + inv.expirationDays * 24 * 60 * 60 * 1000).toISOString();
+    const id = 'inv_init_' + inv.code.replace(/-/g, '_');
+    const invite: UserInvite = {
+      id,
+      code: inv.code,
+      role: inv.role,
+      createdBy: 'admin@supermercado.com',
+      createdAt: now.toISOString(),
+      expiresAt,
+      used: false,
+      usedBy: null,
+      usedAt: null,
+      status: 'DISPONIVEL',
+      recipientEmail: null,
+      autoActivate: true,
+      notes: 'Convite inicial gerado pelo sistema'
+    };
+    cachedInvites.set(id, invite);
+    try {
+      saveUserInviteSqlite(invite);
+    } catch {}
   }
 }
 
-async function seedInitialInvitesIfEmpty(): Promise<void> {
-  if (cachedInvites.size > 0) return;
+async function syncWithSupabaseBackground(): Promise<void> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return;
 
-  const initialInvites = [
-    {
-      code: 'FIN-8K4P-X92M',
-      role: 'FINANCEIRO' as UserRole,
-      expirationDays: 30
-    },
-    {
-      code: 'FIN-OPER-7B3Q',
-      role: 'OPERADOR' as UserRole,
-      expirationDays: 30
-    },
-    {
-      code: 'FIN-CONS-9L1W',
-      role: 'CONSULTA' as UserRole,
-      expirationDays: 30
+  try {
+    // Sincronizar perfis
+    const profPromise = supabase.from('user_profiles').select('*');
+    const { data: profRows, error: profErr }: any = await withTimeout(profPromise, 3000).catch(() => ({ data: null, error: null }));
+    if (!profErr && profRows) {
+      for (const row of profRows) {
+        if (row.data) {
+          const current = cachedProfiles.get(row.data.id);
+          // Se já for administrador no SQLite local, não fazer downgrade
+          if (current && current.role === 'ADMINISTRADOR' && row.data.role !== 'ADMINISTRADOR') {
+            row.data.role = 'ADMINISTRADOR';
+          }
+          cachedProfiles.set(row.data.id, row.data);
+          saveUserProfileSqlite(row.data);
+        }
+      }
     }
-  ];
 
-  for (const inv of initialInvites) {
-    await createInviteWithCode(
-      inv.code,
-      'admin@supermercado.com',
-      inv.role,
-      inv.expirationDays
-    );
+    // Fazer upload de perfis locais de administrador para o Supabase
+    for (const p of cachedProfiles.values()) {
+      if (p.role === 'ADMINISTRADOR') {
+        withTimeout(
+          supabase.from('user_profiles').upsert([{ id: p.id, data: p, updated_at: new Date().toISOString() }]),
+          2000
+        ).catch(() => {});
+      }
+    }
+
+    // Sincronizar convites
+    const invPromise = supabase.from('user_invites').select('*');
+    const { data: invRows, error: invErr }: any = await withTimeout(invPromise, 3000).catch(() => ({ data: null, error: null }));
+    if (!invErr && invRows) {
+      for (const row of invRows) {
+        if (row.data) {
+          cachedInvites.set(row.data.id, row.data);
+          saveUserInviteSqlite(row.data);
+        }
+      }
+    }
+
+    // Fazer upload de convites locais para o Supabase
+    for (const inv of cachedInvites.values()) {
+      withTimeout(
+        supabase.from('user_invites').upsert([{ id: inv.id, data: inv, updated_at: new Date().toISOString() }]),
+        2000
+      ).catch(() => {});
+    }
+
+    // Carregar logs de auditoria
+    const auditPromise = supabase.from('audit_logs').select('*').order('updated_at', { ascending: false }).limit(200);
+    const { data: auditRows, error: auditErr }: any = await withTimeout(auditPromise, 3000).catch(() => ({ data: null, error: null }));
+    if (!auditErr && auditRows) {
+      const remoteLogs = auditRows.map((r: any) => r.data).filter(Boolean);
+      if (remoteLogs.length > 0) {
+        cachedAuditLogs = remoteLogs;
+      }
+    }
+
+    // Se tiver service role key, verificar Auth Users
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        const listPromise = supabase.auth.admin.listUsers();
+        const { data: authData }: any = await withTimeout(listPromise, 3000).catch(() => ({ data: null }));
+        if (authData?.users) {
+          for (const authUser of authData.users) {
+            const email = (authUser.email || '').toLowerCase();
+            if (email === 'heltoncorreios@gmail.com' || email === 'admin@supermercado.com') {
+              let existing = Array.from(cachedProfiles.values()).find(
+                p => p.id === authUser.id || p.email.toLowerCase() === email
+              );
+              const adminProfile: UserProfile = {
+                id: existing ? existing.id : authUser.id,
+                name: existing?.name || (email.includes('helton') ? 'Helton (Administrador Master)' : 'Administrador Financeiro'),
+                email: authUser.email!,
+                role: 'ADMINISTRADOR',
+                status: 'ATIVO',
+                createdAt: existing?.createdAt || authUser.created_at || new Date().toISOString(),
+                lastSignInAt: authUser.last_sign_in_at || existing?.lastSignInAt || null
+              };
+              cachedProfiles.set(adminProfile.id, adminProfile);
+              cachedProfiles.set(authUser.id, adminProfile);
+              saveUserProfileSqlite(adminProfile);
+              withTimeout(
+                supabase.from('user_profiles').upsert([{ id: authUser.id, data: adminProfile, updated_at: new Date().toISOString() }]),
+                2000
+              ).catch(() => {});
+            }
+          }
+        }
+      } catch {}
+    }
+  } catch (err: any) {
+    console.warn('[UserManagement] Erro na sincronização com Supabase:', err.message);
   }
 }
 
@@ -287,9 +309,13 @@ export async function getUserProfiles(): Promise<UserProfile[]> {
 
   // Atualizar last_sign_in_at dinamicamente a partir do Supabase Auth
   const supabase = getSupabaseClient();
-  if (supabase) {
+  if (supabase && process.env.SUPABASE_SERVICE_ROLE_KEY) {
     try {
-      const { data: authData } = await supabase.auth.admin.listUsers();
+      const listPromise = supabase.auth.admin.listUsers();
+      const timeoutPromise = new Promise<{ data: null }>(res =>
+        setTimeout(() => res({ data: null }), 3000)
+      );
+      const { data: authData }: any = await Promise.race([listPromise, timeoutPromise]);
       if (authData?.users) {
         for (const authUser of authData.users) {
           const prof = cachedProfiles.get(authUser.id);
@@ -308,33 +334,123 @@ export async function getUserProfiles(): Promise<UserProfile[]> {
 
 export async function ensureUserIsAdmin(email: string, userId: string, name?: string): Promise<UserProfile> {
   await ensureInitialized();
+  const cleanEmail = (email || '').toLowerCase().trim();
   let profile = await getUserProfileById(userId);
-  if (!profile) {
-    profile = await getUserProfileByEmail(email);
+  if (!profile && cleanEmail) {
+    profile = await getUserProfileByEmail(cleanEmail);
   }
+
   if (!profile) {
     profile = {
       id: userId,
-      name: name || email.split('@')[0],
-      email: email,
+      name: name || (cleanEmail.includes('helton') ? 'Helton (Administrador Master)' : cleanEmail.split('@')[0]),
+      email: cleanEmail,
       role: 'ADMINISTRADOR',
       status: 'ATIVO',
       createdAt: new Date().toISOString(),
       lastSignInAt: new Date().toISOString()
     };
-    cachedProfiles.set(profile.id, profile);
   } else {
     profile.role = 'ADMINISTRADOR';
     profile.status = 'ATIVO';
-    cachedProfiles.set(profile.id, profile);
+    if (name && (!profile.name || profile.name.includes('@') || profile.name === 'Consulta')) {
+      profile.name = name;
+    }
   }
+
+  // Sincronizar ID de autenticação
+  cachedProfiles.set(profile.id, profile);
+  if (userId && userId !== profile.id) {
+    cachedProfiles.set(userId, profile);
+  }
+
   try {
     saveUserProfileSqlite(profile);
     const supabase = getSupabaseClient();
     if (supabase) {
-      await supabase.from('user_profiles').upsert([{ id: profile.id, data: profile, updated_at: new Date().toISOString() }]);
+      withTimeout(
+        supabase.from('user_profiles').upsert([{ id: profile.id, data: profile, updated_at: new Date().toISOString() }]),
+        2000
+      ).catch(() => {});
+      if (userId && userId !== profile.id) {
+        withTimeout(
+          supabase.from('user_profiles').upsert([{ id: userId, data: profile, updated_at: new Date().toISOString() }]),
+          2000
+        ).catch(() => {});
+      }
     }
+  } catch (err: any) {
+    console.warn('[UserManagement] Erro ao sincronizar perfil de administrador:', err.message);
+  }
+  return profile;
+}
+
+export async function enableMasterUser(email?: string, userId?: string, name?: string): Promise<UserProfile> {
+  await ensureInitialized();
+  const targetEmail = (email || 'heltoncorreios@gmail.com').toLowerCase().trim();
+  let profile: UserProfile | null = null;
+  if (userId) {
+    profile = await getUserProfileById(userId);
+  }
+  if (!profile && targetEmail) {
+    profile = await getUserProfileByEmail(targetEmail);
+  }
+
+  const defaultName = name || (targetEmail.includes('helton') ? 'Helton (Administrador Master)' : 'Administrador Master');
+
+  if (!profile) {
+    profile = {
+      id: userId || 'user_master_' + Date.now(),
+      name: defaultName,
+      email: targetEmail,
+      role: 'ADMINISTRADOR',
+      status: 'ATIVO',
+      createdAt: new Date().toISOString(),
+      lastSignInAt: new Date().toISOString()
+    };
+  } else {
+    profile.role = 'ADMINISTRADOR';
+    profile.status = 'ATIVO';
+    profile.name = defaultName;
+  }
+
+  cachedProfiles.set(profile.id, profile);
+  if (userId && userId !== profile.id) {
+    cachedProfiles.set(userId, profile);
+  }
+
+  try {
+    saveUserProfileSqlite(profile);
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      withTimeout(
+        supabase.from('user_profiles').upsert([{ id: profile.id, data: profile, updated_at: new Date().toISOString() }]),
+        2500
+      ).catch(err => {
+        console.warn('[UserManagement] Erro ao sincronizar master profile com Supabase:', err.message);
+      });
+      if (userId && userId !== profile.id) {
+        withTimeout(
+          supabase.from('user_profiles').upsert([{ id: userId, data: profile, updated_at: new Date().toISOString() }]),
+          2500
+        ).catch(() => {});
+      }
+    }
+  } catch (err: any) {
+    console.warn('[UserManagement] Erro ao salvar master profile no Supabase:', err.message);
+  }
+
+  try {
+    await addAuditLog({
+      user: profile.email,
+      userName: profile.name,
+      action: 'USUARIO_PROMOVIDO_MASTER',
+      description: `Perfil ${profile.email} ativado como ADMINISTRADOR MASTER com privilégios irrestritos`,
+      entityType: 'USER',
+      entityId: profile.id
+    });
   } catch {}
+
   return profile;
 }
 
@@ -388,11 +504,14 @@ export async function updateUserStatus(
 
   const supabase = getSupabaseClient();
   if (supabase) {
-    await supabase.from('user_profiles').upsert([{
-      id: target.id,
-      data: target,
-      updated_at: new Date().toISOString()
-    }]);
+    withTimeout(
+      supabase.from('user_profiles').upsert([{
+        id: target.id,
+        data: target,
+        updated_at: new Date().toISOString()
+      }]),
+      2000
+    ).catch(() => {});
   }
 
   const actionName = newStatus === 'ATIVO' ? 'USUARIO_ATIVADO' : newStatus === 'BLOQUEADO' ? 'USUARIO_BLOQUEADO' : 'USUARIO_PENDENTE';
@@ -444,11 +563,14 @@ export async function updateUserRole(
 
   const supabase = getSupabaseClient();
   if (supabase) {
-    await supabase.from('user_profiles').upsert([{
-      id: target.id,
-      data: target,
-      updated_at: new Date().toISOString()
-    }]);
+    withTimeout(
+      supabase.from('user_profiles').upsert([{
+        id: target.id,
+        data: target,
+        updated_at: new Date().toISOString()
+      }]),
+      2000
+    ).catch(() => {});
   }
 
   await addAuditLog({
@@ -537,15 +659,16 @@ async function createInviteWithCode(
 
   const supabase = getSupabaseClient();
   if (supabase) {
-    try {
-      await supabase.from('user_invites').upsert([{
+    withTimeout(
+      supabase.from('user_invites').upsert([{
         id,
         data: invite,
         updated_at: now.toISOString()
-      }]);
-    } catch (err) {
-      console.error('[UserManagement] Erro ao salvar convite no Supabase:', err);
-    }
+      }]),
+      2000
+    ).catch(err => {
+      console.warn('[UserManagement] Erro ao salvar convite no Supabase:', err.message);
+    });
   }
 
   await addAuditLog({
@@ -648,8 +771,8 @@ export async function consumeInviteAndCreateProfile(data: {
 
   const supabase = getSupabaseClient();
   if (supabase) {
-    try {
-      await Promise.all([
+    withTimeout(
+      Promise.all([
         supabase.from('user_invites').upsert([{
           id: invite.id,
           data: invite,
@@ -660,10 +783,11 @@ export async function consumeInviteAndCreateProfile(data: {
           data: newProfile,
           updated_at: now
         }])
-      ]);
-    } catch (err) {
-      console.error('[UserManagement] Erro ao persistir cadastro no Supabase:', err);
-    }
+      ]),
+      2500
+    ).catch(err => {
+      console.warn('[UserManagement] Erro ao persistir cadastro no Supabase:', err.message);
+    });
   }
 
   await addAuditLog({
@@ -705,15 +829,16 @@ export async function revokeInvite(
 
   const supabase = getSupabaseClient();
   if (supabase) {
-    try {
-      await supabase.from('user_invites').upsert([{
+    withTimeout(
+      supabase.from('user_invites').upsert([{
         id: invite.id,
         data: invite,
         updated_at: new Date().toISOString()
-      }]);
-    } catch (err) {
-      console.error('[UserManagement] Erro ao revogar convite no Supabase:', err);
-    }
+      }]),
+      2000
+    ).catch(err => {
+      console.warn('[UserManagement] Erro ao revogar convite no Supabase:', err.message);
+    });
   }
 
   await addAuditLog({

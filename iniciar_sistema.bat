@@ -14,9 +14,8 @@ if not exist node_modules (
 
 echo.
 echo [INFO] Iniciando o servidor local (npm run dev)...
-echo [INFO] Assim que iniciar, abra o navegador em: http://localhost:3000
+echo [INFO] Abrindo o navegador em: http://localhost:3000
 echo.
 start "" http://localhost:3000
 call npm run dev
 pause
-

@@ -93,6 +93,18 @@ function createPostgresPool(connectionString: string): pg.Pool {
   }
 }
 
+function withTimeout<T>(promise: Promise<T>, ms = 3000): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      const timer = setTimeout(() => reject(new Error('Supabase request timeout')), ms);
+      if (timer && typeof (timer as any).unref === 'function') {
+        (timer as any).unref();
+      }
+    })
+  ]);
+}
+
 export async function ensureSupabaseTables(): Promise<boolean> {
   const connectionString = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL;
   if (!connectionString) return false;
@@ -111,7 +123,7 @@ export async function ensureSupabaseTables(): Promise<boolean> {
       CREATE TABLE IF NOT EXISTS audit_logs (id VARCHAR(255) PRIMARY KEY, data JSONB NOT NULL, updated_at TIMESTAMPTZ DEFAULT NOW());
     `;
 
-    await pool.query(schemaQuery);
+    await withTimeout(pool.query(schemaQuery), 2500);
     await pool.end();
     return true;
   } catch (err) {
@@ -125,15 +137,7 @@ export async function loadFromSupabase(): Promise<DatabaseSchema | null> {
   if (!client) return null;
 
   try {
-    const [
-      accsRes,
-      catsRes,
-      opsRes,
-      rulesRes,
-      txsRes,
-      stmtsRes,
-      tmplsRes
-    ] = await Promise.all([
+    const fetchPromise = Promise.all([
       client.from('bank_accounts').select('*'),
       client.from('categories').select('*'),
       client.from('operation_types').select('*'),
@@ -142,6 +146,16 @@ export async function loadFromSupabase(): Promise<DatabaseSchema | null> {
       client.from('bank_statements').select('*'),
       client.from('mapping_templates').select('*')
     ]);
+
+    const [
+      accsRes,
+      catsRes,
+      opsRes,
+      rulesRes,
+      txsRes,
+      stmtsRes,
+      tmplsRes
+    ] = await withTimeout(fetchPromise, 3000);
 
     if (accsRes.error) {
       console.warn('Supabase fetch bank_accounts error:', accsRes.error.message);
@@ -168,6 +182,7 @@ export async function syncToSupabase(schema: DatabaseSchema): Promise<boolean> {
   if (!client) return false;
 
   try {
+    let hadError = false;
     const saveCollection = async (tableName: string, items: any[]) => {
       if (!items || items.length === 0) return;
       const rows = items.map((item) => ({
@@ -182,7 +197,12 @@ export async function syncToSupabase(schema: DatabaseSchema): Promise<boolean> {
         const chunk = rows.slice(i, i + chunkSize);
         const { error } = await client.from(tableName).upsert(chunk, { onConflict: 'id' });
         if (error) {
-          console.error(`Erro ao salvar no Supabase (${tableName}):`, error.message);
+          hadError = true;
+          if (error.code === '42501' || error.message.includes('row-level security')) {
+            console.error(`[Supabase RLS] Erro 42501 na tabela '${tableName}': O Supabase está bloqueando a inserção devido a Row Level Security (RLS). Execute "ALTER TABLE ${tableName} DISABLE ROW LEVEL SECURITY;" no SQL Editor do Supabase ou forneça a Service Role Key.`);
+          } else {
+            console.error(`Erro ao salvar no Supabase (${tableName}):`, error.message);
+          }
         }
       }
     };
@@ -197,7 +217,7 @@ export async function syncToSupabase(schema: DatabaseSchema): Promise<boolean> {
       saveCollection('mapping_templates', schema.mappingTemplates)
     ]);
 
-    return true;
+    return !hadError;
   } catch (err) {
     console.error('Erro ao sincronizar com Supabase:', err);
     return false;

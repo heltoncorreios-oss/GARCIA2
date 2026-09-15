@@ -21,6 +21,7 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
   refreshProfile: () => Promise<void>;
   loginAsPreviewAdmin: () => Promise<void>;
+  enableMaster: () => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -479,6 +480,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const enableMaster = async (): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await apiService.enableMasterUser({
+        email: user?.email || profile?.email || undefined,
+        userId: user?.id || profile?.id || undefined,
+        name: user?.user_metadata?.name || profile?.name || undefined
+      });
+      if (res.success && res.profile) {
+        setProfile(res.profile);
+        return { success: true };
+      }
+      return { success: false, error: res.error || 'Não foi possível habilitar o usuário master.' };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Erro ao comunicar com o servidor.' };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -491,7 +509,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signOut,
         resetPassword,
         refreshProfile,
-        loginAsPreviewAdmin
+        loginAsPreviewAdmin,
+        enableMaster
       }}
     >
       {children}

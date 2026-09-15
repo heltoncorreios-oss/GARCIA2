@@ -147,16 +147,35 @@ export function getSqliteDb(): DatabaseSync {
       data TEXT NOT NULL
     );
 
-    CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_logs(timestamp DESC);
-
     CREATE TABLE IF NOT EXISTS app_settings (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
+
+    CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_logs(timestamp DESC);
   `);
 
   sqliteDbInstance = db;
+
+  // Carregar configurações persistidas do SQLite para process.env
+  try {
+    const rowUrl = db.prepare(`SELECT value FROM app_settings WHERE key = 'SUPABASE_URL'`).get() as { value: string } | undefined;
+    const rowAnon = db.prepare(`SELECT value FROM app_settings WHERE key = 'SUPABASE_ANON_KEY'`).get() as { value: string } | undefined;
+    const rowService = db.prepare(`SELECT value FROM app_settings WHERE key = 'SUPABASE_SERVICE_ROLE_KEY'`).get() as { value: string } | undefined;
+    if (rowUrl?.value && !process.env.SUPABASE_URL) {
+      process.env.SUPABASE_URL = rowUrl.value;
+      process.env.VITE_SUPABASE_URL = rowUrl.value;
+    }
+    if (rowAnon?.value && !process.env.SUPABASE_ANON_KEY) {
+      process.env.SUPABASE_ANON_KEY = rowAnon.value;
+      process.env.VITE_SUPABASE_ANON_KEY = rowAnon.value;
+    }
+    if (rowService?.value && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      process.env.SUPABASE_SERVICE_ROLE_KEY = rowService.value;
+    }
+  } catch {}
+
   console.log(`[SQLite] Banco de dados local SQLite inicializado com sucesso em: ${dbPath}`);
   return db;
 }
@@ -515,3 +534,38 @@ export function getSqliteDatabaseInfo(): {
     tables
   };
 }
+
+export function saveAppSetting(key: string, value: string): void {
+  const db = getSqliteDb();
+  const now = new Date().toISOString();
+  db.prepare(`
+    INSERT INTO app_settings (key, value, updated_at)
+    VALUES (?, ?, ?)
+    ON CONFLICT(key) DO UPDATE SET
+      value = excluded.value,
+      updated_at = excluded.updated_at
+  `).run(key, value, now);
+}
+
+export function getAppSetting(key: string): string | null {
+  try {
+    const db = getSqliteDb();
+    const row = db.prepare(`SELECT value FROM app_settings WHERE key = ?`).get(key) as { value: string } | undefined;
+    return row?.value || null;
+  } catch {
+    return null;
+  }
+}
+
+export function loadAllAppSettings(): Record<string, string> {
+  const settings: Record<string, string> = {};
+  try {
+    const db = getSqliteDb();
+    const rows = db.prepare(`SELECT key, value FROM app_settings`).all() as { key: string; value: string }[];
+    for (const r of rows) {
+      settings[r.key] = r.value;
+    }
+  } catch {}
+  return settings;
+}
+

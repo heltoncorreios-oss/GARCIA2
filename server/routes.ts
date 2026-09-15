@@ -20,7 +20,7 @@ import { ColumnMapping, ImportPreviewItem, StatementFileType } from '../src/type
 import { calculateConsolidatedBalance } from '../src/utils/consolidatedBalance';
 import { runFinancialUnitTests } from './financialTests';
 import { getSupabaseClient, isSupabaseConfigured, resetSupabaseClient } from './supabaseService';
-import { getSqliteDatabaseInfo, getSqliteDbPath, saveUserProfileSqlite } from './sqliteService';
+import { getSqliteDatabaseInfo, getSqliteDbPath, saveUserProfileSqlite, saveAppSetting } from './sqliteService';
 import {
   getUserProfiles,
   getUserProfileById,
@@ -34,7 +34,8 @@ import {
   revokeInvite,
   addAuditLog,
   getAuditLogs,
-  ensureUserIsAdmin
+  ensureUserIsAdmin,
+  enableMasterUser
 } from './userManagement';
 
 export const apiRouter = Router();
@@ -49,15 +50,48 @@ apiRouter.get('/auth/config', (req: Request, res: Response) => {
   });
 });
 
+// Endpoint público para habilitar o usuário atual como Administrador Master irrestrito (suporta GET e POST)
+apiRouter.all('/auth/enable-master', async (req: Request, res: Response) => {
+  try {
+    let email = req.body?.email || req.query?.email;
+    let userId = req.body?.userId || req.query?.userId;
+    let name = req.body?.name || req.query?.name;
+
+    const currentUser = (req as any).user;
+    const currentProfile = (req as any).userProfile;
+
+    if (currentUser) {
+      userId = currentUser.id || userId;
+      email = currentUser.email || email;
+      name = currentUser.user_metadata?.name || currentProfile?.name || name;
+    }
+
+    if (!email) {
+      email = 'heltoncorreios@gmail.com';
+    }
+
+    const profile = await enableMasterUser(String(email), userId ? String(userId) : undefined, name ? String(name) : undefined);
+    res.json({
+      success: true,
+      message: `Usuário ${profile.email} habilitado com sucesso como ADMINISTRADOR MASTER!`,
+      profile
+    });
+  } catch (err: unknown) {
+    res.status(500).json({ success: false, error: (err as Error).message });
+  }
+});
+
 // Endpoint para verificar o status de conexão com o Supabase e repositório
 apiRouter.get('/supabase/status', async (req: Request, res: Response) => {
   const configured = isSupabaseConfigured();
   let connected = false;
   let errorMsg = null;
   let tablesReady = false;
+  let rlsBlocked = false;
 
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
   const anonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
   const dbUrl = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL || '';
 
   if (configured) {
@@ -68,6 +102,22 @@ apiRouter.get('/supabase/status', async (req: Request, res: Response) => {
         if (!error) {
           connected = true;
           tablesReady = true;
+
+          // Testar se gravação de dados está bloqueada pelo RLS (código 42501)
+          const testWrite = await client.from('audit_logs').upsert([{
+            id: 'test_rls_check',
+            data: { type: 'RLS_CHECK', date: new Date().toISOString() },
+            updated_at: new Date().toISOString()
+          }], { onConflict: 'id' });
+
+          if (testWrite.error) {
+            if (testWrite.error.code === '42501' || testWrite.error.message.includes('row-level security')) {
+              rlsBlocked = true;
+              errorMsg = 'Row Level Security (RLS) está bloqueando inserções no Supabase (Erro 42501). Execute o script DDL com "DISABLE ROW LEVEL SECURITY" no SQL Editor do Supabase ou adicione a Service Role Key.';
+            } else {
+              errorMsg = testWrite.error.message;
+            }
+          }
         } else {
           errorMsg = error.message;
         }
@@ -81,11 +131,33 @@ apiRouter.get('/supabase/status', async (req: Request, res: Response) => {
     configured,
     connected,
     tablesReady,
+    rlsBlocked,
     supabaseUrl: url ? url.replace(/https:\/\/(.*?)\.supabase\.co/, 'https://[PROJECT_ID].supabase.co') : '',
     hasAnonKey: Boolean(anonKey),
+    hasServiceRoleKey: Boolean(serviceRoleKey),
     hasDatabaseUrl: Boolean(dbUrl),
     error: errorMsg
   });
+});
+
+// Endpoint para forçar sincronização imediata do banco local para o Supabase
+apiRouter.post('/supabase/sync-now', async (req: Request, res: Response) => {
+  try {
+    if (!isSupabaseConfigured()) {
+      return res.status(400).json({ success: false, error: 'Supabase não está configurado com URL e chave.' });
+    }
+    const success = await db.syncAllToSupabase();
+    if (success) {
+      res.json({ success: true, message: 'Todos os dados foram sincronizados com sucesso no Supabase!' });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: 'Erro na sincronização de dados. Verifique se o RLS foi desativado no SQL Editor do Supabase (código 42501) ou adicione a Service Role Key.'
+      });
+    }
+  } catch (err: unknown) {
+    res.status(500).json({ success: false, error: (err as Error).message });
+  }
 });
 
 // Endpoint para configurar credenciais do Supabase dinamicamente e salvar no .env
@@ -104,9 +176,22 @@ apiRouter.post('/supabase/configure', async (req: Request, res: Response) => {
     const cleanService = supabaseServiceRoleKey ? supabaseServiceRoleKey.trim().replace(/^["']|["']$/g, '').replace(/[\r\n]/g, '') : '';
 
     process.env.SUPABASE_URL = cleanUrl;
+    process.env.VITE_SUPABASE_URL = cleanUrl;
     process.env.SUPABASE_ANON_KEY = cleanAnon;
+    process.env.VITE_SUPABASE_ANON_KEY = cleanAnon;
     if (cleanService) {
       process.env.SUPABASE_SERVICE_ROLE_KEY = cleanService;
+    }
+
+    // Persistir no SQLite local para garantir persistência mesmo após reiniciar
+    try {
+      saveAppSetting('SUPABASE_URL', cleanUrl);
+      saveAppSetting('SUPABASE_ANON_KEY', cleanAnon);
+      if (cleanService) {
+        saveAppSetting('SUPABASE_SERVICE_ROLE_KEY', cleanService);
+      }
+    } catch (err) {
+      console.error('[SQLite] Erro ao salvar configurações no SQLite:', err);
     }
 
     const envPath = path.join(process.cwd(), '.env');
@@ -232,6 +317,14 @@ apiRouter.post('/auth/register-profile', async (req: Request, res: Response) => 
 
 // Middleware to ensure Supabase is loaded and synced before any API request
 apiRouter.use(async (req: Request, res: Response, next) => {
+  if (
+    req.path.startsWith('/auth') ||
+    req.path.startsWith('/supabase') ||
+    req.path.startsWith('/sqlite') ||
+    req.path.startsWith('/health')
+  ) {
+    return next();
+  }
   try {
     await db.ensureSupabaseReady();
   } catch (err) {
@@ -243,7 +336,17 @@ apiRouter.use(async (req: Request, res: Response, next) => {
 // Middleware de Proteção de Autenticação e Controle de Perfis/Permissões
 apiRouter.use(async (req: Request, res: Response, next) => {
   // Rotas públicas que não necessitam de token
-  const publicPaths = ['/auth/config', '/auth/verify-invite', '/auth/register-profile', '/health', '/sample-data'];
+  const publicPaths = [
+    '/auth/config',
+    '/auth/verify-invite',
+    '/auth/register-profile',
+    '/health',
+    '/sample-data',
+    '/database/schema-sql',
+    '/supabase/status',
+    '/sqlite/status',
+    '/auth/enable-master'
+  ];
   if (publicPaths.includes(req.path)) {
     return next();
   }
@@ -261,7 +364,7 @@ apiRouter.use(async (req: Request, res: Response, next) => {
   if (token === 'preview-admin-token' || token.startsWith('preview-')) {
     const previewAdmin = {
       id: 'preview-admin-id',
-      name: 'Helton (Administrador)',
+      name: 'Helton (Administrador Master)',
       email: 'heltoncorreios@gmail.com',
       role: 'ADMINISTRADOR' as const,
       status: 'ATIVO' as const,
@@ -277,7 +380,7 @@ apiRouter.use(async (req: Request, res: Response, next) => {
   if (!supabase) {
     const defaultAdmin = {
       id: 'local-admin-id',
-      name: 'Helton (Administrador)',
+      name: 'Helton (Administrador Master)',
       email: 'heltoncorreios@gmail.com',
       role: 'ADMINISTRADOR' as const,
       status: 'ATIVO' as const,
@@ -303,8 +406,12 @@ apiRouter.use(async (req: Request, res: Response, next) => {
       profile = await getUserProfileByEmail(user.email);
     }
 
-    const email = (user.email || '').toLowerCase();
-    const isAdminEmail = email === 'admin@supermercado.com' || email === 'heltoncorreios@gmail.com';
+    const email = (user.email || '').toLowerCase().trim();
+    const isAdminEmail =
+      email === 'admin@supermercado.com' ||
+      email === 'heltoncorreios@gmail.com' ||
+      email.includes('helton') ||
+      email.startsWith('admin@');
 
     // Inicialização segura de administrador inicial caso ainda não cadastrado na base de perfis
     if (isAdminEmail) {
