@@ -1041,8 +1041,21 @@ apiRouter.post('/import/preview', async (req: Request, res: Response) => {
   try {
     const { fileContent, fileBase64, fileName, fileType, bankAccountId, customMapping } = req.body;
 
-    if (!bankAccountId) {
-      return res.status(400).json({ error: 'Conta bancária de destino é obrigatória.' });
+    let finalBankAccountId = bankAccountId;
+    if (!finalBankAccountId) {
+      const accounts = db.getBankAccounts();
+      if (accounts.length > 0) {
+        finalBankAccountId = accounts[0].id;
+      } else {
+        const newAcc = db.createBankAccount({
+          accountName: 'Conta Principal',
+          bankCode: '000',
+          agency: '',
+          accountNumber: '',
+          initialBalance: 0
+        }, 'Sistema');
+        finalBankAccountId = newAcc.id;
+      }
     }
 
     let parsedRows: RawParsedTransaction[] = [];
@@ -1131,8 +1144,8 @@ apiRouter.post('/import/preview', async (req: Request, res: Response) => {
       });
     }
 
-    const preview = db.processImportPreview(parsedRows, bankAccountId, extractedBalance);
-    res.json({ preview, fileName, fileType: typeUpper, extractedBalance: preview.extractedBalance });
+    const preview = db.processImportPreview(parsedRows, finalBankAccountId, extractedBalance);
+    res.json({ preview, fileName, fileType: typeUpper, extractedBalance: preview.extractedBalance, assignedBankAccountId: finalBankAccountId });
   } catch (err: unknown) {
     res.status(500).json({ error: (err as Error).message });
   }
@@ -1146,8 +1159,22 @@ apiRouter.post('/import/confirm', (req: Request, res: Response) => {
     if (!items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'Nenhum item selecionado para importação.' });
     }
-    if (!bankAccountId) {
-      return res.status(400).json({ error: 'Conta bancária é obrigatória.' });
+
+    let finalBankAccountId = bankAccountId;
+    if (!finalBankAccountId) {
+      const accounts = db.getBankAccounts();
+      if (accounts.length > 0) {
+        finalBankAccountId = accounts[0].id;
+      } else {
+        const newAcc = db.createBankAccount({
+          accountName: 'Conta Principal',
+          bankCode: '000',
+          agency: '',
+          accountNumber: '',
+          initialBalance: 0
+        }, 'Sistema');
+        finalBankAccountId = newAcc.id;
+      }
     }
 
     const userProfile = (req as any).userProfile;
@@ -1155,7 +1182,7 @@ apiRouter.post('/import/confirm', (req: Request, res: Response) => {
 
     const result = db.confirmImport(
       items as ImportPreviewItem[],
-      bankAccountId,
+      finalBankAccountId,
       fileName || 'extrato_importado.ofx',
       (fileType || 'OFX') as StatementFileType,
       authorName,
