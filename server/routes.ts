@@ -1412,3 +1412,32 @@ apiRouter.get('/financial-audit', (req: Request, res: Response) => {
     res.status(500).json({ error: (err as Error).message });
   }
 });
+
+// ===================== ENTERPRISE BACKUP & RECOVERY =====================
+apiRouter.get('/backup/export', (req: Request, res: Response) => {
+  try {
+    const backupPackage = db.exportBackupPackage();
+    res.json(backupPackage);
+  } catch (err: unknown) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+apiRouter.post('/backup/restore', (req: Request, res: Response) => {
+  try {
+    const { backupPackage, userName } = req.body;
+    const result = db.restoreBackupPackage(backupPackage, userName);
+    res.json(result);
+  } catch (err: unknown) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+apiRouter.get('/backup/logs', (req: Request, res: Response) => {
+  try {
+    const logs = db.getBackupLogs();
+    res.json({ logs });
+  } catch (err: unknown) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});

@@ -162,26 +162,26 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
   const { width: previewW, height: previewH } = getOutputDimensions();
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-white border border border-black rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white border border-zinc-200 rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
-        <div className="p-4 border-b border border-black flex items-center justify-between bg-[#101014]">
+        <div className="p-4 border-b border-zinc-200 flex items-center justify-between bg-zinc-50">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-orange-500/10 text-orange-700 font-bold border border-orange-500/20 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-orange-100 text-orange-600 border border-orange-200 flex items-center justify-center">
               <Crop className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-zinc-950 font-bold">
+              <h3 className="text-sm font-bold text-zinc-950">
                 Redimensionar & Ajustar Logotipo
               </h3>
-              <p className="text-[11px] text-zinc-900 font-semibold">
+              <p className="text-[11px] text-zinc-600">
                 Ajuste o zoom, posição, rotação e fundo para um enquadramento perfeito
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-zinc-900 font-semibold hover:text-zinc-950 font-bold hover:bg-white/5 rounded-lg transition-colors"
+            className="p-1.5 text-zinc-500 hover:text-zinc-950 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -191,8 +191,8 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
         <div className="p-5 space-y-5 overflow-y-auto flex-1">
           {/* Interactive Canvas Preview Area */}
           <div className="flex flex-col items-center justify-center">
-            <div className="text-[11px] font-semibold text-zinc-900 font-semibold mb-2 flex items-center gap-1">
-              <Move className="w-3.5 h-3.5 text-orange-700 font-bold" />
+            <div className="text-[11px] font-semibold text-zinc-700 mb-2 flex items-center gap-1">
+              <Move className="w-3.5 h-3.5 text-orange-600" />
               <span>Clique e arraste a imagem abaixo para reposicionar:</span>
             </div>
 
@@ -201,7 +201,7 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
-              className={`relative border-2 border-dashed border-orange-500/40 rounded-xl overflow-hidden cursor-grab active:cursor-grabbing bg-[#0a0a0d] shadow-inner flex items-center justify-center transition-all ${
+              className={`relative border-2 border-dashed border-orange-400 rounded-xl overflow-hidden cursor-grab active:cursor-grabbing bg-zinc-900 shadow-inner flex items-center justify-center transition-all ${
                 bgColor === 'transparent' ? 'checkerboard-bg' : ''
               }`}
               style={{
@@ -216,21 +216,21 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
               />
             </div>
 
-            <div className="text-[10px] text-zinc-800 font-medium mt-1.5">
+            <div className="text-[10px] text-zinc-600 mt-1.5">
               Dimensão de Saída: <span className="text-zinc-950 font-bold font-mono">{previewW}x{previewH}px</span>
             </div>
           </div>
 
           {/* Controls Grid */}
-          <div className="bg-white border border border-black rounded-2xl p-4 space-y-4">
+          <div className="bg-slate-50 border border-zinc-200 rounded-2xl p-4 space-y-4">
             {/* Scale / Zoom Slider */}
             <div>
-              <div className="flex items-center justify-between text-xs font-semibold text-zinc-950 font-bold mb-1.5">
+              <div className="flex items-center justify-between text-xs font-semibold text-zinc-950 mb-1.5">
                 <span className="flex items-center gap-1.5">
-                  <ZoomIn className="w-3.5 h-3.5 text-orange-700 font-bold" />
+                  <ZoomIn className="w-3.5 h-3.5 text-orange-600" />
                   <span>Tamanho / Zoom:</span>
                 </span>
-                <span className="text-orange-700 font-bold font-mono font-bold">
+                <span className="text-orange-700 font-mono font-bold">
                   {Math.round(scale * 100)}%
                 </span>
               </div>
@@ -238,7 +238,7 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setScale((prev) => Math.max(0.2, prev - 0.1))}
-                  className="p-1.5 bg-white/5 hover:bg-white/10 text-zinc-950 font-bold rounded-lg text-xs"
+                  className="p-1.5 bg-white hover:bg-zinc-100 text-zinc-800 rounded-lg text-xs border border-zinc-200 cursor-pointer"
                   title="Diminuir"
                 >
                   <ZoomOut className="w-3.5 h-3.5" />
@@ -250,12 +250,12 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
                   step="0.05"
                   value={scale}
                   onChange={(e) => setScale(parseFloat(e.target.value))}
-                  className="flex-1 accent-orange-500 h-1.5 bg-zinc-800 rounded-lg cursor-pointer"
+                  className="flex-1 accent-orange-500 h-1.5 bg-zinc-200 rounded-lg cursor-pointer"
                 />
                 <button
                   type="button"
                   onClick={() => setScale((prev) => Math.min(3.5, prev + 0.1))}
-                  className="p-1.5 bg-white/5 hover:bg-white/10 text-zinc-950 font-bold rounded-lg text-xs"
+                  className="p-1.5 bg-white hover:bg-zinc-100 text-zinc-800 rounded-lg text-xs border border-zinc-200 cursor-pointer"
                   title="Aumentar"
                 >
                   <ZoomIn className="w-3.5 h-3.5" />
@@ -267,7 +267,7 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               {/* Aspect Ratio Options */}
               <div>
-                <label className="block text-[11px] font-semibold text-zinc-900 font-semibold mb-1.5">
+                <label className="block text-[11px] font-semibold text-zinc-700 mb-1.5">
                   Formato da Imagem:
                 </label>
                 <div className="grid grid-cols-4 gap-1.5">
@@ -276,10 +276,10 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
                       key={ratio}
                       type="button"
                       onClick={() => setAspectRatio(ratio)}
-                      className={`px-2 py-1.5 text-xs font-bold rounded-lg border transition-all ${
+                      className={`px-2 py-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
                         aspectRatio === ratio
-                          ? 'bg-orange-500/20 border-orange-500/50 text-orange-700 font-bold'
-                          : 'bg-white/5 border border-black text-zinc-900 font-semibold hover:text-white'
+                          ? 'bg-orange-600 text-white border-orange-600 shadow-2xs'
+                          : 'bg-white border-zinc-200 text-zinc-800 hover:bg-zinc-100'
                       }`}
                     >
                       {ratio}
@@ -290,18 +290,18 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
 
               {/* Background Color */}
               <div>
-                <label className="block text-[11px] font-semibold text-zinc-900 font-semibold mb-1.5 flex items-center gap-1">
-                  <Palette className="w-3 h-3 text-orange-700 font-bold" />
+                <label className="block text-[11px] font-semibold text-zinc-700 mb-1.5 flex items-center gap-1">
+                  <Palette className="w-3 h-3 text-orange-600" />
                   <span>Fundo da Imagem:</span>
                 </label>
                 <div className="grid grid-cols-4 gap-1.5">
                   <button
                     type="button"
                     onClick={() => setBgColor('transparent')}
-                    className={`px-1.5 py-1.5 text-[10px] font-bold rounded-lg border transition-all ${
+                    className={`px-1.5 py-1.5 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${
                       bgColor === 'transparent'
-                        ? 'bg-orange-500/20 border-orange-500/50 text-orange-700 font-bold'
-                        : 'bg-white/5 border border-black text-zinc-900 font-semibold'
+                        ? 'bg-orange-600 text-white border-orange-600'
+                        : 'bg-white border-zinc-200 text-zinc-800 hover:bg-zinc-100'
                     }`}
                   >
                     Transp.
@@ -309,10 +309,10 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setBgColor('white')}
-                    className={`px-1.5 py-1.5 text-[10px] font-bold rounded-lg border transition-all ${
+                    className={`px-1.5 py-1.5 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${
                       bgColor === 'white'
-                        ? 'bg-white text-black border-white'
-                        : 'bg-white/10 border border-black text-zinc-950 font-bold'
+                        ? 'bg-orange-600 text-white border-orange-600'
+                        : 'bg-white border-zinc-200 text-zinc-800 hover:bg-zinc-100'
                     }`}
                   >
                     Branco
@@ -320,10 +320,10 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setBgColor('dark')}
-                    className={`px-1.5 py-1.5 text-[10px] font-bold rounded-lg border transition-all ${
+                    className={`px-1.5 py-1.5 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${
                       bgColor === 'dark'
-                        ? 'bg-zinc-800 border-orange-500 text-orange-700 font-bold'
-                        : 'bg-white/5 border border-black text-zinc-900 font-semibold'
+                        ? 'bg-orange-600 text-white border-orange-600'
+                        : 'bg-white border-zinc-200 text-zinc-800 hover:bg-zinc-100'
                     }`}
                   >
                     Escuro
@@ -331,10 +331,10 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setBgColor('black')}
-                    className={`px-1.5 py-1.5 text-[10px] font-bold rounded-lg border transition-all ${
+                    className={`px-1.5 py-1.5 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${
                       bgColor === 'black'
-                        ? 'bg-black border-orange-500 text-orange-700 font-bold'
-                        : 'bg-white/5 border border-black text-zinc-900 font-semibold'
+                        ? 'bg-orange-600 text-white border-orange-600'
+                        : 'bg-white border-zinc-200 text-zinc-800 hover:bg-zinc-100'
                     }`}
                   >
                     Preto
@@ -344,28 +344,28 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
             </div>
 
             {/* Rotation and Reset */}
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border border-black">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-zinc-200">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setRotation((prev) => (prev + 90) % 360)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-zinc-950 font-bold text-xs font-semibold rounded-lg border border border-black transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-zinc-100 text-zinc-800 text-xs font-semibold rounded-lg border border-zinc-200 transition-colors cursor-pointer shadow-2xs"
                 >
-                  <RotateCw className="w-3.5 h-3.5 text-orange-700 font-bold" />
+                  <RotateCw className="w-3.5 h-3.5 text-orange-600" />
                   <span>Girar 90°</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-zinc-900 font-semibold hover:text-white text-xs font-semibold rounded-lg transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900 text-xs font-semibold rounded-lg border border-zinc-200 transition-colors cursor-pointer"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>Resetar Ajustes</span>
                 </button>
               </div>
 
-              <div className="text-[11px] text-zinc-800 font-medium italic">
+              <div className="text-[11px] text-zinc-500 italic">
                 * Dica: use o mouse para centralizar o logotipo
               </div>
             </div>
@@ -373,18 +373,18 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border border-black bg-[#101014] flex items-center justify-end gap-3">
+        <div className="p-4 border-t border-zinc-200 bg-zinc-50 flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-zinc-900 font-semibold hover:text-white rounded-xl transition-colors"
+            className="px-4 py-2 text-xs font-semibold text-zinc-600 hover:text-zinc-950 rounded-xl transition-colors cursor-pointer"
           >
             Cancelar
           </button>
           <button
             type="button"
             onClick={handleApply}
-            className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-xl shadow-md transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-xl shadow-xs transition-colors cursor-pointer"
           >
             <Check className="w-4 h-4" />
             <span>Aplicar Redimensionamento</span>

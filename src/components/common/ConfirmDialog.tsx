@@ -34,22 +34,22 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     switch (variant) {
       case 'danger':
         return {
-          iconBg: 'bg-rose-500/10 text-rose-700 font-bold border border border-black',
-          btnBg: 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-950/50',
-          badge: 'bg-rose-500/15 text-rose-700 font-bold'
+          iconBg: 'bg-rose-50 text-rose-700 border border-rose-200',
+          btnBg: 'bg-rose-600 hover:bg-rose-500 text-white shadow-xs',
+          badge: 'bg-rose-100 text-rose-800 font-bold'
         };
       case 'warning':
         return {
-          iconBg: 'bg-amber-500/10 text-amber-700 font-bold border border border-black',
-          btnBg: 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-950/50',
-          badge: 'bg-amber-500/15 text-amber-700 font-bold'
+          iconBg: 'bg-amber-50 text-amber-700 border border-amber-200',
+          btnBg: 'bg-amber-600 hover:bg-amber-500 text-white shadow-xs',
+          badge: 'bg-amber-100 text-amber-800 font-bold'
         };
       case 'primary':
       default:
         return {
-          iconBg: 'bg-orange-500/10 text-orange-700 font-bold border border-orange-500/20',
-          btnBg: 'bg-orange-600 hover:bg-orange-500 text-white shadow-orange-950/50',
-          badge: 'bg-orange-500/15 text-orange-700 font-bold'
+          iconBg: 'bg-orange-50 text-orange-700 border border-orange-200',
+          btnBg: 'bg-orange-600 hover:bg-orange-500 text-white shadow-xs',
+          badge: 'bg-orange-100 text-orange-800 font-bold'
         };
     }
   };
@@ -63,9 +63,9 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div 
-        className="relative w-full max-w-md bg-white border border border-black rounded-2xl shadow-2xl shadow-black overflow-hidden animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-md bg-white border border-zinc-200 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
         role="dialog"
         aria-modal="true"
       >
@@ -80,7 +80,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             <button
               onClick={onCancel}
               disabled={isLoading}
-              className="p-1.5 text-zinc-900 font-semibold hover:text-zinc-950 font-bold hover:bg-white/5 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+              className="p-1.5 text-zinc-400 hover:text-zinc-950 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
               title="Fechar"
             >
               <X className="w-5 h-5" />
@@ -88,18 +88,18 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           </div>
 
           <div className="mt-4">
-            <h3 className="text-lg font-bold text-zinc-950 font-bold tracking-tight">
+            <h3 className="text-lg font-bold text-zinc-950 tracking-tight">
               {title}
             </h3>
-            <p className="text-sm text-zinc-950 font-bold mt-2 leading-relaxed">
+            <p className="text-sm text-zinc-600 mt-2 leading-relaxed font-medium">
               {description}
             </p>
 
             {details && details.length > 0 && (
-              <div className="mt-3 p-3 bg-white rounded-xl border border border-black space-y-1.5">
+              <div className="mt-3 p-3 bg-slate-50/80 rounded-xl border border-zinc-200 space-y-1.5">
                 {details.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-xs text-zinc-900 font-semibold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-orange-400 shrink-0" />
+                  <div key={idx} className="flex items-center gap-2 text-xs text-zinc-700 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
                     <span>{item}</span>
                   </div>
                 ))}
@@ -112,7 +112,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
               type="button"
               onClick={onCancel}
               disabled={isLoading}
-              className="px-4 py-2 text-xs font-semibold text-zinc-950 font-bold hover:text-white bg-white/5 hover:bg-white/10 border border border-black rounded-xl transition-all cursor-pointer disabled:opacity-50"
+              className="px-4 py-2 text-xs font-semibold text-zinc-600 hover:text-zinc-950 bg-zinc-100 hover:bg-zinc-200 border border-zinc-200 rounded-xl transition-all cursor-pointer disabled:opacity-50"
             >
               {cancelText}
             </button>
@@ -120,7 +120,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
               type="button"
               onClick={onConfirm}
               disabled={isLoading}
-              className={`inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl shadow-lg transition-all cursor-pointer disabled:opacity-50 ${styles.btnBg}`}
+              className={`inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer disabled:opacity-50 ${styles.btnBg}`}
             >
               {isLoading ? (
                 <>

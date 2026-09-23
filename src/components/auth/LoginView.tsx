@@ -266,7 +266,7 @@ export const LoginView: React.FC = () => {
   return (
     <div className="min-h-screen bg-zinc-50 flex flex-col justify-center items-center p-4 sm:p-6 lg:p-8">
       {/* Central Login Card */}
-      <div className="w-full max-w-md bg-white border border-black rounded-3xl p-6 sm:p-8 shadow-2xl shadow-zinc-200/50 space-y-6">
+      <div className="w-full max-w-md bg-white border border-zinc-200 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-zinc-200/50 space-y-6">
         {/* Brand & System Header */}
         <div className="flex flex-col items-center text-center space-y-3">
           <div className="w-14 h-14 rounded-2xl bg-orange-600 text-white flex items-center justify-center shadow-md shadow-orange-600/30 border border-orange-700/30">
@@ -334,7 +334,7 @@ export const LoginView: React.FC = () => {
                   autoComplete="username"
                   required
                   disabled={isSubmitting}
-                  className="w-full pl-10 pr-3.5 py-3 text-sm font-semibold text-zinc-950 bg-white border border-black rounded-xl placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-orange-600 focus:border-orange-600 transition-all disabled:bg-zinc-100"
+                  className="w-full pl-10 pr-3.5 py-3 text-sm font-semibold text-zinc-950 bg-slate-50 border border-zinc-200 rounded-xl placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-orange-600 focus:border-orange-600 transition-all disabled:bg-zinc-100"
                 />
               </div>
             </div>
@@ -375,7 +375,7 @@ export const LoginView: React.FC = () => {
                   autoComplete="current-password"
                   required
                   disabled={isSubmitting}
-                  className="w-full pl-10 pr-10 py-3 text-sm font-semibold text-zinc-950 bg-white border border-black rounded-xl placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-orange-600 focus:border-orange-600 transition-all disabled:bg-zinc-100"
+                  className="w-full pl-10 pr-10 py-3 text-sm font-semibold text-zinc-950 bg-slate-50 border border-zinc-200 rounded-xl placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-orange-600 focus:border-orange-600 transition-all disabled:bg-zinc-100"
                 />
                 <button
                   type="button"
@@ -398,7 +398,7 @@ export const LoginView: React.FC = () => {
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
                   disabled={isSubmitting}
-                  className="w-4 h-4 rounded-md border-black text-orange-600 focus:ring-orange-600 cursor-pointer"
+                  className="w-4 h-4 rounded-md border-zinc-300 text-orange-600 focus:ring-orange-600 cursor-pointer"
                 />
                 <span className="text-xs font-bold text-zinc-800">Lembrar acesso</span>
               </label>
@@ -526,7 +526,7 @@ export const LoginView: React.FC = () => {
                   placeholder="Ex: Carlos Eduardo Silveira"
                   required
                   disabled={isSubmitting}
-                  className="w-full pl-10 pr-3.5 py-2.5 text-xs font-semibold text-zinc-950 bg-white border border-black rounded-xl placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-orange-600 focus:border-orange-600"
+                  className="w-full pl-10 pr-3.5 py-2.5 text-xs font-semibold text-zinc-950 bg-slate-50 border border-zinc-200 rounded-xl placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-orange-600 focus:border-orange-600"
                 />
               </div>
             </div>
@@ -548,7 +548,7 @@ export const LoginView: React.FC = () => {
                   placeholder="carlos@supermercado.com"
                   required
                   disabled={isSubmitting}
-                  className="w-full pl-10 pr-3.5 py-2.5 text-xs font-semibold text-zinc-950 bg-white border border-black rounded-xl placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-orange-600 focus:border-orange-600"
+                  className="w-full pl-10 pr-3.5 py-2.5 text-xs font-semibold text-zinc-950 bg-slate-50 border border-zinc-200 rounded-xl placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-orange-600 focus:border-orange-600"
                 />
               </div>
             </div>
@@ -570,7 +570,7 @@ export const LoginView: React.FC = () => {
                   placeholder="••••••••"
                   required
                   disabled={isSubmitting}
-                  className="w-full pl-10 pr-10 py-2.5 text-xs font-semibold text-zinc-950 bg-white border border-black rounded-xl placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-orange-600 focus:border-orange-600"
+                  className="w-full pl-10 pr-10 py-2.5 text-xs font-semibold text-zinc-950 bg-slate-50 border border-zinc-200 rounded-xl placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-orange-600 focus:border-orange-600"
                 />
                 <button
                   type="button"
@@ -600,7 +600,7 @@ export const LoginView: React.FC = () => {
                   placeholder="••••••••"
                   required
                   disabled={isSubmitting}
-                  className="w-full pl-10 pr-3.5 py-2.5 text-xs font-semibold text-zinc-950 bg-white border border-black rounded-xl placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-orange-600 focus:border-orange-600"
+                  className="w-full pl-10 pr-3.5 py-2.5 text-xs font-semibold text-zinc-950 bg-slate-50 border border-zinc-200 rounded-xl placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-orange-600 focus:border-orange-600"
                 />
               </div>
             </div>
@@ -630,7 +630,7 @@ export const LoginView: React.FC = () => {
                   placeholder="Ex: FIN-8K4P-X92M"
                   required
                   disabled={isSubmitting}
-                  className="w-full pl-10 pr-3.5 py-2.5 text-xs font-mono font-bold tracking-wider text-orange-950 bg-orange-50/50 border border-black rounded-xl placeholder:text-zinc-400 placeholder:font-sans focus:outline-hidden focus:ring-2 focus:ring-orange-600 focus:border-orange-600"
+                  className="w-full pl-10 pr-3.5 py-2.5 text-xs font-mono font-bold tracking-wider text-orange-950 bg-orange-50/50 border border-orange-200 rounded-xl placeholder:text-zinc-400 placeholder:font-sans focus:outline-hidden focus:ring-2 focus:ring-orange-600 focus:border-orange-600"
                 />
               </div>
 
@@ -749,7 +749,7 @@ export const LoginView: React.FC = () => {
                   placeholder="usuario@supermercado.com"
                   required
                   disabled={isSubmittingRecovery}
-                  className="w-full pl-10 pr-3.5 py-3 text-sm font-semibold text-zinc-950 bg-white border border-black rounded-xl placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-orange-600 focus:border-orange-600 transition-all disabled:bg-zinc-100"
+                  className="w-full pl-10 pr-3.5 py-3 text-sm font-semibold text-zinc-950 bg-slate-50 border border-zinc-200 rounded-xl placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-orange-600 focus:border-orange-600 transition-all disabled:bg-zinc-100"
                 />
               </div>
             </div>

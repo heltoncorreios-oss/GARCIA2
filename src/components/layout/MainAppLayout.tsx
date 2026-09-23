@@ -11,6 +11,7 @@ import { TransactionsView } from '../transactions/TransactionsView';
 import { ReportsView } from '../reports/ReportsView';
 import { DatabaseView } from '../database/DatabaseView';
 import { AdminUsersView } from '../admin/AdminUsersView';
+import { BackupView } from '../settings/BackupView';
 import { ConfirmDialog } from '../common/ConfirmDialog';
 import { BankAccount, Category, OperationTypeInfo, CompanyProfile } from '../../types';
 import { apiService } from '../../services/api';
@@ -39,6 +40,7 @@ export const MainAppLayout: React.FC = () => {
     if (pathname.includes('/relatorios')) return 'relatorios';
     if (pathname.includes('/usuarios') || pathname.includes('/admin')) return 'usuarios';
     if (pathname.includes('/database')) return 'database';
+    if (pathname.includes('/backup')) return 'backup';
     return 'dashboard';
   };
 
@@ -66,6 +68,9 @@ export const MainAppLayout: React.FC = () => {
         break;
       case 'database':
         navigate('/database');
+        break;
+      case 'backup':
+        navigate('/backup');
         break;
       default:
         navigate('/dashboard');
@@ -205,7 +210,7 @@ export const MainAppLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans text-zinc-950 font-bold flex selection:bg-orange-500/30 selection:text-orange-900">
+    <div className="min-h-screen bg-slate-100/70 font-sans text-zinc-950 font-bold flex selection:bg-orange-500/30 selection:text-orange-900">
       {/* Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
@@ -388,6 +393,31 @@ export const MainAppLayout: React.FC = () => {
               onResetData={() => setIsResetModalOpen(true)}
               onRestoreSampleData={() => setIsRestoreModalOpen(true)}
             />
+          )}
+
+          {activeTab === 'backup' && profile?.role === 'ADMINISTRADOR' && (
+            <BackupView onRefreshData={loadGlobalData} />
+          )}
+
+          {activeTab === 'backup' && profile?.role !== 'ADMINISTRADOR' && (
+            <div className="bg-white p-8 rounded-2xl border border-zinc-200 text-center max-w-md mx-auto space-y-4 my-12 shadow-sm">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-zinc-950">Acesso Restrito ao Administrador</h2>
+                <p className="text-xs text-zinc-600 mt-1">
+                  O módulo Enterprise de Backup & Disaster Recovery é restrito a administradores.
+                </p>
+              </div>
+              <button
+                onClick={handleEnableMaster}
+                disabled={isActionLoading}
+                className="px-4 py-2 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 rounded-xl cursor-pointer shadow-xs disabled:opacity-50"
+              >
+                👑 Habilitar Usuário Master
+              </button>
+            </div>
           )}
         </main>
       </div>

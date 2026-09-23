@@ -79,6 +79,14 @@ export default function App() {
             }
           />
           <Route
+            path="/backup"
+            element={
+              <AuthGuard>
+                <MainAppLayout />
+              </AuthGuard>
+            }
+          />
+          <Route
             path="/usuarios"
             element={
               <AuthGuard>

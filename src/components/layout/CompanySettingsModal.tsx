@@ -129,26 +129,26 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white border border border-black rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white border border-zinc-200 rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="p-5 border-b border border-black flex items-center justify-between bg-[#101014]">
+        <div className="p-5 border-b border-zinc-200 flex items-center justify-between bg-zinc-50">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-orange-500/10 text-orange-700 font-bold border border-orange-500/20 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-orange-100 text-orange-600 border border-orange-200 flex items-center justify-center">
               <ImageIcon className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-zinc-950 font-bold">
+              <h3 className="text-base font-bold text-zinc-950">
                 Logotipo & Dados do Estabelecimento
               </h3>
-              <p className="text-xs text-zinc-900 font-semibold">
+              <p className="text-xs text-zinc-600">
                 Personalize o logo da empresa (.png, .jpg, .jpeg) e os títulos do cabeçalho
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-zinc-900 font-semibold hover:text-zinc-950 font-bold hover:bg-white/5 rounded-lg transition-colors"
+            className="p-1.5 text-zinc-500 hover:text-zinc-950 hover:bg-zinc-100 rounded-lg transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -157,15 +157,15 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
         {/* Body content */}
         <div className="p-6 space-y-6 overflow-y-auto">
           {errorMsg && (
-            <div className="p-3 bg-rose-500/10 border border border-black text-rose-700 font-bold text-xs font-semibold rounded-xl flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-rose-700 font-bold shrink-0" />
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold rounded-xl flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           {/* Logo Upload Slot */}
           <div className="space-y-2">
-            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-950 font-bold">
+            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-950">
               Espaço para Logotipo do Estabelecimento (.png, .jpg, .jpeg)
             </label>
 
@@ -176,14 +176,14 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
               onDrop={handleDrop}
               className={`relative border-2 border-dashed rounded-2xl p-4 transition-all flex flex-col sm:flex-row items-center gap-4 ${
                 dragActive
-                  ? 'border-orange-500 bg-orange-500/10'
+                  ? 'border-orange-500 bg-orange-50'
                   : logoUrl
-                  ? 'border border-black bg-white'
-                  : 'border border-black hover:border border-black bg-white'
+                  ? 'border-zinc-200 bg-slate-50/60'
+                  : 'border-zinc-200 hover:border-zinc-300 bg-slate-50/60'
               }`}
             >
               {/* Logo Preview Box */}
-              <div className="w-24 h-24 rounded-xl bg-[#101014] border border border-black flex items-center justify-center overflow-hidden shrink-0 relative group">
+              <div className="w-24 h-24 rounded-xl bg-white border border-zinc-200 flex items-center justify-center overflow-hidden shrink-0 relative group shadow-2xs">
                 {logoUrl ? (
                   <img
                     src={logoUrl}
@@ -192,9 +192,9 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className="flex flex-col items-center justify-center text-zinc-900 font-semibold">
-                    <Building2 className="w-8 h-8 text-zinc-900 font-semibold mb-1" />
-                    <span className="text-[9px] uppercase font-bold text-zinc-800 font-medium">Sem Logo</span>
+                  <div className="flex flex-col items-center justify-center text-zinc-400">
+                    <Building2 className="w-8 h-8 text-zinc-400 mb-1" />
+                    <span className="text-[9px] uppercase font-bold text-zinc-500">Sem Logo</span>
                   </div>
                 )}
               </div>
@@ -202,10 +202,10 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
               {/* Upload controls */}
               <div className="flex-1 text-center sm:text-left space-y-2 w-full">
                 <div>
-                  <h4 className="text-xs font-bold text-zinc-950 font-bold">
+                  <h4 className="text-xs font-bold text-zinc-950">
                     {logoUrl ? 'Logotipo Carregado' : 'Selecione ou arraste a imagem do logo'}
                   </h4>
-                  <p className="text-[11px] text-zinc-900 font-semibold">
+                  <p className="text-[11px] text-zinc-600">
                     Suporta imagens em alta resolução: PNG com fundo transparente, JPG ou JPEG.
                   </p>
                 </div>
@@ -231,7 +231,7 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowUrlInput(!showUrlInput)}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 hover:bg-white/10 text-zinc-950 font-bold text-xs font-semibold rounded-xl border border border-black transition-colors"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-zinc-800 text-xs font-semibold rounded-xl border border-zinc-200 transition-colors cursor-pointer"
                   >
                     <Link className="w-3.5 h-3.5" />
                     <span>URL da Web</span>
@@ -245,7 +245,7 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
                           setCropperImage(logoUrl);
                           setIsCropperOpen(true);
                         }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/15 hover:bg-orange-500/25 text-orange-700 font-bold text-xs font-bold rounded-xl border border-orange-500/30 transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-800 text-xs font-bold rounded-xl border border-orange-200 transition-colors cursor-pointer"
                       >
                         <Crop className="w-3.5 h-3.5" />
                         <span>Redimensionar / Ajustar</span>
@@ -254,7 +254,7 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
                       <button
                         type="button"
                         onClick={handleRemoveLogo}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 font-bold text-xs font-semibold rounded-xl border border border-black transition-colors"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 text-xs font-semibold rounded-xl border border-rose-200 transition-colors cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                         <span>Remover</span>
@@ -270,12 +270,12 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
                       placeholder="https://exemplo.com/logo.png"
                       value={urlInput}
                       onChange={(e) => setUrlInput(e.target.value)}
-                      className="flex-1 px-3 py-1.5 bg-white border border border-black rounded-lg text-xs text-zinc-950 font-bold placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      className="flex-1 px-3 py-1.5 bg-slate-50 border border-zinc-200 rounded-lg text-xs text-zinc-950 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-orange-500 font-medium"
                     />
                     <button
                       type="button"
                       onClick={handleApplyUrl}
-                      className="px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-semibold rounded-lg"
+                      className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-semibold rounded-lg cursor-pointer"
                     >
                       Aplicar
                     </button>
@@ -288,7 +288,7 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
           {/* Form Fields: Name, Subtitle, CNPJ, Badge */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-zinc-950 font-bold mb-1">
+              <label className="block text-xs font-semibold text-zinc-950 mb-1">
                 Nome do Estabelecimento / Supermercado:
               </label>
               <input
@@ -296,12 +296,12 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ex: Supermercado Central, Hipermercado Estrela..."
-                className="w-full px-3.5 py-2.5 bg-white border border border-black rounded-xl text-xs text-zinc-950 font-bold font-bold focus:outline-none focus:ring-1 focus:ring-orange-500"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-zinc-200 rounded-xl text-xs text-zinc-950 font-medium focus:outline-none focus:ring-1 focus:ring-orange-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-zinc-950 font-bold mb-1">
+              <label className="block text-xs font-semibold text-zinc-950 mb-1">
                 Subtítulo / Módulo:
               </label>
               <input
@@ -309,12 +309,12 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
                 value={subtitle}
                 onChange={(e) => setSubtitle(e.target.value)}
                 placeholder="Ex: Gestão Financeira"
-                className="w-full px-3 py-2 bg-white border border border-black rounded-xl text-xs text-zinc-950 font-bold focus:outline-none focus:ring-1 focus:ring-orange-500"
+                className="w-full px-3 py-2 bg-slate-50 border border-zinc-200 rounded-xl text-xs text-zinc-950 font-medium focus:outline-none focus:ring-1 focus:ring-orange-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-zinc-950 font-bold mb-1">
+              <label className="block text-xs font-semibold text-zinc-950 mb-1">
                 Etiqueta / Tag (Badge):
               </label>
               <input
@@ -322,12 +322,12 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
                 value={badge}
                 onChange={(e) => setBadge(e.target.value.toUpperCase())}
                 placeholder="Ex: FINANCEIRO, MATRIZ, LOJA 01..."
-                className="w-full px-3 py-2 bg-white border border border-black rounded-xl text-xs text-zinc-950 font-bold uppercase font-mono focus:outline-none focus:ring-1 focus:ring-orange-500"
+                className="w-full px-3 py-2 bg-slate-50 border border-zinc-200 rounded-xl text-xs text-zinc-950 uppercase font-mono font-medium focus:outline-none focus:ring-1 focus:ring-orange-500"
               />
             </div>
 
             <div className="sm:col-span-2">
-              <label className="block text-xs font-semibold text-zinc-950 font-bold mb-1">
+              <label className="block text-xs font-semibold text-zinc-950 mb-1">
                 CNPJ do Estabelecimento (Opcional):
               </label>
               <input
@@ -335,24 +335,24 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
                 value={cnpj}
                 onChange={(e) => setCnpj(e.target.value)}
                 placeholder="00.000.000/0001-00"
-                className="w-full px-3 py-2 bg-white border border border-black rounded-xl text-xs text-zinc-950 font-bold focus:outline-none focus:ring-1 focus:ring-orange-500"
+                className="w-full px-3 py-2 bg-slate-50 border border-zinc-200 rounded-xl text-xs text-zinc-950 font-medium focus:outline-none focus:ring-1 focus:ring-orange-500"
               />
             </div>
           </div>
 
           {/* Live Header Preview Box */}
           <div className="space-y-1.5">
-            <span className="text-[11px] font-bold text-zinc-900 font-semibold uppercase tracking-wider block">
+            <span className="text-[11px] font-bold text-zinc-700 uppercase tracking-wider block">
               Pré-visualização do Cabeçalho:
             </span>
-            <div className="p-3 bg-[#0e0e12] border border border-black rounded-xl flex items-center justify-between gap-3">
+            <div className="p-3 bg-slate-50/80 border border-zinc-200 rounded-xl flex items-center justify-between gap-3 shadow-2xs">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center text-white shadow-md overflow-hidden shrink-0 border border border-black">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center text-white shadow-xs overflow-hidden shrink-0 border border-orange-400/40">
                   {logoUrl ? (
                     <img
                       src={logoUrl}
                       alt="Preview"
-                      className="w-full h-full object-contain p-1 bg-white"
+                      className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
                     />
                   ) : (
@@ -361,20 +361,20 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-zinc-950 font-bold">{name || 'Supermercado'}</span>
+                    <span className="text-sm font-bold text-zinc-950">{name || 'Supermercado'}</span>
                     {badge && (
-                      <span className="px-1.5 py-0.5 text-[9px] font-bold bg-orange-500/15 text-orange-700 font-bold border border-orange-500/25 rounded">
+                      <span className="px-1.5 py-0.5 text-[9px] font-bold bg-orange-100 text-orange-800 border border-orange-200 rounded">
                         {badge}
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-zinc-900 font-semibold">
+                  <p className="text-[11px] text-zinc-600">
                     {subtitle || 'Gestão Financeira'}
                   </p>
                 </div>
               </div>
 
-              <span className="text-[10px] text-emerald-700 font-bold font-bold bg-emerald-500/10 border border border-black px-2 py-0.5 rounded-full">
+              <span className="text-[10px] text-emerald-800 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
                 Ativo
               </span>
             </div>
@@ -382,18 +382,18 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
         </div>
 
         {/* Footer actions */}
-        <div className="p-4 border-t border border-black bg-[#101014] flex items-center justify-end gap-3">
+        <div className="p-4 border-t border-zinc-200 bg-zinc-50 flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-zinc-900 font-semibold hover:text-white rounded-xl transition-colors"
+            className="px-4 py-2 text-xs font-semibold text-zinc-600 hover:text-zinc-950 rounded-xl transition-colors cursor-pointer"
           >
             Cancelar
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-xl shadow-md transition-colors"
+            className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-xl shadow-xs transition-colors cursor-pointer"
           >
             <Check className="w-4 h-4" />
             <span>Salvar Estabelecimento</span>

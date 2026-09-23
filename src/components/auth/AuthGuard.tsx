@@ -16,7 +16,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-zinc-950">
-        <div className="w-full max-w-sm p-8 rounded-2xl border border-black shadow-xl bg-white flex flex-col items-center text-center space-y-5">
+        <div className="w-full max-w-sm p-8 rounded-2xl border border-zinc-200 shadow-xl bg-white flex flex-col items-center text-center space-y-5">
           <div className="w-14 h-14 rounded-2xl bg-orange-600 text-white flex items-center justify-center shadow-lg shadow-orange-600/30">
             <ShieldCheck className="w-8 h-8" />
           </div>

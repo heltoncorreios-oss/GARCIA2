@@ -144,19 +144,19 @@ export const ConsolidatedBalanceView: React.FC<ConsolidatedBalanceViewProps> = (
   return (
     <div className="space-y-6">
       {/* Filter Bar */}
-      <div className="bg-white p-4 rounded-2xl border border border-black shadow-md flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white p-4 rounded-2xl border border-zinc-200/90 shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3">
           {/* Bank Account Selector */}
-          <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border border-black">
-            <Building2 className="w-4 h-4 text-orange-700 font-bold shrink-0" />
+          <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-zinc-200">
+            <Building2 className="w-4 h-4 text-orange-600 shrink-0" />
             <select
               value={selectedBankAccountId}
               onChange={(e) => setSelectedBankAccountId(e.target.value)}
-              className="bg-transparent text-xs text-zinc-950 font-bold focus:outline-none cursor-pointer"
+              className="bg-transparent text-xs text-zinc-950 font-medium focus:outline-none cursor-pointer"
             >
               <option value="" className="bg-white text-zinc-950 font-bold">Todas as Contas Bancárias</option>
               {bankAccounts.map(acc => (
-                <option key={acc.id} value={acc.id} className="bg-white text-zinc-950 font-bold">
+                <option key={acc.id} value={acc.id} className="bg-white text-zinc-950">
                   {acc.bankName || acc.accountName} - {acc.accountNumber}
                 </option>
               ))}
@@ -164,18 +164,18 @@ export const ConsolidatedBalanceView: React.FC<ConsolidatedBalanceViewProps> = (
           </div>
 
           {/* Period Selector */}
-          <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border border-black">
-            <Calendar className="w-4 h-4 text-orange-700 font-bold shrink-0" />
+          <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-zinc-200">
+            <Calendar className="w-4 h-4 text-orange-600 shrink-0" />
             <select
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
-              className="bg-transparent text-xs text-zinc-950 font-bold focus:outline-none cursor-pointer"
+              className="bg-transparent text-xs text-zinc-950 font-medium focus:outline-none cursor-pointer"
             >
-              <option value="todos" className="bg-white text-zinc-950 font-bold">Todos os Períodos</option>
-              <option value="mes-atual" className="bg-white text-zinc-950 font-bold">Mês Atual</option>
-              <option value="mes-anterior" className="bg-white text-zinc-950 font-bold">Mês Anterior</option>
-              <option value="este-ano" className="bg-white text-zinc-950 font-bold">Este Ano</option>
-              <option value="personalizado" className="bg-white text-zinc-950 font-bold">Personalizado</option>
+              <option value="todos" className="bg-white text-zinc-950">Todos os Períodos</option>
+              <option value="mes-atual" className="bg-white text-zinc-950">Mês Atual</option>
+              <option value="mes-anterior" className="bg-white text-zinc-950">Mês Anterior</option>
+              <option value="este-ano" className="bg-white text-zinc-950">Este Ano</option>
+              <option value="personalizado" className="bg-white text-zinc-950">Personalizado</option>
             </select>
           </div>
 
@@ -186,14 +186,14 @@ export const ConsolidatedBalanceView: React.FC<ConsolidatedBalanceViewProps> = (
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="bg-white text-xs text-zinc-950 font-bold px-3 py-1.5 rounded-xl border border border-black focus:outline-none focus:border-orange-500"
+                className="bg-slate-50 text-xs text-zinc-950 font-medium px-3 py-1.5 rounded-xl border border-zinc-200 focus:outline-none focus:border-orange-500"
               />
-              <span className="text-zinc-800 font-medium text-xs">até</span>
+              <span className="text-zinc-600 font-medium text-xs">até</span>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="bg-white text-xs text-zinc-950 font-bold px-3 py-1.5 rounded-xl border border border-black focus:outline-none focus:border-orange-500"
+                className="bg-slate-50 text-xs text-zinc-950 font-medium px-3 py-1.5 rounded-xl border border-zinc-200 focus:outline-none focus:border-orange-500"
               />
             </div>
           )}
@@ -202,25 +202,25 @@ export const ConsolidatedBalanceView: React.FC<ConsolidatedBalanceViewProps> = (
         {/* Search & Actions */}
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <div className="relative flex-1 sm:w-64">
-            <Search className="w-4 h-4 text-zinc-900 font-semibold absolute left-3 top-2.5" />
+            <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-2.5" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar por data ou valor..."
-              className="w-full bg-white pl-9 pr-3 py-1.5 rounded-xl border border border-black text-xs text-zinc-950 font-bold placeholder-zinc-500 focus:outline-none focus:border-orange-500"
+              className="w-full bg-slate-50 pl-9 pr-3 py-1.5 rounded-xl border border-zinc-200 text-xs text-zinc-950 font-medium placeholder-zinc-400 focus:outline-none focus:border-orange-500"
             />
           </div>
           <button
             onClick={loadTransactions}
-            className="p-2 bg-white hover:bg-zinc-100 text-zinc-950 font-bold border border border-black rounded-xl transition-colors cursor-pointer shrink-0"
+            className="p-2 bg-slate-100 hover:bg-slate-200 text-zinc-700 border border-zinc-200 rounded-xl transition-colors cursor-pointer shrink-0 shadow-2xs"
             title="Recarregar Dados"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-orange-700 font-bold' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-orange-600' : ''}`} />
           </button>
           <button
             onClick={handleExportCSV}
-            className="px-3 py-2 bg-orange-600 hover:bg-orange-500 text-white font-semibold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shrink-0"
+            className="px-3 py-2 bg-orange-600 hover:bg-orange-500 text-white font-semibold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs shrink-0"
           >
             <Download className="w-4 h-4" />
             <span>Exportar CSV</span>
@@ -231,118 +231,118 @@ export const ConsolidatedBalanceView: React.FC<ConsolidatedBalanceViewProps> = (
       {/* Summary KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Saldo Inicial do Período */}
-        <div className="bg-white p-4 rounded-2xl border border border-black shadow-md">
-          <div className="flex items-center justify-between text-zinc-900 font-semibold text-[11px] font-bold uppercase tracking-wider">
+        <div className="bg-amber-50/70 p-4 rounded-2xl border border-amber-200/90 shadow-sm">
+          <div className="flex items-center justify-between text-amber-950 font-semibold text-[11px] uppercase tracking-wider">
             <span>Saldo Inicial / Anterior</span>
-            <Wallet className="w-4 h-4 text-amber-700 font-bold" />
+            <Wallet className="w-4 h-4 text-amber-700" />
           </div>
-          <div className="text-xl font-bold text-zinc-950 font-bold mt-2">
+          <div className="text-xl font-bold text-amber-950 font-mono mt-2">
             {formatCurrency(calcResult?.initialBalanceOfPeriod)}
           </div>
-          <div className="text-[10px] text-zinc-800 font-medium mt-0.5">
+          <div className="text-[10px] text-amber-700/80 font-medium mt-0.5">
             Herdado do acumulado anterior
           </div>
         </div>
 
         {/* Total Créditos */}
-        <div className="bg-white p-4 rounded-2xl border border border-black shadow-md">
-          <div className="flex items-center justify-between text-emerald-700 font-bold text-[11px] font-bold uppercase tracking-wider">
+        <div className="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200/90 shadow-sm">
+          <div className="flex items-center justify-between text-emerald-950 font-semibold text-[11px] uppercase tracking-wider">
             <span>Total Créditos (+)</span>
-            <TrendingUp className="w-4 h-4 text-emerald-700 font-bold" />
+            <TrendingUp className="w-4 h-4 text-emerald-700" />
           </div>
-          <div className="text-xl font-bold text-emerald-700 font-bold mt-2">
+          <div className="text-xl font-bold text-emerald-800 font-mono mt-2">
             + {formatCurrency(calcResult?.totalCreditosPeriod)}
           </div>
-          <div className="text-[10px] text-zinc-800 font-medium mt-0.5">
+          <div className="text-[10px] text-emerald-700/80 font-medium mt-0.5">
             Entradas no período
           </div>
         </div>
 
         {/* Total Débitos */}
-        <div className="bg-white p-4 rounded-2xl border border border-black shadow-md">
-          <div className="flex items-center justify-between text-rose-700 font-bold text-[11px] font-bold uppercase tracking-wider">
+        <div className="bg-rose-50/70 p-4 rounded-2xl border border-rose-200/90 shadow-sm">
+          <div className="flex items-center justify-between text-rose-950 font-semibold text-[11px] uppercase tracking-wider">
             <span>Total Débitos (-)</span>
-            <TrendingDown className="w-4 h-4 text-rose-700 font-bold" />
+            <TrendingDown className="w-4 h-4 text-rose-700" />
           </div>
-          <div className="text-xl font-bold text-rose-700 font-bold mt-2">
+          <div className="text-xl font-bold text-rose-800 font-mono mt-2">
             - {formatCurrency(calcResult?.totalDebitosPeriod)}
           </div>
-          <div className="text-[10px] text-zinc-800 font-medium mt-0.5">
+          <div className="text-[10px] text-rose-700/80 font-medium mt-0.5">
             Saídas no período
           </div>
         </div>
 
         {/* Saldo Consolidado Final */}
-        <div className="bg-white p-4 rounded-2xl border border-orange-500/30 shadow-md">
-          <div className="flex items-center justify-between text-orange-700 font-bold text-[11px] font-bold uppercase tracking-wider">
+        <div className="bg-gradient-to-br from-orange-50/80 to-amber-50/50 p-4 rounded-2xl border border-orange-200/90 shadow-sm">
+          <div className="flex items-center justify-between text-orange-950 font-semibold text-[11px] uppercase tracking-wider">
             <span>Saldo Consolidado Final</span>
-            <Scale className="w-4 h-4 text-orange-700 font-bold" />
+            <Scale className="w-4 h-4 text-orange-700" />
           </div>
-          <div className="text-xl font-black text-orange-700 font-bold mt-2">
+          <div className="text-xl font-black text-orange-900 font-mono mt-2">
             {formatCurrency(calcResult?.finalBalanceOfPeriod)}
           </div>
-          <div className="text-[10px] text-zinc-800 font-medium mt-0.5">
+          <div className="text-[10px] text-orange-700/80 font-medium mt-0.5">
             Posição final acumulada
           </div>
         </div>
 
         {/* Status de Auditoria */}
-        <div className={`p-4 rounded-2xl border shadow-md ${
+        <div className={`p-4 rounded-2xl border shadow-sm ${
           (calcResult?.divergencesCount || 0) > 0
-            ? 'bg-white border border-black'
-            : 'bg-white border border-black'
+            ? 'bg-rose-50/80 border-rose-200/90 text-rose-950'
+            : 'bg-emerald-50/80 border-emerald-200/90 text-emerald-950'
         }`}>
-          <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider">
-            <span className={(calcResult?.divergencesCount || 0) > 0 ? 'text-rose-700 font-bold' : 'text-emerald-700 font-bold'}>
+          <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider">
+            <span className={(calcResult?.divergencesCount || 0) > 0 ? 'text-rose-900 font-bold' : 'text-emerald-900 font-bold'}>
               Auditoria Bancária
             </span>
             {(calcResult?.divergencesCount || 0) > 0 ? (
-              <AlertTriangle className="w-4 h-4 text-rose-700 font-bold" />
+              <AlertTriangle className="w-4 h-4 text-rose-600" />
             ) : (
-              <CheckCircle2 className="w-4 h-4 text-emerald-700 font-bold" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             )}
           </div>
           <div className={`text-xl font-bold mt-2 ${
-            (calcResult?.divergencesCount || 0) > 0 ? 'text-rose-700 font-bold' : 'text-emerald-700 font-bold'
+            (calcResult?.divergencesCount || 0) > 0 ? 'text-rose-800' : 'text-emerald-800'
           }`}>
             {(calcResult?.divergencesCount || 0) > 0 ? `${calcResult?.divergencesCount} Divergência(s)` : '100% Auditado'}
           </div>
-          <div className="text-[10px] text-zinc-900 font-semibold mt-0.5">
+          <div className="text-[10px] text-zinc-600 font-medium mt-0.5">
             {(calcResult?.divergencesCount || 0) > 0 ? 'Atenção: verifique os dias sinalizados' : 'Saldos do extrato batendo com o cálculo'}
           </div>
         </div>
       </div>
 
       {/* Primary Audit Table: DATA | SALDO INICIAL/ANTERIOR | CRÉDITOS | DÉBITOS | SALDO CONSOLIDADO */}
-      <div className="bg-white rounded-2xl border border border-black shadow-md overflow-hidden">
-        <div className="p-4 border-b border border-black flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-sm overflow-hidden">
+        <div className="p-4 bg-zinc-50/90 border-b border-zinc-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Scale className="w-5 h-5 text-orange-700 font-bold" />
-            <h3 className="text-sm font-bold text-zinc-950 font-bold uppercase tracking-wider">
+            <Scale className="w-5 h-5 text-orange-600" />
+            <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-wider">
               Demonstrativo do Saldo Consolidado por Dia
             </h3>
           </div>
-          <span className="text-xs text-zinc-900 font-semibold font-mono bg-white px-3 py-1 rounded-xl border border border-black">
-            Total de Dias no Extrato: <strong className="text-orange-700 font-bold">{displayedDays.length}</strong>
+          <span className="text-xs text-zinc-700 font-mono bg-white px-3 py-1 rounded-xl border border-zinc-200 shadow-xs">
+            Total de Dias no Extrato: <strong className="text-orange-600 font-bold">{displayedDays.length}</strong>
           </span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-white text-zinc-900 font-semibold uppercase text-[10px] tracking-wider border-b border border-black">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead className="bg-zinc-100 text-zinc-700 font-bold uppercase text-[11px] tracking-wider border-b-2 border-zinc-300">
               <tr>
-                <th className="p-3.5 font-bold">Data</th>
-                <th className="p-3.5 font-bold text-right">Saldo Inicial / Anterior</th>
-                <th className="p-3.5 font-bold text-right text-emerald-700 font-bold">Créditos (Entradas)</th>
-                <th className="p-3.5 font-bold text-right text-rose-700 font-bold">Débitos (Saídas)</th>
-                <th className="p-3.5 font-bold text-right text-orange-700 font-bold">Saldo Consolidado</th>
-                <th className="p-3.5 font-bold text-center">Auditoria Extrato</th>
+                <th className="py-3.5 px-4 font-bold border-r border-zinc-200">Data</th>
+                <th className="py-3.5 px-4 font-bold text-right border-r border-zinc-200">Saldo Inicial / Anterior</th>
+                <th className="py-3.5 px-4 font-bold text-right text-emerald-800 border-r border-zinc-200">Créditos (Entradas)</th>
+                <th className="py-3.5 px-4 font-bold text-right text-rose-800 border-r border-zinc-200">Débitos (Saídas)</th>
+                <th className="py-3.5 px-4 font-bold text-right text-orange-950 bg-orange-100/50 border-r border-zinc-200">Saldo Consolidado</th>
+                <th className="py-3.5 px-4 font-bold text-center">Auditoria Extrato</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5 text-zinc-950 font-bold font-medium">
+            <tbody className="divide-y divide-zinc-200 text-zinc-900 font-medium">
               {displayedDays.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-zinc-800 font-medium text-xs">
+                  <td colSpan={6} className="p-8 text-center text-zinc-600 text-xs">
                     Nenhuma movimentação ou extrato encontrado no período selecionado.
                   </td>
                 </tr>
@@ -350,53 +350,59 @@ export const ConsolidatedBalanceView: React.FC<ConsolidatedBalanceViewProps> = (
                 displayedDays.map((day, idx) => (
                   <tr
                     key={day.date}
-                    className={`hover:bg-white/[0.02] transition-colors ${
-                      day.hasDivergence ? 'bg-rose-950/20' : (idx % 2 === 0 ? 'bg-transparent' : 'bg-white/[0.01]')
+                    className={`transition-colors ${
+                      day.hasDivergence
+                        ? 'bg-rose-50/90 hover:bg-rose-100/70 border-l-4 border-l-rose-500'
+                        : idx % 2 === 0
+                        ? 'bg-white hover:bg-orange-50/40'
+                        : 'bg-zinc-50/70 hover:bg-orange-50/40'
                     }`}
                   >
                     {/* DATA */}
-                    <td className="p-3.5 font-mono font-bold text-zinc-950 font-bold">
+                    <td className="py-3 px-4 font-mono font-bold text-zinc-900 border-r border-zinc-200/80 whitespace-nowrap">
                       {day.formattedDate}
                     </td>
 
                     {/* SALDO INICIAL / ANTERIOR */}
-                    <td className="p-3.5 text-right font-mono text-zinc-950 font-bold">
+                    <td className="py-3 px-4 text-right font-mono text-zinc-800 border-r border-zinc-200/80 tabular-nums">
                       {formatCurrency(day.saldoAnterior)}
                     </td>
 
                     {/* CRÉDITOS */}
-                    <td className="p-3.5 text-right font-mono text-emerald-700 font-bold font-semibold">
+                    <td className="py-3 px-4 text-right font-mono text-emerald-700 font-bold border-r border-zinc-200/80 tabular-nums">
                       {day.creditos > 0 ? `+ ${formatCurrency(day.creditos)}` : 'R$ 0,00'}
                     </td>
 
                     {/* DÉBITOS */}
-                    <td className="p-3.5 text-right font-mono text-rose-700 font-bold font-semibold">
+                    <td className="py-3 px-4 text-right font-mono text-rose-700 font-bold border-r border-zinc-200/80 tabular-nums">
                       {day.debitos > 0 ? `- ${formatCurrency(day.debitos)}` : 'R$ 0,00'}
                     </td>
 
                     {/* SALDO CONSOLIDADO */}
-                    <td className="p-3.5 text-right font-mono font-black text-orange-700 font-bold bg-orange-500/5">
+                    <td className={`py-3 px-4 text-right font-mono font-black border-r border-zinc-200/80 tabular-nums ${
+                      day.saldoConsolidado >= 0 ? 'text-zinc-950 bg-orange-50/50' : 'text-rose-700 bg-rose-50/50'
+                    }`}>
                       {formatCurrency(day.saldoConsolidado)}
                     </td>
 
                     {/* AUDITORIA BANCÁRIA */}
-                    <td className="p-3.5 text-center">
+                    <td className="py-3 px-4 text-center whitespace-nowrap">
                       {day.hasDivergence ? (
                         <button
                           onClick={() => setAuditingDay(day)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/20 hover:bg-rose-500/30 text-rose-700 font-bold border border border-black transition-all cursor-pointer shadow-md"
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-rose-100 hover:bg-rose-200 text-rose-800 border border-rose-300 transition-all cursor-pointer shadow-xs"
                           title="Clique para auditar e verificar a origem desta divergência"
                         >
-                          <AlertTriangle className="w-3 h-3 text-rose-700 font-bold shrink-0 animate-pulse" />
+                          <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0 animate-pulse" />
                           <span>Divergência ({formatCurrency(day.divergenceAmount)})</span>
                         </button>
                       ) : day.saldoExtratoInformado !== undefined ? (
-                        <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-700 font-bold border border border-black" title={`Saldo do Extrato: ${formatCurrency(day.saldoExtratoInformado)}`}>
-                          <CheckCircle2 className="w-3 h-3 text-emerald-700 font-bold shrink-0" />
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300" title={`Saldo do Extrato: ${formatCurrency(day.saldoExtratoInformado)}`}>
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                           <span>Confirmado no Extrato</span>
                         </div>
                       ) : (
-                        <span className="text-[10px] text-zinc-800 font-medium italic">
+                        <span className="text-[10px] text-zinc-500 italic">
                           Saldo Contínuo Calculado
                         </span>
                       )}
@@ -410,10 +416,10 @@ export const ConsolidatedBalanceView: React.FC<ConsolidatedBalanceViewProps> = (
       </div>
 
       {/* Information Box on Calculation Rules */}
-      <div className="bg-white p-4 rounded-xl border border border-black flex items-start gap-3 text-xs text-zinc-900 font-semibold">
-        <Info className="w-5 h-5 text-orange-700 font-bold shrink-0 mt-0.5" />
+      <div className="bg-slate-50 border border-zinc-200 p-4 rounded-2xl flex items-start gap-3 text-xs text-zinc-600 shadow-2xs">
+        <Info className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <strong className="text-zinc-950 font-bold block font-semibold">
+          <strong className="text-zinc-950 block font-semibold">
             Entenda a Regra de Cálculo do Saldo Consolidado:
           </strong>
           <p>

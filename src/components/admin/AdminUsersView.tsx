@@ -599,21 +599,21 @@ export const AdminUsersView: React.FC = () => {
         <div className="space-y-4">
           {/* Quick Metrics Bar */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-white p-3.5 rounded-xl border border-zinc-200 flex flex-col">
-              <span className="text-[11px] font-semibold text-zinc-500 uppercase">Total de Convites</span>
+            <div className="bg-slate-50/80 p-3.5 rounded-2xl border border-zinc-200 flex flex-col shadow-2xs">
+              <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">Total de Convites</span>
               <span className="text-lg font-black text-zinc-950 mt-0.5">{inviteStats.total}</span>
             </div>
-            <div className="bg-white p-3.5 rounded-xl border border-zinc-200 flex flex-col">
-              <span className="text-[11px] font-semibold text-emerald-700 uppercase">Disponíveis / Ativos</span>
-              <span className="text-lg font-black text-emerald-700 mt-0.5">{inviteStats.available}</span>
+            <div className="bg-emerald-50/70 p-3.5 rounded-2xl border border-emerald-200/90 flex flex-col shadow-2xs">
+              <span className="text-[11px] font-semibold text-emerald-800 uppercase tracking-wider">Disponíveis / Ativos</span>
+              <span className="text-lg font-black text-emerald-900 mt-0.5">{inviteStats.available}</span>
             </div>
-            <div className="bg-white p-3.5 rounded-xl border border-zinc-200 flex flex-col">
-              <span className="text-[11px] font-semibold text-blue-700 uppercase">Utilizados</span>
-              <span className="text-lg font-black text-blue-700 mt-0.5">{inviteStats.used}</span>
+            <div className="bg-blue-50/70 p-3.5 rounded-2xl border border-blue-200/90 flex flex-col shadow-2xs">
+              <span className="text-[11px] font-semibold text-blue-800 uppercase tracking-wider">Utilizados</span>
+              <span className="text-lg font-black text-blue-900 mt-0.5">{inviteStats.used}</span>
             </div>
-            <div className="bg-white p-3.5 rounded-xl border border-zinc-200 flex flex-col">
-              <span className="text-[11px] font-semibold text-zinc-500 uppercase">Expirados / Revogados</span>
-              <span className="text-lg font-black text-zinc-600 mt-0.5">{inviteStats.expired + inviteStats.revoked}</span>
+            <div className="bg-slate-50/80 p-3.5 rounded-2xl border border-zinc-200 flex flex-col shadow-2xs">
+              <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">Expirados / Revogados</span>
+              <span className="text-lg font-black text-zinc-700 mt-0.5">{inviteStats.expired + inviteStats.revoked}</span>
             </div>
           </div>
 
@@ -908,7 +908,7 @@ export const AdminUsersView: React.FC = () => {
       {/* CREATE INVITE MODAL */}
       {isInviteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-lg bg-white rounded-3xl border border-black p-6 shadow-2xl space-y-4 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-lg bg-white rounded-3xl border border-zinc-200 p-6 shadow-2xl space-y-4 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-zinc-200 pb-3">
               <div className="flex items-center gap-2">
                 <Ticket className="w-5 h-5 text-orange-600" />
@@ -1052,7 +1052,7 @@ export const AdminUsersView: React.FC = () => {
       {/* CREATED INVITE SUCCESS & SHARE DIALOG */}
       {createdInviteDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-lg bg-white rounded-3xl border border-black p-6 shadow-2xl space-y-5 animate-in zoom-in-95">
+          <div className="w-full max-w-lg bg-white rounded-3xl border border-zinc-200 p-6 shadow-2xl space-y-5 animate-in zoom-in-95">
             {/* Header */}
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-300">

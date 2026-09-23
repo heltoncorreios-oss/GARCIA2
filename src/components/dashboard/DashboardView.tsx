@@ -35,7 +35,8 @@ import {
   Table,
   Search,
   Eye,
-  EyeOff
+  EyeOff,
+  PieChart as LucidePieChart
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -140,6 +141,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [txPage, setTxPage] = useState<number>(1);
   const TXS_PER_PAGE = 15;
 
+  // Controle de Exibição de Gráficos (Opção 2: ocultar por padrão para evitar rolagem)
+  const [showCharts, setShowCharts] = useState<boolean>(() => {
+    const saved = localStorage.getItem('conciliacao_show_charts');
+    return saved !== null ? saved === 'true' : false;
+  });
+
+  const toggleShowCharts = () => {
+    const next = !showCharts;
+    setShowCharts(next);
+    localStorage.setItem('conciliacao_show_charts', String(next));
+  };
+
   const handleDateSortChange = (newOrder: 'desc' | 'asc') => {
     setDateSortOrder(newOrder);
   };
@@ -204,7 +217,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Header Bar with Period, Bank and Date Organization */}
-      <div className="bg-white p-4 sm:p-5 rounded-2xl border border border-black shadow-md flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-zinc-200/90 shadow-sm flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5 flex-wrap">
             <h2 className="text-xl font-bold text-zinc-950 font-bold tracking-tight">
@@ -222,7 +235,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {/* Period Selector */}
-          <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border border-black">
+          <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-zinc-200 shadow-2xs">
             <Calendar className="w-3.5 h-3.5 text-zinc-900 font-semibold shrink-0" />
             <select
               aria-label="Selecionar período do relatório"
@@ -243,7 +256,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           {/* CONTROLE PRINCIPAL: Organizar por Data */}
-          <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-orange-500/30 shadow-xs">
+          <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-orange-500/40 shadow-2xs">
             <ArrowUpDown className="w-3.5 h-3.5 text-orange-700 font-bold shrink-0" />
             <span className="text-[11px] font-bold text-zinc-900 font-semibold hidden sm:inline">Data:</span>
             <select
@@ -257,7 +270,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </select>
             <button
               onClick={() => handleDateSortChange(dateSortOrder === 'desc' ? 'asc' : 'desc')}
-              className="p-1 text-orange-700 font-bold hover:text-orange-200 hover:bg-orange-500/15 rounded transition-colors"
+              className="p-1 text-orange-700 font-bold hover:text-orange-900 hover:bg-orange-500/15 rounded transition-colors"
               title={dateSortOrder === 'desc' ? 'Inverter para Mais Antigos Primeiro' : 'Inverter para Mais Recentes Primeiro'}
             >
               {dateSortOrder === 'desc' ? (
@@ -275,7 +288,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 type="date"
                 value={customStartDate}
                 onChange={(e) => setCustomStartDate(e.target.value)}
-                className="text-xs px-2.5 py-1.5 bg-white text-zinc-950 font-bold border border border-black rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500"
+                className="text-xs px-2.5 py-1.5 bg-slate-50 text-zinc-950 font-bold border border-zinc-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500"
               />
               <span className="text-xs text-zinc-800 font-medium">até</span>
               <input
@@ -283,14 +296,37 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 type="date"
                 value={customEndDate}
                 onChange={(e) => setCustomEndDate(e.target.value)}
-                className="text-xs px-2.5 py-1.5 bg-white text-zinc-950 font-bold border border border-black rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500"
+                className="text-xs px-2.5 py-1.5 bg-slate-50 text-zinc-950 font-bold border border-zinc-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500"
               />
             </div>
           )}
 
+          {/* Botão de Alternância: Ocultar / Exibir Gráficos */}
+          <button
+            onClick={toggleShowCharts}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer shadow-xs ${
+              showCharts
+                ? 'bg-orange-500/15 text-orange-700 font-bold border-orange-500/40 hover:bg-orange-500/25'
+                : 'bg-slate-50 text-zinc-800 font-bold hover:text-zinc-950 border border-zinc-200 hover:bg-zinc-100'
+            }`}
+            title={showCharts ? 'Ocultar gráficos analíticos para manter a tela limpa e sem rolagem' : 'Exibir gráficos de distribuição de receitas e despesas'}
+          >
+            {showCharts ? (
+              <>
+                <EyeOff className="w-3.5 h-3.5 text-orange-700 font-bold" />
+                <span>Ocultar Gráficos</span>
+              </>
+            ) : (
+              <>
+                <LucidePieChart className="w-3.5 h-3.5 text-zinc-700 font-bold" />
+                <span>Exibir Gráficos</span>
+              </>
+            )}
+          </button>
+
           <button
             onClick={fetchDashboard}
-            className="p-2 text-zinc-900 font-semibold hover:text-zinc-950 font-bold hover:bg-white/5 rounded-xl transition-colors"
+            className="p-2 text-zinc-700 hover:text-zinc-950 font-bold hover:bg-slate-100 rounded-xl transition-colors border border-transparent hover:border-zinc-200"
             title="Atualizar dados"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -299,7 +335,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {error && (
-        <div className="p-4 bg-rose-500/10 border border border-black rounded-xl text-xs text-rose-700 font-bold">
+        <div className="p-4 bg-rose-500/10 border border-rose-300 rounded-xl text-xs text-rose-700 font-bold">
           {error}
         </div>
       )}
@@ -336,13 +372,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       )}
 
       {/* CONTROLE PRINCIPAL DE JANELAS DO DASHBOARD: [ ENTRADAS ] [ SAÍDAS ] [ VISÃO CONSOLIDADA ] */}
-      <div className="bg-white p-3 sm:p-4 rounded-2xl border border border-black shadow-lg flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+      <div className="bg-white p-3 sm:p-4 rounded-2xl border border-zinc-200/90 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className={`p-2.5 rounded-xl border shrink-0 transition-colors ${
             activeWindow === 'ENTRADAS'
-              ? 'bg-emerald-500/20 text-emerald-700 font-bold border border-black'
+              ? 'bg-emerald-500/20 text-emerald-700 font-bold border-emerald-300'
               : activeWindow === 'SAIDAS'
-              ? 'bg-rose-500/20 text-rose-700 font-bold border border-black'
+              ? 'bg-rose-500/20 text-rose-700 font-bold border-rose-300'
               : 'bg-orange-500/20 text-orange-700 font-bold border-orange-500/30'
           }`}>
             <Layers className="w-5 h-5" />
@@ -354,9 +390,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </span>
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase border ${
                 activeWindow === 'ENTRADAS'
-                  ? 'bg-emerald-500/20 text-emerald-700 font-bold border border-black'
+                  ? 'bg-emerald-500/20 text-emerald-700 font-bold border-emerald-300'
                   : activeWindow === 'SAIDAS'
-                  ? 'bg-rose-500/20 text-rose-700 font-bold border border-black'
+                  ? 'bg-rose-500/20 text-rose-700 font-bold border-rose-300'
                   : 'bg-orange-500/20 text-orange-700 font-bold border-orange-500/30'
               }`}>
                 {activeWindow === 'ENTRADAS' && 'Janela de Entradas Ativa'}
@@ -373,13 +409,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* BOTOES DE ALTERNANCIA: [ ENTRADAS ] [ SAIDAS ] [ CONSOLIDADO ] */}
-        <div className="grid grid-cols-3 gap-2 bg-white p-1.5 rounded-xl border border border-black w-full md:w-auto">
+        <div className="grid grid-cols-3 gap-2 bg-slate-100/80 p-1.5 rounded-xl border border-zinc-200/90 w-full md:w-auto shadow-2xs">
           <button
             onClick={() => handleSelectWindow('ENTRADAS')}
             className={`px-4 py-2.5 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-2 ${
               activeWindow === 'ENTRADAS'
-                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-950/60 border border-emerald-400/40 ring-1 ring-emerald-400/30 scale-[1.02]'
-                : 'text-zinc-900 font-semibold hover:text-emerald-700 font-bold hover:bg-emerald-500/10'
+                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950/20 border border-emerald-500 scale-[1.02]'
+                : 'text-zinc-800 font-bold hover:text-emerald-700 hover:bg-emerald-500/10'
             }`}
           >
             <TrendingUp className="w-4 h-4 text-emerald-700 font-bold" />
@@ -390,8 +426,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             onClick={() => handleSelectWindow('SAIDAS')}
             className={`px-4 py-2.5 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-2 ${
               activeWindow === 'SAIDAS'
-                ? 'bg-rose-600 text-white shadow-lg shadow-rose-950/60 border border-rose-400/40 ring-1 ring-rose-400/30 scale-[1.02]'
-                : 'text-zinc-900 font-semibold hover:text-rose-700 font-bold hover:bg-rose-500/10'
+                ? 'bg-rose-600 text-white shadow-md shadow-rose-950/20 border border-rose-500 scale-[1.02]'
+                : 'text-zinc-800 font-bold hover:text-rose-700 hover:bg-rose-500/10'
             }`}
           >
             <TrendingDown className="w-4 h-4 text-rose-700 font-bold" />
@@ -402,8 +438,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             onClick={() => handleSelectWindow('ALL')}
             className={`px-4 py-2.5 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-2 ${
               activeWindow === 'ALL'
-                ? 'bg-orange-600 text-white shadow-lg shadow-orange-950/60 border border-orange-400/40 ring-1 ring-orange-400/30 scale-[1.02]'
-                : 'text-zinc-900 font-semibold hover:text-orange-700 font-bold hover:bg-orange-500/10'
+                ? 'bg-orange-600 text-white shadow-md shadow-orange-950/20 border border-orange-500 scale-[1.02]'
+                : 'text-zinc-800 font-bold hover:text-orange-700 hover:bg-orange-500/10'
             }`}
           >
             <Scale className="w-4 h-4 text-orange-700 font-bold" />
@@ -416,12 +452,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {activeWindow === 'ENTRADAS' ? (
         /* JANELA ENTRADAS: CARDS DEDICADOS A CRÉDITOS */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-5 rounded-2xl border border border-black shadow-xl relative overflow-hidden">
+          <div className="bg-emerald-50/80 p-5 rounded-2xl border border-emerald-200/90 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-emerald-700 font-bold uppercase tracking-wider">
                 Total de Entradas (Crédito)
               </span>
-              <div className="p-2 bg-emerald-500/20 text-emerald-700 font-bold border border border-black rounded-xl">
+              <div className="p-2 bg-emerald-500/20 text-emerald-700 font-bold border border-emerald-300 rounded-xl">
                 <TrendingUp className="w-5 h-5" />
               </div>
             </div>
@@ -436,12 +472,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border border-black shadow-md">
+          <div className="bg-emerald-50/35 p-5 rounded-2xl border border-emerald-200/70 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-zinc-900 font-semibold uppercase tracking-wider">
                 Média Diária de Entradas
               </span>
-              <div className="p-2 bg-emerald-500/10 text-emerald-700 font-bold rounded-xl">
+              <div className="p-2 bg-emerald-500/15 text-emerald-700 font-bold rounded-xl border border-emerald-200">
                 <Calendar className="w-5 h-5" />
               </div>
             </div>
@@ -453,12 +489,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border border-black shadow-md">
+          <div className="bg-emerald-50/35 p-5 rounded-2xl border border-emerald-200/70 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-zinc-900 font-semibold uppercase tracking-wider">
                 Ticket Médio das Entradas
               </span>
-              <div className="p-2 bg-emerald-500/10 text-emerald-700 font-bold rounded-xl">
+              <div className="p-2 bg-emerald-500/15 text-emerald-700 font-bold rounded-xl border border-emerald-200">
                 <Scale className="w-5 h-5" />
               </div>
             </div>
@@ -470,12 +506,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border border-black shadow-md">
+          <div className="bg-emerald-50/50 p-5 rounded-2xl border border-emerald-200/80 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-zinc-900 font-semibold uppercase tracking-wider">
                 Maior Entrada do Período
               </span>
-              <div className="p-2 bg-emerald-500/10 text-emerald-700 font-bold rounded-xl">
+              <div className="p-2 bg-emerald-500/15 text-emerald-700 font-bold rounded-xl border border-emerald-200">
                 <ArrowUpRight className="w-5 h-5" />
               </div>
             </div>
@@ -492,12 +528,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       ) : activeWindow === 'SAIDAS' ? (
         /* JANELA SAÍDAS: CARDS DEDICADOS A DÉBITOS */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-5 rounded-2xl border border border-black shadow-xl relative overflow-hidden">
+          <div className="bg-rose-50/80 p-5 rounded-2xl border border-rose-200/90 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-rose-700 font-bold uppercase tracking-wider">
                 Total de Saídas (Débito)
               </span>
-              <div className="p-2 bg-rose-500/20 text-rose-700 font-bold border border border-black rounded-xl">
+              <div className="p-2 bg-rose-500/20 text-rose-700 font-bold border border-rose-300 rounded-xl">
                 <TrendingDown className="w-5 h-5" />
               </div>
             </div>
@@ -512,12 +548,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border border-black shadow-md">
+          <div className="bg-rose-50/35 p-5 rounded-2xl border border-rose-200/70 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-zinc-900 font-semibold uppercase tracking-wider">
                 Média Diária de Saídas
               </span>
-              <div className="p-2 bg-rose-500/10 text-rose-700 font-bold rounded-xl">
+              <div className="p-2 bg-rose-500/15 text-rose-700 font-bold rounded-xl border border-rose-200">
                 <Calendar className="w-5 h-5" />
               </div>
             </div>
@@ -529,12 +565,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border border-black shadow-md">
+          <div className="bg-rose-50/35 p-5 rounded-2xl border border-rose-200/70 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-zinc-900 font-semibold uppercase tracking-wider">
                 Ticket Médio das Saídas
               </span>
-              <div className="p-2 bg-rose-500/10 text-rose-700 font-bold rounded-xl">
+              <div className="p-2 bg-rose-500/15 text-rose-700 font-bold rounded-xl border border-rose-200">
                 <Scale className="w-5 h-5" />
               </div>
             </div>
@@ -546,12 +582,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border border-black shadow-md">
+          <div className="bg-rose-50/50 p-5 rounded-2xl border border-rose-200/80 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-zinc-900 font-semibold uppercase tracking-wider">
                 Maior Saída do Período
               </span>
-              <div className="p-2 bg-rose-500/10 text-rose-700 font-bold rounded-xl">
+              <div className="p-2 bg-rose-500/15 text-rose-700 font-bold rounded-xl border border-rose-200">
                 <ArrowDownRight className="w-5 h-5" />
               </div>
             </div>
@@ -568,12 +604,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       ) : (
         /* JANELA CONSOLIDADA */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-5 rounded-2xl border border border-black shadow-md relative overflow-hidden">
+          <div className="bg-gradient-to-br from-emerald-50/80 to-teal-50/40 p-5 rounded-2xl border border-emerald-200/80 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-zinc-900 font-semibold uppercase tracking-wider">
                 Saldo Atual em Caixa & Bancos
               </span>
-              <div className="p-2 bg-emerald-500/10 text-emerald-700 font-bold border border border-black rounded-xl">
+              <div className="p-2 bg-emerald-500/15 text-emerald-700 font-bold border border-emerald-300 rounded-xl">
                 <Wallet className="w-5 h-5" />
               </div>
             </div>
@@ -587,32 +623,32 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border border-black shadow-md relative overflow-hidden">
+          <div className="bg-gradient-to-br from-sky-50/80 to-blue-50/40 p-5 rounded-2xl border border-blue-200/80 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-zinc-900 font-semibold uppercase tracking-wider">
                 Total de Entradas
               </span>
-              <div className="p-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-xl">
+              <div className="p-2 bg-blue-500/15 text-blue-600 border border-blue-300 rounded-xl">
                 <TrendingUp className="w-5 h-5" />
               </div>
             </div>
             <div className="mt-3">
-              <span className="text-2xl font-bold text-blue-400 tracking-tight">
+              <span className="text-2xl font-bold text-blue-700 tracking-tight">
                 {formatCurrency(metrics?.totalEntradas)}
               </span>
-              <div className="flex items-center gap-1 text-xs text-blue-400/80 mt-1">
+              <div className="flex items-center gap-1 text-xs text-blue-600 mt-1 font-medium">
                 <ArrowUpRight className="w-3.5 h-3.5" />
                 <span>{metrics?.entradasCount || 0} lançamentos de receita</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border border-black shadow-md relative overflow-hidden">
+          <div className="bg-gradient-to-br from-rose-50/80 to-amber-50/40 p-5 rounded-2xl border border-rose-200/80 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-zinc-900 font-semibold uppercase tracking-wider">
                 Total de Saídas
               </span>
-              <div className="p-2 bg-rose-500/10 text-rose-700 font-bold border border border-black rounded-xl">
+              <div className="p-2 bg-rose-500/15 text-rose-700 font-bold border border-rose-300 rounded-xl">
                 <TrendingDown className="w-5 h-5" />
               </div>
             </div>
@@ -620,14 +656,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <span className="text-2xl font-bold text-rose-700 font-bold tracking-tight">
                 {formatCurrency(metrics?.totalSaidas)}
               </span>
-              <div className="flex items-center gap-1 text-xs text-rose-700 font-bold/80 mt-1">
+              <div className="flex items-center gap-1 text-xs text-rose-700 font-bold mt-1 font-medium">
                 <ArrowDownRight className="w-3.5 h-3.5" />
                 <span>{metrics?.saidasCount || 0} lançamentos de despesa</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border border-black shadow-md relative overflow-hidden">
+          <div className="bg-gradient-to-br from-violet-50/80 to-indigo-50/40 p-5 rounded-2xl border border-violet-200/80 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-zinc-900 font-semibold uppercase tracking-wider">
                 Resultado do Período
@@ -635,8 +671,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <div
                 className={`p-2 rounded-xl border ${
                   (metrics?.resultadoFinanceiro || 0) >= 0
-                    ? 'bg-emerald-500/10 text-emerald-700 font-bold border border-black'
-                    : 'bg-rose-500/10 text-rose-700 font-bold border border-black'
+                    ? 'bg-emerald-500/15 text-emerald-700 font-bold border-emerald-300'
+                    : 'bg-rose-500/15 text-rose-700 font-bold border-rose-300'
                 }`}
               >
                 <Scale className="w-5 h-5" />
@@ -661,8 +697,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       )}
 
       {/* Recebimentos & Operações Detalhadas por Categoria (Reflete as Categorias do Supermercado) */}
-      <div className="bg-white p-5 rounded-2xl border border border-black shadow-md space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border border-black pb-3">
+      <div className="bg-white p-5 rounded-2xl border border-zinc-200/90 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 pb-3">
           <div>
             <div className="flex items-center gap-2">
               <Layers className="w-4 h-4 text-orange-700 font-bold" />
@@ -676,13 +712,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           {/* Sub-tabs / Filter Buttons */}
-          <div className="flex items-center bg-white p-1 rounded-xl border border border-black self-start sm:self-auto">
+          <div className="flex items-center bg-slate-100/90 p-1 rounded-xl border border-zinc-200/90 self-start sm:self-auto shadow-2xs">
             <button
               onClick={() => setCategoryTab('ALL')}
               className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${
                 categoryTab === 'ALL'
                   ? 'bg-orange-600 text-white shadow-xs'
-                  : 'text-zinc-900 font-semibold hover:text-zinc-950 font-bold'
+                  : 'text-zinc-700 hover:text-zinc-950 font-bold'
               }`}
             >
               Todas
@@ -692,7 +728,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
                 categoryTab === 'ENTRADA'
                   ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-zinc-900 font-semibold hover:text-emerald-700 font-bold'
+                  : 'text-zinc-700 hover:text-emerald-700 font-bold'
               }`}
             >
               <TrendingUp className="w-3 h-3" />
@@ -703,7 +739,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 ${
                 categoryTab === 'SAIDA'
                   ? 'bg-rose-600 text-white shadow-xs'
-                  : 'text-zinc-900 font-semibold hover:text-rose-700 font-bold'
+                  : 'text-zinc-700 hover:text-rose-700 font-bold'
               }`}
             >
               <TrendingDown className="w-3 h-3" />
@@ -734,8 +770,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 key={cat.id}
                 className={`p-4 rounded-xl border transition-all flex flex-col justify-between ${
                   isEntrada
-                    ? 'bg-white/80 hover:bg-white border border-black hover:border border-black'
-                    : 'bg-white/80 hover:bg-white border border-black hover:border border-black'
+                    ? 'bg-emerald-50/40 hover:bg-emerald-50/70 border-emerald-200/80 hover:border-emerald-300 shadow-2xs'
+                    : 'bg-rose-50/40 hover:bg-rose-50/70 border-rose-200/80 hover:border-rose-300 shadow-2xs'
                 }`}
               >
                 <div>
@@ -745,8 +781,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       <div
                         className={`p-1.5 rounded-lg border shrink-0 ${
                           isEntrada
-                            ? 'bg-emerald-500/10 text-emerald-700 font-bold border border-black'
-                            : 'bg-rose-500/10 text-rose-700 font-bold border border-black'
+                            ? 'bg-emerald-500/15 text-emerald-700 font-bold border-emerald-300'
+                            : 'bg-rose-500/15 text-rose-700 font-bold border-rose-300'
                         }`}
                       >
                         {renderCategoryIcon(cat.name, cat.type)}
@@ -759,8 +795,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <span
                       className={`px-1.5 py-0.5 rounded text-[10px] font-extrabold uppercase shrink-0 ${
                         isEntrada
-                          ? 'bg-emerald-500/15 text-emerald-700 font-bold border border border-black'
-                          : 'bg-rose-500/15 text-rose-700 font-bold border border border-black'
+                          ? 'bg-emerald-500/15 text-emerald-700 font-bold border border-emerald-300'
+                          : 'bg-rose-500/15 text-rose-700 font-bold border border-rose-300'
                       }`}
                     >
                       {isEntrada ? 'Entrada' : 'Saída'}
@@ -786,18 +822,18 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                   {/* Subcategories preview tags */}
                   {hasSubs && (
-                    <div className="mt-3 pt-2.5 border-t border border-black flex flex-wrap gap-1">
+                    <div className="mt-3 pt-2.5 border-t border-zinc-200/80 flex flex-wrap gap-1">
                       {cat.subcategories?.slice(0, 3).map((sub, idx) => (
                         <span
                           key={idx}
-                          className="text-[9px] px-1.5 py-0.5 rounded bg-white/[0.04] text-zinc-900 font-semibold border border border-black truncate max-w-[150px]"
+                          className="text-[9px] px-1.5 py-0.5 rounded bg-white text-zinc-800 font-semibold border border-zinc-200 truncate max-w-[150px] shadow-2xs"
                           title={sub.name}
                         >
                           {sub.name}
                         </span>
                       ))}
                       {(cat.subcategories?.length || 0) > 3 && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/[0.04] text-zinc-800 font-medium border border border-black">
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-white text-zinc-700 font-medium border border-zinc-200 shadow-2xs">
                           +{(cat.subcategories?.length || 0) - 3}
                         </span>
                       )}
@@ -807,10 +843,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                 {/* Subcategories Accordion Trigger */}
                 {hasSubs && (
-                  <div className="mt-3 pt-2 border-t border border-black">
+                  <div className="mt-3 pt-2 border-t border-zinc-200/80">
                     <button
                       onClick={() => setExpandedCategoryId(isExpanded ? null : cat.id)}
-                      className="w-full flex items-center justify-between text-[10px] font-semibold text-zinc-900 font-semibold hover:text-zinc-950 font-bold transition-colors"
+                      className="w-full flex items-center justify-between text-[10px] font-semibold text-zinc-800 hover:text-zinc-950 font-bold transition-colors"
                     >
                       <span>{isExpanded ? 'Ocultar detalhes' : 'Ver subcategorias'}</span>
                       {isExpanded ? (
@@ -821,13 +857,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     </button>
 
                     {isExpanded && (
-                      <div className="mt-2 space-y-1.5 pt-2 border-t border border-black bg-black/20 p-2 rounded-lg">
+                      <div className="mt-2 space-y-1.5 pt-2 border-t border-zinc-200 bg-white/80 p-2 rounded-lg border">
                         {cat.subcategories?.map((sub, sIdx) => (
                           <div
                             key={sIdx}
                             className="flex items-center justify-between text-[10px] text-zinc-950 font-bold"
                           >
-                            <span className="truncate pr-2 text-zinc-900 font-semibold">{sub.name}</span>
+                            <span className="truncate pr-2 text-zinc-800 font-medium">{sub.name}</span>
                             <span className="font-bold text-zinc-950 font-bold shrink-0">
                               {formatCurrency(sub.total)}
                             </span>
@@ -846,7 +882,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
           if (rawCategories.length === 0) {
             return (
-              <div className="p-8 text-center text-xs text-zinc-800 font-medium bg-white rounded-xl border border border-black">
+              <div className="p-8 text-center text-xs text-zinc-800 font-medium bg-slate-50 rounded-xl border border-zinc-200">
                 Nenhuma categoria localizada para o período selecionado.
               </div>
             );
@@ -858,17 +894,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div 
                   onClick={() => setCategoryTab(categoryTab === 'ENTRADA' ? 'ALL' : 'ENTRADA')}
-                  className={`p-3.5 rounded-xl bg-white border border border-black flex items-center justify-between cursor-pointer transition-all hover:bg-zinc-50 ${categoryTab === 'ENTRADA' ? 'ring-2 ring-emerald-600' : ''}`}
+                  className={`p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200/90 flex items-center justify-between cursor-pointer transition-all hover:bg-emerald-50 shadow-2xs ${categoryTab === 'ENTRADA' ? 'ring-2 ring-emerald-600' : ''}`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-700 font-bold">
+                    <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-700 font-bold border border-emerald-300">
                       <TrendingUp className="w-5 h-5" />
                     </div>
                     <div>
                       <div className="text-[11px] font-bold text-emerald-700 font-bold uppercase tracking-wider">
                         Total Recebimentos (Entradas)
                       </div>
-                      <div className="text-xs text-zinc-900 font-semibold">
+                      <div className="text-xs text-zinc-800 font-medium">
                         {entradaCategories.length} categorias • {totalEntradasCount} lançamentos
                       </div>
                     </div>
@@ -882,17 +918,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                 <div 
                   onClick={() => setCategoryTab(categoryTab === 'SAIDA' ? 'ALL' : 'SAIDA')}
-                  className={`p-3.5 rounded-xl bg-white border border border-black flex items-center justify-between cursor-pointer transition-all hover:bg-zinc-50 ${categoryTab === 'SAIDA' ? 'ring-2 ring-rose-600' : ''}`}
+                  className={`p-3.5 rounded-xl bg-rose-50/70 border border-rose-200/90 flex items-center justify-between cursor-pointer transition-all hover:bg-rose-50 shadow-2xs ${categoryTab === 'SAIDA' ? 'ring-2 ring-rose-600' : ''}`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-rose-500/20 text-rose-700 font-bold">
+                    <div className="p-2 rounded-lg bg-rose-500/20 text-rose-700 font-bold border border-rose-300">
                       <TrendingDown className="w-5 h-5" />
                     </div>
                     <div>
                       <div className="text-[11px] font-bold text-rose-700 font-bold uppercase tracking-wider">
                         Total Operações (Saídas)
                       </div>
-                      <div className="text-xs text-zinc-900 font-semibold">
+                      <div className="text-xs text-zinc-800 font-medium">
                         {saidaCategories.length} categorias • {totalSaidasCount} lançamentos
                       </div>
                     </div>
@@ -906,8 +942,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </div>
 
               {categoryTab === 'ALL' && (
-                <div className="p-8 text-center bg-white rounded-2xl border border border-black shadow-xs space-y-2">
-                  <p className="text-sm font-bold text-zinc-950 font-bold">
+                <div className="p-6 text-center bg-slate-50/80 rounded-xl border border-zinc-200/90 shadow-2xs space-y-1">
+                  <p className="text-xs font-bold text-zinc-900">
                     Selecione "Recebimentos (Entradas)" ou "Operações (Saídas)" acima (ou clique nos cards acima) para exibir os detalhes das categorias.
                   </p>
                 </div>
@@ -916,20 +952,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               {/* SEÇÃO 1: RECEBIMENTOS & ENTRADAS */}
               {showEntradas && (
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between bg-emerald-950/30 p-3 rounded-xl border border border-black">
+                  <div className="flex items-center justify-between bg-emerald-100/70 p-3 rounded-xl border border-emerald-200/90">
                     <div className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <h4 className="text-xs font-black text-emerald-700 font-bold uppercase tracking-wider">
+                      <h4 className="text-xs font-black text-emerald-800 uppercase tracking-wider">
                         Recebimentos & Entradas ({entradaCategories.length} Categoria{entradaCategories.length !== 1 ? 's' : ''})
                       </h4>
                     </div>
-                    <span className="text-xs font-bold text-emerald-700 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-lg border border border-black">
+                    <span className="text-xs font-bold text-emerald-800 bg-white/80 px-2.5 py-1 rounded-lg border border-emerald-300">
                       Subtotal: {formatCurrency(totalEntradasVal)}
                     </span>
                   </div>
 
                   {entradaCategories.length === 0 ? (
-                    <div className="p-6 text-center text-xs text-zinc-800 font-medium bg-white rounded-xl border border border-black">
+                    <div className="p-6 text-center text-xs text-zinc-800 font-medium bg-slate-50 rounded-xl border border-zinc-200">
                       Nenhuma categoria de entrada registrada.
                     </div>
                   ) : (
@@ -943,20 +979,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               {/* SEÇÃO 2: OPERAÇÕES & SAÍDAS */}
               {showSaidas && (
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between bg-rose-950/30 p-3 rounded-xl border border border-black">
+                  <div className="flex items-center justify-between bg-rose-100/70 p-3 rounded-xl border border-rose-200/90">
                     <div className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
-                      <h4 className="text-xs font-black text-rose-700 font-bold uppercase tracking-wider">
+                      <h4 className="text-xs font-black text-rose-800 uppercase tracking-wider">
                         Operações & Saídas ({saidaCategories.length} Categoria{saidaCategories.length !== 1 ? 's' : ''})
                       </h4>
                     </div>
-                    <span className="text-xs font-bold text-rose-700 font-bold bg-rose-500/10 px-2.5 py-1 rounded-lg border border border-black">
+                    <span className="text-xs font-bold text-rose-800 bg-white/80 px-2.5 py-1 rounded-lg border border-rose-300">
                       Subtotal: {formatCurrency(totalSaidasVal)}
                     </span>
                   </div>
 
                   {saidaCategories.length === 0 ? (
-                    <div className="p-6 text-center text-xs text-zinc-800 font-medium bg-white rounded-xl border border border-black">
+                    <div className="p-6 text-center text-xs text-zinc-800 font-medium bg-slate-50 rounded-xl border border-zinc-200">
                       Nenhuma categoria de saída registrada.
                     </div>
                   ) : (
@@ -973,38 +1009,38 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* Key Supermarket Operational Calculations (Section 17) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border border-black shadow-xs">
-          <div className="text-[11px] font-semibold text-zinc-900 font-semibold uppercase">
+        <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-200/80 shadow-2xs">
+          <div className="text-[11px] font-semibold text-zinc-800 uppercase">
             Média Diária Entradas
           </div>
           <div className="text-lg font-bold text-zinc-950 font-bold mt-1">
             {formatCurrency(metrics?.mediaDiariaEntradas)}
           </div>
-          <div className="text-[10px] text-zinc-800 font-medium mt-0.5">Faturamento médio/dia</div>
+          <div className="text-[10px] text-zinc-700 font-medium mt-0.5">Faturamento médio/dia</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border border-black shadow-xs">
-          <div className="text-[11px] font-semibold text-zinc-900 font-semibold uppercase">
+        <div className="bg-rose-50/50 p-4 rounded-xl border border-rose-200/80 shadow-2xs">
+          <div className="text-[11px] font-semibold text-zinc-800 uppercase">
             Média Diária Saídas
           </div>
           <div className="text-lg font-bold text-rose-700 font-bold mt-1">
             {formatCurrency(metrics?.mediaDiariaSaidas)}
           </div>
-          <div className="text-[10px] text-zinc-800 font-medium mt-0.5">Desembolso médio/dia</div>
+          <div className="text-[10px] text-zinc-700 font-medium mt-0.5">Desembolso médio/dia</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border border-black shadow-xs">
-          <div className="text-[11px] font-semibold text-zinc-900 font-semibold uppercase">
+        <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-200/80 shadow-2xs">
+          <div className="text-[11px] font-semibold text-zinc-800 uppercase">
             Ticket Médio Entradas
           </div>
-          <div className="text-lg font-bold text-blue-400 mt-1">
+          <div className="text-lg font-bold text-blue-700 mt-1">
             {formatCurrency(metrics?.ticketMedioEntradas)}
           </div>
-          <div className="text-[10px] text-zinc-800 font-medium mt-0.5">Valor médio por crédito</div>
+          <div className="text-[10px] text-zinc-700 font-medium mt-0.5">Valor médio por crédito</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border border-black shadow-xs">
-          <div className="text-[11px] font-semibold text-zinc-900 font-semibold uppercase">
+        <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-200/80 shadow-2xs">
+          <div className="text-[11px] font-semibold text-zinc-800 uppercase">
             Maior Entrada / Maior Saída
           </div>
           <div className="text-xs font-bold text-emerald-700 font-bold mt-1 truncate" title={metrics?.maiorEntrada?.description}>
@@ -1017,8 +1053,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* SEÇÃO: Lançamentos do Período Organizados por Data (Auditoria Direta no Dashboard) */}
-      <div className="bg-white p-5 rounded-2xl border border border-black shadow-md space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border border-black pb-3">
+      <div className="bg-white p-5 rounded-2xl border border-zinc-200/90 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 pb-3">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-orange-500/10 text-orange-700 font-bold border border-orange-500/20 rounded-xl shrink-0">
               <Receipt className="w-5 h-5" />
@@ -1028,15 +1064,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <h3 className="text-sm font-bold text-zinc-950 font-bold uppercase tracking-wider">
                   Lançamentos do Período Organizados por Data
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/20 text-orange-700 font-bold border border-orange-500/30">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/15 text-orange-700 font-bold border border-orange-500/30">
                   {filteredPeriodTxs.length} Lançamentos
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/5 text-zinc-900 font-semibold border border border-black flex items-center gap-1">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-zinc-700 font-semibold border border-zinc-200 flex items-center gap-1">
                   <ArrowUpDown className="w-3 h-3 text-orange-700 font-bold" />
                   {dateSortOrder === 'desc' ? 'Mais Recentes Primeiro (↓)' : 'Mais Antigos Primeiro (↑)'}
                 </span>
               </div>
-              <p className="text-xs text-zinc-900 font-semibold mt-0.5">
+              <p className="text-xs text-zinc-800 font-medium mt-0.5">
                 Consulte e audite individualmente os lançamentos financeiros sem sair do Dashboard
               </p>
             </div>
@@ -1045,11 +1081,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowPeriodTxs(!showPeriodTxs)}
-              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white border border border-black text-zinc-950 font-bold hover:text-white hover:bg-white/5 transition-colors flex items-center gap-1.5"
+              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-50 border border-zinc-200 text-zinc-900 hover:text-zinc-950 hover:bg-slate-100 transition-colors flex items-center gap-1.5 shadow-2xs"
             >
               {showPeriodTxs ? (
                 <>
-                  <EyeOff className="w-3.5 h-3.5 text-zinc-900 font-semibold" />
+                  <EyeOff className="w-3.5 h-3.5 text-zinc-700" />
                   <span>Ocultar Detalhamento</span>
                 </>
               ) : (
@@ -1065,9 +1101,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {showPeriodTxs && (
           <div className="space-y-4 pt-1">
             {/* Filter controls */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 rounded-xl border border border-black">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/90 p-3 rounded-xl border border-zinc-200 shadow-2xs">
               <div className="relative flex-1 max-w-sm">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-900 font-semibold" />
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" />
                 <input
                   type="text"
                   placeholder="Buscar por histórico, categoria, operação..."
@@ -1076,12 +1112,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     setTxSearch(e.target.value);
                     setTxPage(1);
                   }}
-                  className="w-full pl-8 pr-3 py-1.5 bg-white text-xs text-zinc-950 font-bold border border border-black rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500"
+                  className="w-full pl-8 pr-3 py-1.5 bg-white text-xs text-zinc-950 font-bold border border-zinc-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500"
                 />
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex items-center bg-white p-1 rounded-lg border border border-black text-xs">
+                <div className="flex items-center bg-white p-1 rounded-lg border border-zinc-200 text-xs shadow-2xs">
                   <button
                     onClick={() => {
                       setTxTypeFilter('ALL');
@@ -1089,8 +1125,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     }}
                     className={`px-2.5 py-0.5 rounded font-semibold transition-colors ${
                       txTypeFilter === 'ALL'
-                        ? 'bg-orange-600 text-white'
-                        : 'text-zinc-900 font-semibold hover:text-zinc-950 font-bold'
+                        ? 'bg-orange-600 text-white shadow-2xs'
+                        : 'text-zinc-700 hover:text-zinc-950 font-bold'
                     }`}
                   >
                     Todos
@@ -1102,8 +1138,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     }}
                     className={`px-2.5 py-0.5 rounded font-semibold transition-colors ${
                       txTypeFilter === 'ENTRADA'
-                        ? 'bg-emerald-600 text-white'
-                        : 'text-zinc-900 font-semibold hover:text-emerald-700 font-bold'
+                        ? 'bg-emerald-600 text-white shadow-2xs'
+                        : 'text-zinc-700 hover:text-emerald-700 font-bold'
                     }`}
                   >
                     Entradas
@@ -1115,24 +1151,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     }}
                     className={`px-2.5 py-0.5 rounded font-semibold transition-colors ${
                       txTypeFilter === 'SAIDA'
-                        ? 'bg-rose-600 text-white'
-                        : 'text-zinc-900 font-semibold hover:text-rose-700 font-bold'
+                        ? 'bg-rose-600 text-white shadow-2xs'
+                        : 'text-zinc-700 hover:text-rose-700 font-bold'
                     }`}
                   >
                     Saídas
                   </button>
                 </div>
 
-                <span className="text-[11px] text-zinc-800 font-medium font-mono">
+                <span className="text-[11px] text-zinc-700 font-medium font-mono">
                   {filteredPeriodTxs.length} encontrados
                 </span>
               </div>
             </div>
 
             {/* Transactions Table */}
-            <div className="overflow-x-auto rounded-xl border border border-black bg-white/50">
+            <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white shadow-2xs">
               <table className="w-full text-left text-xs">
-                <thead className="bg-white text-zinc-900 font-semibold font-semibold border-b border border-black">
+                <thead className="bg-slate-100/80 text-zinc-700 font-semibold border-b border-zinc-200">
                   <tr>
                     <th className="p-3">Data</th>
                     <th className="p-3">Descrição / Histórico</th>
@@ -1143,10 +1179,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <th className="p-3 text-center">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5 font-medium">
+                <tbody className="divide-y divide-zinc-100 font-medium">
                   {paginatedTxs.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="p-6 text-center text-zinc-800 font-medium">
+                      <td colSpan={7} className="p-6 text-center text-zinc-700 font-medium">
                         Nenhum lançamento encontrado com os filtros selecionados.
                       </td>
                     </tr>
@@ -1154,10 +1190,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     paginatedTxs.map((tx) => {
                       const isCredit = tx.type === 'ENTRADA';
                       return (
-                        <tr key={tx.id} className="hover:bg-white/[0.02] transition-colors">
+                        <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors">
                           <td className="p-3 font-mono text-zinc-950 font-bold whitespace-nowrap">
                             <div className="flex items-center gap-1.5">
-                              <Calendar className="w-3 h-3 text-zinc-800 font-medium" />
+                              <Calendar className="w-3 h-3 text-zinc-600 font-medium" />
                               <span>{formatDateBR(tx.date)}</span>
                             </div>
                           </td>
@@ -1166,22 +1202,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                               {tx.description}
                             </div>
                             {tx.documentNumber && (
-                              <div className="text-[10px] text-zinc-800 font-medium font-mono">
+                              <div className="text-[10px] text-zinc-700 font-mono">
                                 Doc: {tx.documentNumber}
                               </div>
                             )}
                           </td>
                           <td className="p-3">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-white/5 text-zinc-950 font-bold border border border-black truncate max-w-[140px] inline-block">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-zinc-800 border border-zinc-200 truncate max-w-[140px] inline-block shadow-2xs">
                               {tx.categoryName || 'Geral'}
                             </span>
                           </td>
                           <td className="p-3">
-                            <span className="text-[11px] font-medium text-zinc-900 font-semibold">
+                            <span className="text-[11px] font-medium text-zinc-800">
                               {tx.operationType || 'Outros'}
                             </span>
                           </td>
-                          <td className="p-3 text-zinc-900 font-semibold text-[11px]">
+                          <td className="p-3 text-zinc-700 text-[11px]">
                             {tx.bankAccountName || '-'}
                           </td>
                           <td className={`p-3 text-right font-mono font-bold whitespace-nowrap ${
@@ -1191,12 +1227,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                           </td>
                           <td className="p-3 text-center whitespace-nowrap">
                             {tx.reconciliationStatus === 'DUPLICADO' ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-700 font-bold border border border-black">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-700 font-bold border border-amber-300">
                                 <AlertTriangle className="w-3 h-3 text-amber-700 font-bold" />
                                 Duplicado
                               </span>
                             ) : (
-                              <span className="text-zinc-900 font-semibold text-xs">-</span>
+                              <span className="text-zinc-600 text-xs">-</span>
                             )}
                           </td>
                         </tr>
@@ -1209,7 +1245,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between text-xs text-zinc-900 font-semibold pt-2 px-1">
+              <div className="flex items-center justify-between text-xs text-zinc-700 pt-2 px-1">
                 <span>
                   Mostrando {(txPage - 1) * TXS_PER_PAGE + 1} a{' '}
                   {Math.min(txPage * TXS_PER_PAGE, filteredPeriodTxs.length)} de{' '}
@@ -1219,7 +1255,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <button
                     disabled={txPage <= 1}
                     onClick={() => setTxPage(txPage - 1)}
-                    className="px-2.5 py-1 rounded-lg border border border-black bg-white disabled:opacity-40 hover:bg-white/5 transition-colors font-semibold"
+                    className="px-2.5 py-1 rounded-lg border border-zinc-200 bg-white disabled:opacity-40 hover:bg-slate-50 transition-colors font-semibold shadow-2xs"
                   >
                     Anterior
                   </button>
@@ -1229,7 +1265,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <button
                     disabled={txPage >= totalPages}
                     onClick={() => setTxPage(txPage + 1)}
-                    className="px-2.5 py-1 rounded-lg border border border-black bg-white disabled:opacity-40 hover:bg-white/5 transition-colors font-semibold"
+                    className="px-2.5 py-1 rounded-lg border border-zinc-200 bg-white disabled:opacity-40 hover:bg-slate-50 transition-colors font-semibold shadow-2xs"
                   >
                     Próxima
                   </button>
@@ -1240,156 +1276,157 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         )}
       </div>
 
-      {/* Distribution Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* 3. Distribuição das Receitas por Tipo de Operação */}
-        <div className="bg-white p-5 rounded-2xl border border border-black shadow-md">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-sm font-bold text-zinc-950 font-bold">
-                Receitas por Tipo de Operação
-              </h3>
-              <p className="text-xs text-zinc-900 font-semibold">
-                Participação de PIX, cartões e depósitos no faturamento
-              </p>
+      {/* Distribution Charts (Alternados pelo botão Ocultar/Exibir Gráficos) */}
+      {showCharts ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fadeIn">
+          {/* 3. Distribuição das Receitas por Tipo de Operação */}
+          <div className="bg-white p-5 rounded-2xl border border-zinc-200/90 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-sm font-bold text-zinc-950 font-bold">
+                  Receitas por Tipo de Operação
+                </h3>
+                <p className="text-xs text-zinc-700">
+                  Participação de PIX, cartões e depósitos no faturamento
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="h-72 flex flex-col md:flex-row items-center justify-center gap-4">
-            {data?.receiptsByOperation && data.receiptsByOperation.length > 0 ? (
-              <>
-                <div className="w-full md:w-1/2 h-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={data.receiptsByOperation}
-                        dataKey="total"
-                        nameKey="operationType"
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={50}
-                        outerRadius={80}
-                        paddingAngle={3}
-                      >
-                        {data.receiptsByOperation.map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{ backgroundColor: '#18181b', borderColor: '#3f3f46', borderRadius: '12px', color: '#f4f4f5' }}
-                        formatter={(val: number | string | Array<number | string> | undefined) => {
-                          const num = typeof val === 'number' ? val : Number(val) || 0;
-                          return [formatCurrency(num), 'Total'];
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-
-                <div className="w-full md:w-1/2 space-y-2 overflow-y-auto max-h-64 pr-2">
-                  {data.receiptsByOperation.map((op, idx) => (
-                    <div key={op.operationType} className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="w-2.5 h-2.5 rounded-full"
-                          style={{ backgroundColor: COLORS[idx % COLORS.length] }}
-                        />
-                        <span className="font-medium text-zinc-950 font-bold">{op.operationType}</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="font-bold text-zinc-950 font-bold">
-                          {formatCurrency(op.total)}
-                        </span>
-                        <span className="text-[10px] text-zinc-800 font-medium ml-1.5">
-                          ({op.percentage}%)
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div className="text-xs text-zinc-800 font-medium">Nenhuma receita registrada.</div>
-            )}
-          </div>
-        </div>
-
-        {/* 4. Distribuição das Despesas por Categoria */}
-        <div className="bg-white p-5 rounded-2xl border border border-black shadow-md">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-sm font-bold text-zinc-950 font-bold">
-                Distribuição das Despesas por Categoria
-              </h3>
-              <p className="text-xs text-zinc-900 font-semibold">
-                Fornecedores, folha, energia, tributos e manutenção
-              </p>
-            </div>
-          </div>
-          <div className="h-72 flex flex-col md:flex-row items-center justify-center gap-4">
-            {data?.expensesByCategory && data.expensesByCategory.length > 0 ? (
-              <>
-                <div className="w-full md:w-1/2 h-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={data.expensesByCategory}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={50}
-                        outerRadius={80}
-                        paddingAngle={3}
-                      >
-                        {data.expensesByCategory.map((entry, index) => (
-                          <Cell
-                            key={`cat-cell-${index}`}
-                            fill={entry.color || COLORS[index % COLORS.length]}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{ backgroundColor: '#18181b', borderColor: '#3f3f46', borderRadius: '12px', color: '#f4f4f5' }}
-                        formatter={(val: number | string | Array<number | string> | undefined) => {
-                          const num = typeof val === 'number' ? val : Number(val) || 0;
-                          return [formatCurrency(num), 'Gasto'];
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-
-                <div className="w-full md:w-1/2 space-y-2 overflow-y-auto max-h-64 pr-2">
-                  {data.expensesByCategory.map((cat, idx) => (
-                    <div key={cat.name} className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2 truncate pr-2">
-                        <span
-                          className="w-2.5 h-2.5 rounded-full shrink-0"
-                          style={{
-                            backgroundColor: cat.color || COLORS[idx % COLORS.length]
+            <div className="h-72 flex flex-col md:flex-row items-center justify-center gap-4">
+              {data?.receiptsByOperation && data.receiptsByOperation.length > 0 ? (
+                <>
+                  <div className="w-full md:w-1/2 h-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={data.receiptsByOperation}
+                          dataKey="total"
+                          nameKey="operationType"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={50}
+                          outerRadius={80}
+                          paddingAngle={3}
+                        >
+                          {data.receiptsByOperation.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', color: '#0f172a', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                          formatter={(val: number | string | Array<number | string> | undefined) => {
+                            const num = typeof val === 'number' ? val : Number(val) || 0;
+                            return [formatCurrency(num), 'Total'];
                           }}
                         />
-                        <span className="font-medium text-zinc-950 font-bold truncate">{cat.name}</span>
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  <div className="w-full md:w-1/2 space-y-2 overflow-y-auto max-h-64 pr-2">
+                    {data.receiptsByOperation.map((op, idx) => (
+                      <div key={op.operationType} className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full"
+                            style={{ backgroundColor: COLORS[idx % COLORS.length] }}
+                          />
+                          <span className="font-medium text-zinc-950 font-bold">{op.operationType}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-bold text-zinc-950 font-bold">
+                            {formatCurrency(op.total)}
+                          </span>
+                          <span className="text-[10px] text-zinc-700 ml-1.5">
+                            ({op.percentage}%)
+                          </span>
+                        </div>
                       </div>
-                      <div className="text-right shrink-0">
-                        <span className="font-bold text-zinc-950 font-bold">
-                          {formatCurrency(cat.value)}
-                        </span>
-                        <span className="text-[10px] text-zinc-800 font-medium ml-1.5">
-                          ({cat.percentage}%)
-                        </span>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="text-xs text-zinc-700">Nenhuma receita registrada.</div>
+              )}
+            </div>
+          </div>
+
+          {/* 4. Distribuição das Despesas por Categoria */}
+          <div className="bg-white p-5 rounded-2xl border border-zinc-200/90 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-sm font-bold text-zinc-950 font-bold">
+                  Distribuição das Despesas por Categoria
+                </h3>
+                <p className="text-xs text-zinc-700">
+                  Fornecedores, folha, energia, tributos e manutenção
+                </p>
+              </div>
+            </div>
+            <div className="h-72 flex flex-col md:flex-row items-center justify-center gap-4">
+              {data?.expensesByCategory && data.expensesByCategory.length > 0 ? (
+                <>
+                  <div className="w-full md:w-1/2 h-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={data.expensesByCategory}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={50}
+                          outerRadius={80}
+                          paddingAngle={3}
+                        >
+                          {data.expensesByCategory.map((entry, index) => (
+                            <Cell
+                              key={`cat-cell-${index}`}
+                              fill={entry.color || COLORS[index % COLORS.length]}
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', color: '#0f172a', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                          formatter={(val: number | string | Array<number | string> | undefined) => {
+                            const num = typeof val === 'number' ? val : Number(val) || 0;
+                            return [formatCurrency(num), 'Gasto'];
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  <div className="w-full md:w-1/2 space-y-2 overflow-y-auto max-h-64 pr-2">
+                    {data.expensesByCategory.map((cat, idx) => (
+                      <div key={cat.name} className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2 truncate pr-2">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full shrink-0"
+                            style={{
+                              backgroundColor: cat.color || COLORS[idx % COLORS.length]
+                            }}
+                          />
+                          <span className="font-medium text-zinc-950 font-bold truncate">{cat.name}</span>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="font-bold text-zinc-950 font-bold">
+                            {formatCurrency(cat.value)}
+                          </span>
+                          <span className="text-[10px] text-zinc-700 ml-1.5">
+                            ({cat.percentage}%)
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div className="text-xs text-zinc-800 font-medium">Nenhuma despesa registrada.</div>
-            )}
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="text-xs text-zinc-700">Nenhuma despesa registrada.</div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 };

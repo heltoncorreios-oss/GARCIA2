@@ -96,22 +96,22 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs overflow-y-auto">
-      <div className="bg-white border border border-black rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
+      <div className="bg-white border border-zinc-200 rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="p-5 border-b border border-black flex items-center justify-between bg-white">
+        <div className="p-5 border-b border-zinc-200 flex items-center justify-between bg-zinc-50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-700 font-bold flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-orange-100 border border-orange-200 text-orange-600 flex items-center justify-center shrink-0">
               <History className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-zinc-950 font-bold flex items-center gap-2">
+              <h3 className="text-base font-bold text-zinc-950 flex items-center gap-2">
                 Histórico de Extratos Importados
-                <span className="text-xs px-2 py-0.5 rounded bg-white/10 text-zinc-950 font-bold font-mono">
+                <span className="text-xs px-2 py-0.5 rounded bg-zinc-200 text-zinc-800 font-mono font-semibold">
                   {statements.length} lotes
                 </span>
               </h3>
-              <p className="text-xs text-zinc-900 font-semibold mt-0.5">
+              <p className="text-xs text-zinc-600 mt-0.5">
                 Rastreabilidade completa de arquivos originais com suporte a auditoria e reversão segura de importações
               </p>
             </div>
@@ -119,7 +119,7 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-zinc-900 font-semibold hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-950 hover:bg-zinc-100 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -127,8 +127,8 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
 
         {/* Feedback message */}
         {feedbackMessage && (
-          <div className="mx-6 mt-4 p-3 bg-emerald-500/10 border border border-black rounded-xl text-emerald-700 font-bold text-xs flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 shrink-0" />
+          <div className="mx-6 mt-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 font-semibold text-xs flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
             <span>{feedbackMessage}</span>
           </div>
         )}
@@ -137,14 +137,14 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
         <div className="p-6 overflow-y-auto space-y-6">
           {isLoading && !statementDetails ? (
             <div className="text-center py-12">
-              <RefreshCw className="w-8 h-8 text-orange-700 font-bold animate-spin mx-auto" />
-              <p className="text-xs text-zinc-900 font-semibold mt-3">Carregando histórico de extratos...</p>
+              <RefreshCw className="w-8 h-8 text-orange-600 animate-spin mx-auto" />
+              <p className="text-xs text-zinc-600 mt-3 font-medium">Carregando histórico de extratos...</p>
             </div>
           ) : statements.length === 0 ? (
-            <div className="text-center py-12 border border-dashed border border-black rounded-2xl bg-white">
-              <FileText className="w-10 h-10 text-zinc-900 font-semibold mx-auto" />
-              <h4 className="text-sm font-bold text-zinc-950 font-bold mt-3">Nenhum extrato importado até o momento</h4>
-              <p className="text-xs text-zinc-800 font-medium mt-1 max-w-sm mx-auto">
+            <div className="text-center py-12 border border-dashed border-zinc-300 rounded-2xl bg-slate-50">
+              <FileText className="w-10 h-10 text-zinc-400 mx-auto" />
+              <h4 className="text-sm font-bold text-zinc-950 mt-3">Nenhum extrato importado até o momento</h4>
+              <p className="text-xs text-zinc-600 mt-1 max-w-sm mx-auto">
                 Assim que você importar um arquivo OFX, CSV, XLSX, TXT ou PDF, ele ficará registrado aqui com rastreabilidade completa.
               </p>
             </div>
@@ -153,7 +153,7 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
               {/* If details view open */}
               {statementDetails ? (
                 <div className="space-y-4 animate-in fade-in">
-                  <div className="flex items-center justify-between bg-white p-4 rounded-xl border border border-black">
+                  <div className="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-zinc-200">
                     <div>
                       <button
                         type="button"
@@ -161,17 +161,17 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
                           setStatementDetails(null);
                           setSelectedStatementId(null);
                         }}
-                        className="text-xs text-orange-700 font-bold hover:underline flex items-center gap-1 mb-1 font-semibold"
+                        className="text-xs text-orange-600 font-bold hover:text-orange-700 flex items-center gap-1 mb-1 cursor-pointer"
                       >
                         &larr; Voltar para a lista de extratos
                       </button>
-                      <h4 className="text-sm font-bold text-zinc-950 font-bold flex items-center gap-2">
+                      <h4 className="text-sm font-bold text-zinc-950 flex items-center gap-2">
                         {statementDetails.statement.fileName}
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-500/20 text-orange-700 font-bold">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700">
                           {statementDetails.statement.fileType}
                         </span>
                       </h4>
-                      <p className="text-xs text-zinc-900 font-semibold mt-0.5">
+                      <p className="text-xs text-zinc-600 mt-0.5">
                         Conta: {statementDetails.statement.bankAccountName} &bull; Importado por: {statementDetails.statement.importedByUserName} em {new Date(statementDetails.statement.importedAt).toLocaleString('pt-BR')}
                       </p>
                     </div>
@@ -179,7 +179,7 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setConfirmRevertId(statementDetails.statement.id)}
-                      className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border border-black text-rose-700 font-bold text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors"
+                      className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       Reverter este Lote
@@ -188,13 +188,13 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
 
                   {/* Summary row */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                    <div className="p-3 bg-white border border border-black rounded-xl">
-                      <span className="text-zinc-900 font-semibold block text-[11px]">Total Lançamentos</span>
-                      <span className="text-base font-bold text-zinc-950 font-bold">{statementDetails.transactions.length}</span>
+                    <div className="p-3 bg-slate-50 border border-zinc-200 rounded-xl">
+                      <span className="text-zinc-600 block text-[11px]">Total Lançamentos</span>
+                      <span className="text-base font-bold text-zinc-950">{statementDetails.transactions.length}</span>
                     </div>
-                    <div className="p-3 bg-white border border border-black rounded-xl">
-                      <span className="text-zinc-900 font-semibold block text-[11px]">Entradas</span>
-                      <span className="text-base font-bold text-emerald-700 font-bold">
+                    <div className="p-3 bg-slate-50 border border-zinc-200 rounded-xl">
+                      <span className="text-zinc-600 block text-[11px]">Entradas</span>
+                      <span className="text-base font-bold text-emerald-700">
                         {formatCurrency(
                           statementDetails.transactions
                             .filter(t => t.type === 'ENTRADA')
@@ -202,9 +202,9 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
                         )}
                       </span>
                     </div>
-                    <div className="p-3 bg-white border border border-black rounded-xl">
-                      <span className="text-zinc-900 font-semibold block text-[11px]">Saídas</span>
-                      <span className="text-base font-bold text-rose-700 font-bold">
+                    <div className="p-3 bg-slate-50 border border-zinc-200 rounded-xl">
+                      <span className="text-zinc-600 block text-[11px]">Saídas</span>
+                      <span className="text-base font-bold text-rose-700">
                         {formatCurrency(
                           statementDetails.transactions
                             .filter(t => t.type === 'SAIDA')
@@ -212,19 +212,19 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
                         )}
                       </span>
                     </div>
-                    <div className="p-3 bg-white border border border-black rounded-xl">
-                      <span className="text-zinc-900 font-semibold block text-[11px]">Período do Arquivo</span>
-                      <span className="text-xs font-semibold text-zinc-950 font-bold">
+                    <div className="p-3 bg-slate-50 border border-zinc-200 rounded-xl">
+                      <span className="text-zinc-600 block text-[11px]">Período do Arquivo</span>
+                      <span className="text-xs font-semibold text-zinc-950">
                         {formatDateBR(statementDetails.statement.startDate)} até {formatDateBR(statementDetails.statement.endDate)}
                       </span>
                     </div>
                   </div>
 
                   {/* Transactions list */}
-                  <div className="border border border-black rounded-xl overflow-x-auto bg-white">
+                  <div className="border border-zinc-200 rounded-xl overflow-x-auto bg-white shadow-2xs">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
-                        <tr className="bg-white text-zinc-900 font-semibold border-b border border-black">
+                        <tr className="bg-zinc-50 text-zinc-700 border-b border-zinc-200">
                           <th className="p-2.5 font-semibold">Data</th>
                           <th className="p-2.5 font-semibold">Descrição no Extrato</th>
                           <th className="p-2.5 font-semibold">Categoria</th>
@@ -233,13 +233,13 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
                           <th className="p-2.5 font-semibold text-center">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-white/5 text-zinc-950 font-bold">
+                      <tbody className="divide-y divide-zinc-100 text-zinc-950">
                         {statementDetails.transactions.map((tx) => (
-                          <tr key={tx.id} className="hover:bg-white/[0.02]">
+                          <tr key={tx.id} className="hover:bg-zinc-50/50">
                             <td className="p-2.5 whitespace-nowrap font-mono">{formatDateBR(tx.date)}</td>
-                            <td className="p-2.5 max-w-xs truncate font-medium text-zinc-950 font-bold">{tx.description}</td>
+                            <td className="p-2.5 max-w-xs truncate font-medium text-zinc-950">{tx.description}</td>
                             <td className="p-2.5 whitespace-nowrap">
-                              <span className="px-2 py-0.5 rounded text-[10px] bg-white/5 border border border-black text-zinc-950 font-bold">
+                              <span className="px-2 py-0.5 rounded text-[10px] bg-zinc-100 border border-zinc-200 text-zinc-800">
                                 {tx.categoryName || 'Não categorizado'}
                               </span>
                             </td>
@@ -247,8 +247,8 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
                               <span
                                 className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                                   tx.type === 'ENTRADA'
-                                    ? 'bg-emerald-500/10 text-emerald-700 font-bold'
-                                    : 'bg-rose-500/10 text-rose-700 font-bold'
+                                    ? 'bg-emerald-50 text-emerald-800'
+                                    : 'bg-rose-50 text-rose-800'
                                 }`}
                               >
                                 {tx.type}
@@ -256,7 +256,7 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
                             </td>
                             <td
                               className={`p-2.5 text-right font-mono font-bold whitespace-nowrap ${
-                                tx.type === 'ENTRADA' ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'
+                                tx.type === 'ENTRADA' ? 'text-emerald-700' : 'text-rose-700'
                               }`}
                             >
                               {tx.type === 'ENTRADA' ? '+' : '-'} {formatCurrency(tx.amount)}
@@ -265,8 +265,8 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
                               <span
                                 className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                                   tx.reconciliationStatus === 'CONCILIADO'
-                                    ? 'bg-emerald-500/10 text-emerald-700 font-bold'
-                                    : 'bg-amber-500/10 text-amber-700 font-bold'
+                                    ? 'bg-emerald-50 text-emerald-800'
+                                    : 'bg-amber-50 text-amber-800'
                                 }`}
                               >
                                 {tx.reconciliationStatus}
@@ -280,10 +280,10 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
                 </div>
               ) : (
                 /* Statements table */
-                <div className="border border border-black rounded-xl overflow-x-auto bg-white">
+                <div className="border border-zinc-200 rounded-xl overflow-x-auto bg-white shadow-2xs">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="bg-white text-zinc-900 font-semibold border-b border border-black">
+                      <tr className="bg-zinc-50 text-zinc-700 border-b border-zinc-200">
                         <th className="p-3 font-semibold">Arquivo / Data</th>
                         <th className="p-3 font-semibold">Formato</th>
                         <th className="p-3 font-semibold">Conta Bancária</th>
@@ -294,44 +294,44 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
                         <th className="p-3 font-semibold text-right">Ações</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5 text-zinc-950 font-bold">
+                    <tbody className="divide-y divide-zinc-100 text-zinc-950">
                       {statements.map((stmt) => (
-                        <tr key={stmt.id} className="hover:bg-white/[0.02]">
+                        <tr key={stmt.id} className="hover:bg-zinc-50/50">
                           <td className="p-3">
-                            <div className="font-bold text-zinc-950 font-bold flex items-center gap-2">
+                            <div className="font-bold text-zinc-950 flex items-center gap-2">
                               {stmt.fileType === 'XLSX' ? (
-                                <FileSpreadsheet className="w-4 h-4 text-emerald-700 font-bold shrink-0" />
+                                <FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0" />
                               ) : (
-                                <FileText className="w-4 h-4 text-orange-700 font-bold shrink-0" />
+                                <FileText className="w-4 h-4 text-orange-600 shrink-0" />
                               )}
                               <span>{stmt.fileName}</span>
                             </div>
-                            <div className="text-[11px] text-zinc-800 font-medium mt-0.5">
+                            <div className="text-[11px] text-zinc-500 mt-0.5">
                               {new Date(stmt.importedAt).toLocaleString('pt-BR')}
                             </div>
                           </td>
                           <td className="p-3">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white/5 border border border-black text-zinc-950 font-bold font-mono">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-zinc-100 border border-zinc-200 text-zinc-800 font-mono">
                               {stmt.fileType}
                             </span>
                           </td>
-                          <td className="p-3 font-medium text-zinc-950 font-bold">
+                          <td className="p-3 font-medium text-zinc-950">
                             {stmt.bankAccountName}
                           </td>
-                          <td className="p-3 text-[11px] font-mono text-zinc-900 font-semibold">
+                          <td className="p-3 text-[11px] font-mono text-zinc-600">
                             {formatDateBR(stmt.startDate)} &rarr; {formatDateBR(stmt.endDate)}
                           </td>
                           <td className="p-3 text-center">
-                            <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-700 font-bold font-bold text-[11px]">
+                            <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-bold text-[11px]">
                               {stmt.importedRecords}
                             </span>
                           </td>
                           <td className="p-3 text-center">
-                            <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-700 font-bold font-bold text-[11px]">
+                            <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-800 font-bold text-[11px]">
                               {stmt.duplicateRecords}
                             </span>
                           </td>
-                          <td className="p-3 text-zinc-900 font-semibold text-[11px]">
+                          <td className="p-3 text-zinc-600 text-[11px]">
                             {stmt.importedByUserName}
                           </td>
                           <td className="p-3 text-right">
@@ -339,7 +339,7 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
                               <button
                                 type="button"
                                 onClick={() => handleViewDetails(stmt.id)}
-                                className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-950 font-bold hover:text-white transition-colors"
+                                className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-950 hover:bg-zinc-100 transition-colors cursor-pointer"
                                 title="Ver lançamentos deste extrato"
                               >
                                 <Eye className="w-4 h-4" />
@@ -347,7 +347,7 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
                               <button
                                 type="button"
                                 onClick={() => setConfirmRevertId(stmt.id)}
-                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 font-bold transition-colors"
+                                className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors cursor-pointer"
                                 title="Reverter e excluir lançamentos deste extrato"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -366,9 +366,9 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
 
         {/* Confirmation Dialog for Reverting a Batch */}
         {confirmRevertId && (
-          <div className="p-4 bg-rose-950/40 border-t border border-black flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex items-center gap-3 text-xs text-rose-200">
-              <AlertTriangle className="w-5 h-5 text-rose-700 font-bold shrink-0" />
+          <div className="p-4 bg-rose-50 border-t border-rose-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-3 text-xs text-rose-800">
+              <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
               <span>
                 <strong>Atenção:</strong> A reversão removerá permanentemente todos os lançamentos originados deste extrato e recalculará o saldo da conta imediatamente. Deseja prosseguir?
               </span>
@@ -377,7 +377,7 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
               <button
                 type="button"
                 onClick={() => setConfirmRevertId(null)}
-                className="px-3 py-1.5 text-xs text-zinc-900 font-semibold hover:text-white"
+                className="px-3 py-1.5 text-xs text-zinc-600 hover:text-zinc-950 cursor-pointer"
               >
                 Cancelar
               </button>
@@ -385,7 +385,7 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
                 type="button"
                 disabled={isReverting}
                 onClick={() => handleRevert(confirmRevertId)}
-                className="px-4 py-1.5 text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white rounded-lg transition-colors"
+                className="px-4 py-1.5 text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white rounded-lg transition-colors cursor-pointer shadow-xs"
               >
                 {isReverting ? 'Revertendo...' : 'Sim, Reverter Lote'}
               </button>
@@ -394,11 +394,11 @@ export const StatementHistoryModal: React.FC<StatementHistoryModalProps> = ({
         )}
 
         {/* Footer */}
-        <div className="p-4 border-t border border-black bg-white flex items-center justify-end">
+        <div className="p-4 border-t border-zinc-200 bg-zinc-50 flex items-center justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-zinc-950 font-bold hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+            className="px-4 py-2 text-xs font-semibold text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
           >
             Fechar
           </button>

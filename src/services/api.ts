@@ -592,5 +592,24 @@ export const apiService = {
   }> {
     const res = await authFetch(`${API_BASE}/sqlite/status`);
     return await parseJsonResponse(res, 'Erro ao verificar status do SQLite');
+  },
+
+  async exportBackup(): Promise<any> {
+    const res = await authFetch(`${API_BASE}/backup/export`);
+    return await parseJsonResponse(res, 'Erro ao exportar arquivo de backup');
+  },
+
+  async restoreBackup(payload: { backupPackage: any; userName?: string }): Promise<{ success: boolean; message: string }> {
+    const res = await authFetch(`${API_BASE}/backup/restore`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    return await parseJsonResponse(res, 'Erro ao restaurar backup');
+  },
+
+  async getBackupLogs(): Promise<{ logs: any[] }> {
+    const res = await authFetch(`${API_BASE}/backup/logs`);
+    return await parseJsonResponse(res, 'Erro ao carregar histórico de backups');
   }
 };

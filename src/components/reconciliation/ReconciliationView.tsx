@@ -168,13 +168,13 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white p-5 rounded-2xl border border border-black shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white p-5 rounded-2xl border border-zinc-200/90 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-zinc-950 font-bold tracking-tight flex items-center gap-2">
-            <CheckCheck className="w-6 h-6 text-orange-700 font-bold" />
+          <h2 className="text-xl font-bold text-zinc-950 tracking-tight flex items-center gap-2">
+            <CheckCheck className="w-6 h-6 text-orange-600" />
             Conciliação Bancária de Varejo
           </h2>
-          <p className="text-xs text-zinc-900 font-semibold mt-0.5">
+          <p className="text-xs text-zinc-600 mt-0.5">
             Validação de lançamentos bancários contra fechamentos de PDV, cartões e contas a pagar
           </p>
         </div>
@@ -184,43 +184,43 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
           <select
             value={selectedAccountId}
             onChange={(e) => setSelectedAccountId(e.target.value)}
-            className="text-xs font-semibold px-3 py-2 bg-white border border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 text-zinc-950 font-bold"
+            className="text-xs font-semibold px-3 py-2 bg-slate-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 text-zinc-950"
           >
-            <option value="" className="bg-white text-zinc-950 font-bold">Todas as Contas</option>
+            <option value="" className="bg-white text-zinc-950">Todas as Contas</option>
             {bankAccounts.map((acc) => (
-              <option key={acc.id} value={acc.id} className="bg-white text-zinc-950 font-bold">
+              <option key={acc.id} value={acc.id} className="bg-white text-zinc-950">
                 {acc.accountName}
               </option>
             ))}
           </select>
 
           <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-zinc-800 font-medium" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-zinc-400" />
             <input
               type="text"
               placeholder="Buscar..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="text-xs pl-8 pr-3 py-2 bg-white border border border-black rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 text-zinc-950 font-bold placeholder-zinc-500"
+              className="text-xs pl-8 pr-3 py-2 bg-slate-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500 text-zinc-950 placeholder-zinc-400 font-medium"
             />
           </div>
         </div>
       </div>
 
       {notification && (
-        <div className="p-3 bg-emerald-500/10 border border border-black text-emerald-700 font-bold text-xs font-semibold rounded-xl">
+        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold rounded-xl">
           {notification}
         </div>
       )}
 
       {/* Tabs as specified in Section 7 */}
-      <div className="flex flex-wrap items-center gap-2 bg-white p-1.5 rounded-2xl border border border-black shadow-inner">
+      <div className="flex flex-wrap items-center gap-2 bg-slate-100/90 p-1.5 rounded-2xl border border-zinc-200 shadow-2xs">
         <button
           onClick={() => setActiveTab('PENDENTE')}
           className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeTab === 'PENDENTE'
-              ? 'bg-white text-white shadow-sm border border border-black'
-              : 'text-zinc-900 font-semibold hover:text-white'
+              ? 'bg-white text-zinc-950 shadow-xs border border-zinc-200/80'
+              : 'text-zinc-600 hover:text-zinc-950'
           }`}
         >
           <Clock className="w-3.5 h-3.5 text-zinc-600" />
@@ -236,11 +236,11 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
           onClick={() => setActiveTab('CONCILIADO')}
           className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeTab === 'CONCILIADO'
-              ? 'bg-orange-50 text-orange-950 shadow-xs border border-orange-200'
-              : 'text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50'
+              ? 'bg-white text-emerald-900 shadow-xs border border-zinc-200/80'
+              : 'text-zinc-600 hover:text-zinc-950'
           }`}
         >
-          <CheckCheck className="w-3.5 h-3.5 text-emerald-700 font-bold" />
+          <CheckCheck className="w-3.5 h-3.5 text-emerald-600 font-bold" />
           <span>Conciliados</span>
           <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold">
             {countConciliated}
@@ -251,8 +251,8 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
           onClick={() => setActiveTab('NAO_CLASSIFICADO')}
           className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeTab === 'NAO_CLASSIFICADO'
-              ? 'bg-orange-50 text-orange-950 shadow-xs border border-orange-200'
-              : 'text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50'
+              ? 'bg-white text-purple-950 shadow-xs border border-zinc-200/80'
+              : 'text-zinc-600 hover:text-zinc-950'
           }`}
         >
           <HelpCircle className="w-3.5 h-3.5 text-purple-600" />
@@ -268,11 +268,11 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
           onClick={() => setActiveTab('DUPLICADO')}
           className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeTab === 'DUPLICADO'
-              ? 'bg-orange-50 text-orange-950 shadow-xs border border-orange-200'
-              : 'text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50'
+              ? 'bg-white text-amber-950 shadow-xs border border-zinc-200/80'
+              : 'text-zinc-600 hover:text-zinc-950'
           }`}
         >
-          <AlertTriangle className="w-3.5 h-3.5 text-amber-700 font-bold" />
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
           <span>Duplicados</span>
           {countDuplicate > 0 && (
             <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-bold">
@@ -285,11 +285,11 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
           onClick={() => setActiveTab('SUSPEITO')}
           className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeTab === 'SUSPEITO'
-              ? 'bg-orange-50 text-orange-950 shadow-xs border border-orange-200'
-              : 'text-zinc-600 hover:text-zinc-950 hover:bg-zinc-50'
+              ? 'bg-white text-rose-950 shadow-xs border border-zinc-200/80'
+              : 'text-zinc-600 hover:text-zinc-950'
           }`}
         >
-          <AlertCircle className="w-3.5 h-3.5 text-rose-700 font-bold" />
+          <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
           <span>Suspeitos</span>
           {countSuspicious > 0 && (
             <span className="px-1.5 py-0.2 text-[10px] rounded-full bg-rose-100 text-rose-900 border border-rose-300 font-bold">
@@ -302,11 +302,11 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
           onClick={() => setActiveTab('ENTRADA')}
           className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeTab === 'ENTRADA'
-              ? 'bg-white text-white shadow-sm border border border-black'
-              : 'text-zinc-900 font-semibold hover:text-white'
+              ? 'bg-white text-blue-900 shadow-xs border border-zinc-200/80'
+              : 'text-zinc-600 hover:text-zinc-950'
           }`}
         >
-          <TrendingUp className="w-3.5 h-3.5 text-blue-400" />
+          <TrendingUp className="w-3.5 h-3.5 text-blue-500" />
           <span>Entradas</span>
         </button>
 
@@ -314,11 +314,11 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
           onClick={() => setActiveTab('SAIDA')}
           className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeTab === 'SAIDA'
-              ? 'bg-white text-white shadow-sm border border border-black'
-              : 'text-zinc-900 font-semibold hover:text-white'
+              ? 'bg-white text-rose-900 shadow-xs border border-zinc-200/80'
+              : 'text-zinc-600 hover:text-zinc-950'
           }`}
         >
-          <TrendingDown className="w-3.5 h-3.5 text-rose-700 font-bold" />
+          <TrendingDown className="w-3.5 h-3.5 text-rose-600" />
           <span>Saídas</span>
         </button>
 
@@ -326,8 +326,8 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
           onClick={() => setActiveTab('TODOS')}
           className={`px-3 py-2 rounded-xl text-xs font-bold transition-all ${
             activeTab === 'TODOS'
-              ? 'bg-white text-white shadow-sm border border border-black'
-              : 'text-zinc-900 font-semibold hover:text-white'
+              ? 'bg-white text-zinc-950 shadow-xs border border-zinc-200/80'
+              : 'text-zinc-600 hover:text-zinc-950'
           }`}
         >
           Todos ({transactions.length})
@@ -335,24 +335,24 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
       </div>
 
       {/* Batch Action Toolbar */}
-      <div className="bg-white p-3.5 rounded-2xl border border border-black shadow-md flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-slate-50 p-3.5 rounded-2xl border border-zinc-200 shadow-2xs flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3 text-xs">
           <button
             onClick={() => toggleSelectAll(true)}
-            className="font-semibold text-zinc-950 font-bold hover:text-emerald-700 font-bold flex items-center gap-1"
+            className="font-semibold text-zinc-900 hover:text-emerald-700 flex items-center gap-1"
           >
-            <CheckSquare className="w-4 h-4 text-emerald-700 font-bold" />
+            <CheckSquare className="w-4 h-4 text-emerald-600" />
             Selecionar Todos ({filteredList.length})
           </button>
           <button
             onClick={() => toggleSelectAll(false)}
-            className="font-semibold text-zinc-900 font-semibold hover:text-white flex items-center gap-1"
+            className="font-semibold text-zinc-600 hover:text-zinc-950 flex items-center gap-1"
           >
-            <Square className="w-4 h-4 text-zinc-800 font-medium" />
+            <Square className="w-4 h-4 text-zinc-400" />
             Limpar Seleção
           </button>
-          <span className="text-zinc-900 font-semibold">|</span>
-          <span className="font-bold text-zinc-950 font-bold">
+          <span className="text-zinc-300">|</span>
+          <span className="font-bold text-zinc-950">
             {selectedIds.length} selecionados
           </span>
         </div>
@@ -361,7 +361,7 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
           <button
             disabled={selectedIds.length === 0}
             onClick={() => handleBatchAction('CONCILIAR')}
-            className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-bold text-xs rounded-xl shadow-md border border border-black transition-all flex items-center gap-1.5"
+            className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5"
           >
             <Check className="w-3.5 h-3.5" />
             <span>Marcar Conciliado ({selectedIds.length})</span>
@@ -370,7 +370,7 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
           <button
             disabled={selectedIds.length === 0}
             onClick={() => handleBatchAction('SUSPEITO')}
-            className="px-3.5 py-1.5 bg-rose-500/15 hover:bg-rose-500/25 disabled:opacity-40 text-rose-700 font-bold font-bold text-xs rounded-xl border border border-black transition-all flex items-center gap-1.5"
+            className="px-3.5 py-1.5 bg-rose-100 hover:bg-rose-200 disabled:opacity-40 text-rose-800 font-bold text-xs rounded-xl border border-rose-200 transition-all flex items-center gap-1.5"
           >
             <AlertCircle className="w-3.5 h-3.5" />
             <span>Marcar Suspeito</span>
@@ -379,10 +379,10 @@ export const ReconciliationView: React.FC<ReconciliationViewProps> = ({
       </div>
 
       {/* Reconciliation Table */}
-      <div className="bg-white rounded-2xl border border border-black shadow-md overflow-hidden">
+      <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-white text-zinc-900 font-semibold font-semibold border-b border border-black">
+            <thead className="bg-zinc-50 text-zinc-700 font-semibold border-b border-zinc-200">
               <tr>
                 <th className="p-3 w-10 text-center">Sel.</th>
                 <th className="p-3">Data</th>

@@ -218,31 +218,31 @@ export const CategorizeModal: React.FC<CategorizeModalProps> = ({
   const bankAccount = isSingle ? bankAccounts.find((a) => a.id === primaryTx.bankAccountId) : null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="bg-white border border border-black rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col my-8 max-h-[90vh]">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+      <div className="bg-white border border-zinc-200 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col my-8 max-h-[90vh]">
         {/* Header */}
-        <div className="px-6 py-4 border-b border border-black flex items-center justify-between bg-white">
+        <div className="px-6 py-4 border-b border-zinc-200 flex items-center justify-between bg-zinc-50">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-700 font-bold">
+            <div className="p-2 rounded-xl bg-orange-100 border border-orange-200 text-orange-600">
               <Tag className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-zinc-950 font-bold flex items-center gap-2">
+              <h3 className="text-base font-bold text-zinc-950 flex items-center gap-2">
                 <span>Categorizar {isSingle ? 'Lançamento' : `${transactions.length} Lançamentos`}</span>
                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                  txType === 'ENTRADA' ? 'bg-emerald-500/20 text-emerald-700 font-bold border border border-black' : 'bg-rose-500/20 text-rose-700 font-bold border border border-black'
+                  txType === 'ENTRADA' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'
                 }`}>
                   {txType === 'ENTRADA' ? 'Crédito / Entrada (+)' : 'Débito / Saída (-)'}
                 </span>
               </h3>
-              <p className="text-xs text-zinc-900 font-semibold">
+              <p className="text-xs text-zinc-600">
                 Defina a categoria e crie regras automáticas para os próximos extratos importados
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-zinc-900 font-semibold hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-950 hover:bg-zinc-100 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -251,15 +251,15 @@ export const CategorizeModal: React.FC<CategorizeModalProps> = ({
         {/* Content Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto flex-1 text-xs">
           {errorMessage && (
-            <div className="p-3.5 bg-rose-500/10 border border border-black rounded-xl text-rose-700 font-bold flex items-center gap-2 text-xs">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-700 font-bold" />
+            <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 font-semibold flex items-center gap-2 text-xs">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
               <span>{errorMessage}</span>
             </div>
           )}
 
           {/* Transaction Summary Card */}
-          <div className="bg-white p-4 rounded-xl border border border-black space-y-2">
-            <div className="text-[11px] font-bold text-zinc-900 font-semibold uppercase tracking-wider flex items-center justify-between">
+          <div className="bg-slate-50/80 p-4 rounded-xl border border-zinc-200 space-y-2 shadow-2xs">
+            <div className="text-[11px] font-bold text-zinc-700 uppercase tracking-wider flex items-center justify-between">
               <span>{isSingle ? 'Detalhes da Movimentação' : 'Resumo dos Lançamentos Selecionados'}</span>
               <span className="font-mono text-zinc-950 font-bold">
                 {isSingle ? formatDateBR(primaryTx.date) : `${transactions.length} itens`}
@@ -325,12 +325,12 @@ export const CategorizeModal: React.FC<CategorizeModalProps> = ({
                     onClick={() => handleSelectPresetOp(preset)}
                     className={`px-3 py-2 rounded-xl text-xs font-medium text-left border transition-all flex items-center justify-between cursor-pointer ${
                       isSelected
-                        ? 'bg-orange-500/15 border-orange-500/50 text-orange-200 font-bold shadow-sm'
-                        : 'bg-white border border-black text-zinc-950 font-bold hover:border border-black hover:bg-white/[0.04]'
+                        ? 'bg-orange-50 border-orange-300 text-orange-800 font-bold shadow-2xs'
+                        : 'bg-white border-zinc-200 text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50'
                     }`}
                   >
                     <span className="truncate">{preset.label}</span>
-                    {isSelected && <Check className="w-3.5 h-3.5 text-orange-700 font-bold shrink-0" />}
+                    {isSelected && <Check className="w-3.5 h-3.5 text-orange-600 shrink-0" />}
                   </button>
                 );
               })}
@@ -340,17 +340,17 @@ export const CategorizeModal: React.FC<CategorizeModalProps> = ({
           {/* Category & Subcategory Selectors */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-zinc-950 font-bold">
-                Categoria Contábil / Financeira <span className="text-orange-700 font-bold">*</span>
+              <label className="block text-xs font-bold text-zinc-950">
+                Categoria Contábil / Financeira <span className="text-orange-600">*</span>
               </label>
               <select
                 value={selectedCategoryId}
                 onChange={(e) => handleCategoryChange(e.target.value)}
-                className="w-full px-3 py-2.5 bg-white border border border-black rounded-xl text-xs text-zinc-950 font-bold focus:outline-none focus:ring-1 focus:ring-orange-500"
+                className="w-full px-3 py-2.5 bg-slate-50 border border-zinc-200 rounded-xl text-xs text-zinc-950 focus:outline-hidden focus:ring-2 focus:ring-orange-600"
               >
                 <option value="">-- Selecione uma Categoria --</option>
                 {availableCategories.map((c) => (
-                  <option key={c.id} value={c.id} className="bg-white text-zinc-950 font-bold">
+                  <option key={c.id} value={c.id} className="bg-white text-zinc-950">
                     {c.name}
                   </option>
                 ))}
@@ -358,18 +358,18 @@ export const CategorizeModal: React.FC<CategorizeModalProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-zinc-950 font-bold">
+              <label className="block text-xs font-bold text-zinc-950">
                 Subcategoria (Opcional)
               </label>
               <select
                 value={selectedSubcategoryId}
                 disabled={!currentCategory || !currentCategory.subcategories || currentCategory.subcategories.length === 0}
                 onChange={(e) => setSelectedSubcategoryId(e.target.value)}
-                className="w-full px-3 py-2.5 bg-white border border border-black rounded-xl text-xs text-zinc-950 font-bold focus:outline-none focus:ring-1 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-3 py-2.5 bg-slate-50 border border-zinc-200 rounded-xl text-xs text-zinc-950 focus:outline-hidden focus:ring-2 focus:ring-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="">(Sem subcategoria específica)</option>
                 {currentCategory?.subcategories?.map((s) => (
-                  <option key={s.id} value={s.id} className="bg-white text-zinc-950 font-bold">
+                  <option key={s.id} value={s.id} className="bg-white text-zinc-950">
                     {s.name}
                   </option>
                 ))}
@@ -379,7 +379,7 @@ export const CategorizeModal: React.FC<CategorizeModalProps> = ({
 
           {/* Operation Type Custom Field */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-zinc-950 font-bold">
+            <label className="block text-xs font-bold text-zinc-950">
               Nome do Tipo de Operação
             </label>
             <input
@@ -387,25 +387,25 @@ export const CategorizeModal: React.FC<CategorizeModalProps> = ({
               value={selectedOpType}
               onChange={(e) => setSelectedOpType(e.target.value)}
               placeholder="Ex: Boleto recebido, Cartão de Crédito, PIX..."
-              className="w-full px-3 py-2.5 bg-white border border border-black rounded-xl text-xs text-zinc-950 font-bold focus:outline-none focus:ring-1 focus:ring-orange-500"
+              className="w-full px-3 py-2.5 bg-slate-50 border border-zinc-200 rounded-xl text-xs text-zinc-950 focus:outline-hidden focus:ring-2 focus:ring-orange-600"
             />
           </div>
 
           {/* Section: Create Rule for Future Bank Statements */}
-          <div className="p-4 rounded-xl bg-gradient-to-br from-orange-950/20 to-amber-950/10 border border-orange-500/30 space-y-3.5">
+          <div className="p-4 rounded-xl bg-orange-50/60 border border-orange-200 space-y-3.5">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-2.5">
-                <div className="p-1.5 bg-orange-500/20 border border-orange-500/40 rounded-lg text-orange-700 font-bold shrink-0 mt-0.5">
+                <div className="p-1.5 bg-orange-100 border border-orange-200 rounded-lg text-orange-700 font-bold shrink-0 mt-0.5">
                   <Zap className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-orange-200 text-xs flex items-center gap-1.5">
+                  <h4 className="font-bold text-zinc-950 text-xs flex items-center gap-1.5">
                     <span>Criar Regra para os Próximos Extratos</span>
-                    <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-orange-500/30 text-orange-700 font-bold">
+                    <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-orange-200 text-orange-800">
                       Automático
                     </span>
                   </h4>
-                  <p className="text-[11px] text-zinc-900 font-semibold mt-0.5 leading-relaxed">
+                  <p className="text-[11px] text-zinc-600 mt-0.5 leading-relaxed">
                     Sempre que novos extratos forem importados contendo este padrão, o sistema aplicará automaticamente esta categoria e tipo de operação.
                   </p>
                 </div>
@@ -417,25 +417,25 @@ export const CategorizeModal: React.FC<CategorizeModalProps> = ({
                   onChange={(e) => setCreateRule(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-9 h-5 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500"></div>
+                <div className="w-9 h-5 bg-zinc-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-600"></div>
               </label>
             </div>
 
             {createRule && (
-              <div className="space-y-3 pt-2 border-t border-orange-500/20">
+              <div className="space-y-3 pt-2 border-t border-orange-200">
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-bold text-zinc-950 font-bold">
+                    <label className="text-[11px] font-bold text-zinc-950">
                       Texto / Palavra-chave a identificar no extrato:
                     </label>
-                    <span className="text-[10px] text-zinc-900 font-semibold">Insensível a maiúsculas</span>
+                    <span className="text-[10px] text-zinc-500">Insensível a maiúsculas</span>
                   </div>
                   <input
                     type="text"
                     value={ruleKeyword}
                     onChange={(e) => setRuleKeyword(e.target.value)}
                     placeholder="Ex: POSTO IPIRANGA, CIELO, ALELO, COPASA..."
-                    className="w-full px-3 py-2 bg-white border border-orange-500/40 rounded-xl text-xs font-semibold text-orange-100 focus:outline-none focus:ring-1 focus:ring-orange-500 font-mono"
+                    className="w-full px-3 py-2 bg-white border border-orange-300 rounded-xl text-xs font-semibold text-zinc-950 focus:outline-hidden focus:ring-2 focus:ring-orange-600 font-mono"
                   />
                 </div>
 
@@ -446,16 +446,16 @@ export const CategorizeModal: React.FC<CategorizeModalProps> = ({
                       type="checkbox"
                       checked={applyToAllSimilar}
                       onChange={(e) => setApplyToAllSimilar(e.target.checked)}
-                      className="mt-0.5 rounded bg-zinc-800 border border-black text-orange-700 font-bold focus:ring-0 cursor-pointer"
+                      className="mt-0.5 rounded border-zinc-300 text-orange-600 focus:ring-orange-600 cursor-pointer"
                     />
-                    <div className="text-[11px] text-zinc-950 font-bold">
-                      <strong className="text-zinc-950 font-bold">Aplicar agora a todos os outros lançamentos já importados</strong>
+                    <div className="text-[11px] text-zinc-950">
+                      <strong className="text-zinc-950">Aplicar agora a todos os outros lançamentos já importados</strong>
                       {similarCount > 0 ? (
-                        <span className="text-orange-700 font-bold font-bold ml-1">
+                        <span className="text-orange-700 font-bold ml-1">
                           ({similarCount} outro(s) lançamento(s) encontrado(s) com este termo!)
                         </span>
                       ) : (
-                        <span className="text-zinc-800 font-medium ml-1">(Nenhum outro pendente no momento)</span>
+                        <span className="text-zinc-500 ml-1">(Nenhum outro pendente no momento)</span>
                       )}
                     </div>
                   </label>
@@ -466,9 +466,9 @@ export const CategorizeModal: React.FC<CategorizeModalProps> = ({
                       type="checkbox"
                       checked={allowMultipleSameDay}
                       onChange={(e) => setAllowMultipleSameDay(e.target.checked)}
-                      className="mt-0.5 rounded bg-zinc-800 border border-black text-orange-700 font-bold focus:ring-0 cursor-pointer"
+                      className="mt-0.5 rounded border-zinc-300 text-orange-600 focus:ring-orange-600 cursor-pointer"
                     />
-                    <div className="text-[11px] text-zinc-900 font-semibold">
+                    <div className="text-[11px] text-zinc-600">
                       <span>Permitir múltiplos lançamentos com mesmo valor no mesmo dia (não acusar duplicidade)</span>
                     </div>
                   </label>
@@ -478,22 +478,22 @@ export const CategorizeModal: React.FC<CategorizeModalProps> = ({
           </div>
 
           {/* Footer Actions */}
-          <div className="pt-2 flex items-center justify-end gap-3 border-t border border-black">
+          <div className="pt-2 flex items-center justify-end gap-3 border-t border-zinc-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-zinc-900 font-semibold hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100 transition-colors cursor-pointer"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white font-bold text-xs shadow-lg shadow-orange-950/40 transition-all flex items-center gap-2 cursor-pointer"
+              className="px-6 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white font-bold text-xs shadow-xs transition-all flex items-center gap-2 cursor-pointer"
             >
               {isSubmitting ? (
                 <>
-                  <div className="w-4 h-4 border-2 border border-black border-t-white rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   <span>Salvando e Aplicando...</span>
                 </>
               ) : (

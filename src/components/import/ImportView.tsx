@@ -720,18 +720,18 @@ export const ImportView: React.FC<ImportViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Title & Bank Selector Card */}
-      <div className="bg-white p-5 rounded-2xl border border border-black shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white p-5 rounded-2xl border border-zinc-200 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-zinc-950 font-bold tracking-tight flex items-center gap-2">
-              <UploadCloud className="w-6 h-6 text-orange-700 font-bold" />
+            <h2 className="text-xl font-bold text-zinc-950 tracking-tight flex items-center gap-2">
+              <UploadCloud className="w-6 h-6 text-orange-600" />
               Importação & Padronização de Extratos Bancários
             </h2>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/10 text-orange-700 font-bold border border-orange-500/20">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-700 border border-orange-200">
               OFX &bull; CSV &bull; XLSX &bull; TXT &bull; PDF
             </span>
           </div>
-          <p className="text-xs text-zinc-900 font-semibold mt-1">
+          <p className="text-xs text-zinc-600 mt-1">
             Recepção direta sem necessidade de conversão manual. Normalização de datas, valores, históricos bancários e detecção rigorosa de duplicidades.
           </p>
         </div>
@@ -741,24 +741,24 @@ export const ImportView: React.FC<ImportViewProps> = ({
           <button
             type="button"
             onClick={() => setIsHistoryModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-950 font-bold hover:text-white border border border-black text-xs font-semibold transition-colors shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 hover:bg-zinc-100 text-zinc-800 border border-zinc-200 text-xs font-semibold transition-colors shadow-2xs cursor-pointer"
           >
-            <History className="w-4 h-4 text-orange-700 font-bold" />
+            <History className="w-4 h-4 text-orange-600" />
             <span>Histórico de Lotes</span>
           </button>
         </div>
       </div>
 
       {successMessage && (
-        <div className="p-4 bg-emerald-500/10 border border border-black rounded-2xl flex items-center justify-between text-emerald-700 font-bold text-xs font-semibold">
+        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between text-emerald-800 text-xs font-semibold shadow-2xs">
           <div className="flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-emerald-700 font-bold shrink-0" />
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
             <span>{successMessage}</span>
           </div>
           <button
             type="button"
             onClick={() => setSuccessMessage(null)}
-            className="text-emerald-700 font-bold hover:text-emerald-200"
+            className="text-emerald-700 hover:text-emerald-950 cursor-pointer text-base leading-none"
           >
             &times;
           </button>
@@ -766,25 +766,25 @@ export const ImportView: React.FC<ImportViewProps> = ({
       )}
 
       {pdfWarning && (
-        <div className="p-4 bg-amber-500/10 border border border-black rounded-2xl flex items-start gap-3 text-amber-700 font-bold text-xs leading-relaxed">
-          <AlertTriangle className="w-5 h-5 text-amber-700 font-bold shrink-0 mt-0.5" />
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3 text-amber-800 text-xs leading-relaxed shadow-2xs">
+          <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="flex-1">
-            <strong className="block text-amber-200 font-bold mb-1">Diagnóstico Técnico de PDF</strong>
+            <strong className="block text-amber-950 font-bold mb-1">Diagnóstico Técnico de PDF</strong>
             <span>{pdfWarning}</span>
           </div>
         </div>
       )}
 
       {error && (
-        <div className="p-4 bg-rose-500/10 border border border-black rounded-2xl flex items-center justify-between text-rose-700 font-bold text-xs font-semibold">
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-center justify-between text-rose-800 text-xs font-semibold shadow-2xs">
           <div className="flex items-center gap-3">
-            <XCircle className="w-5 h-5 text-rose-700 font-bold shrink-0" />
+            <XCircle className="w-5 h-5 text-rose-600 shrink-0" />
             <span>{error}</span>
           </div>
           <button
             type="button"
             onClick={() => setError(null)}
-            className="text-rose-700 font-bold hover:text-rose-200"
+            className="text-rose-700 hover:text-rose-950 cursor-pointer text-base leading-none"
           >
             &times;
           </button>
@@ -798,7 +798,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
             onDragOver={handleDragOver}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border border-black hover:border-orange-500/60 bg-white hover:bg-orange-500/[0.02] rounded-2xl p-8 sm:p-12 text-center cursor-pointer transition-all shadow-md group"
+            className="border-2 border-dashed border-zinc-300 hover:border-orange-500/60 bg-slate-50 hover:bg-orange-500/[0.02] rounded-2xl p-8 sm:p-12 text-center cursor-pointer transition-all shadow-2xs group"
           >
             <input
               type="file"
@@ -812,35 +812,35 @@ export const ImportView: React.FC<ImportViewProps> = ({
               className="hidden"
             />
 
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-orange-500/10 text-orange-700 font-bold border border-orange-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-orange-100 text-orange-600 border border-orange-200 flex items-center justify-center group-hover:scale-110 transition-transform">
               <UploadCloud className="w-7 h-7" />
             </div>
 
-            <h3 className="text-base font-bold text-zinc-950 font-bold mt-4">
+            <h3 className="text-base font-bold text-zinc-950 mt-4">
               Clique para selecionar ou arraste o extrato bancário aqui
             </h3>
-            <p className="text-xs text-zinc-900 font-semibold mt-1 max-w-lg mx-auto">
-              Formatos aceitos: <strong className="text-orange-700 font-bold">OFX</strong> (preferencial), <strong className="text-zinc-950 font-bold">CSV</strong>, <strong className="text-zinc-950 font-bold">XLSX</strong>, <strong className="text-zinc-950 font-bold">TXT</strong> ou <strong className="text-zinc-950 font-bold">PDF</strong> legível.
+            <p className="text-xs text-zinc-600 mt-1 max-w-lg mx-auto">
+              Formatos aceitos: <strong className="text-orange-600">OFX</strong> (preferencial), <strong className="text-zinc-950">CSV</strong>, <strong className="text-zinc-950">XLSX</strong>, <strong className="text-zinc-950">TXT</strong> ou <strong className="text-zinc-950">PDF</strong> legível.
               Não é necessário converter manualmente para OFX.
             </p>
 
-            <div className="flex flex-wrap items-center justify-center gap-2 mt-5 text-[11px] text-zinc-900 font-semibold">
-              <span className="px-2.5 py-1 bg-white border border border-black rounded-md font-semibold text-zinc-950 font-bold">
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-5 text-[11px] text-zinc-600">
+              <span className="px-2.5 py-1 bg-white border border-zinc-200 rounded-md font-semibold text-zinc-800 shadow-2xs">
                 Itaú Unibanco
               </span>
-              <span className="px-2.5 py-1 bg-white border border border-black rounded-md font-semibold text-zinc-950 font-bold">
+              <span className="px-2.5 py-1 bg-white border border-zinc-200 rounded-md font-semibold text-zinc-800 shadow-2xs">
                 Bradesco
               </span>
-              <span className="px-2.5 py-1 bg-white border border border-black rounded-md font-semibold text-zinc-950 font-bold">
+              <span className="px-2.5 py-1 bg-white border border-zinc-200 rounded-md font-semibold text-zinc-800 shadow-2xs">
                 Banco do Brasil
               </span>
-              <span className="px-2.5 py-1 bg-white border border border-black rounded-md font-semibold text-zinc-950 font-bold">
+              <span className="px-2.5 py-1 bg-white border border-zinc-200 rounded-md font-semibold text-zinc-800 shadow-2xs">
                 Santander
               </span>
-              <span className="px-2.5 py-1 bg-white border border border-black rounded-md font-semibold text-zinc-950 font-bold">
+              <span className="px-2.5 py-1 bg-white border border-zinc-200 rounded-md font-semibold text-zinc-800 shadow-2xs">
                 Sicoob / Sicredi
               </span>
-              <span className="px-2.5 py-1 bg-white border border border-black rounded-md font-semibold text-zinc-950 font-bold">
+              <span className="px-2.5 py-1 bg-white border border-zinc-200 rounded-md font-semibold text-zinc-800 shadow-2xs">
                 Stone / PagBank / Cielo
               </span>
             </div>
@@ -850,12 +850,12 @@ export const ImportView: React.FC<ImportViewProps> = ({
 
       {/* Loading state indicator */}
       {isProcessing && (
-        <div className="bg-white p-8 rounded-2xl border border border-black text-center space-y-3 shadow-md">
-          <RefreshCw className="w-8 h-8 text-orange-700 font-bold animate-spin mx-auto" />
-          <h4 className="text-sm font-bold text-zinc-950 font-bold">
+        <div className="bg-white p-8 rounded-2xl border border-zinc-200 text-center space-y-3 shadow-2xs">
+          <RefreshCw className="w-8 h-8 text-orange-600 animate-spin mx-auto" />
+          <h4 className="text-sm font-bold text-zinc-950">
             Processando e normalizando extrato bancário...
           </h4>
-          <p className="text-xs text-zinc-900 font-semibold max-w-md mx-auto">
+          <p className="text-xs text-zinc-600 max-w-md mx-auto">
             Identificando colunas, normalizando moeda BRL, verificando duplicidades por hash único e aplicando regras automáticas de conciliação.
           </p>
         </div>
@@ -865,24 +865,24 @@ export const ImportView: React.FC<ImportViewProps> = ({
       {previewSummary && (
         <div className="space-y-6">
           {/* File Header Details & Mapping Button */}
-          <div className="bg-white p-4 rounded-2xl border border border-black shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="bg-white p-4 rounded-2xl border border-zinc-200 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-700 font-bold flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-orange-100 border border-orange-200 text-orange-600 flex items-center justify-center shrink-0">
                 {fileType === 'XLSX' ? (
-                  <FileSpreadsheet className="w-5 h-5 text-emerald-700 font-bold" />
+                  <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
                 ) : (
-                  <FileText className="w-5 h-5 text-orange-700 font-bold" />
+                  <FileText className="w-5 h-5 text-orange-600" />
                 )}
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-zinc-950 font-bold">{fileName}</h3>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-500/20 text-orange-700 font-bold font-mono">
+                  <h3 className="text-sm font-bold text-zinc-950">{fileName}</h3>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700 font-mono">
                     {fileType}
                   </span>
                 </div>
-                <p className="text-xs text-zinc-900 font-semibold mt-0.5">
-                  Total Entradas: <span className="text-emerald-700 font-bold font-bold">{formatCurrency(previewSummary.totalEntradas)}</span> &bull; Total Saídas: <span className="text-rose-700 font-bold font-bold">{formatCurrency(previewSummary.totalSaidas)}</span>
+                <p className="text-xs text-zinc-600 mt-0.5">
+                  Total Entradas: <span className="text-emerald-700 font-bold">{formatCurrency(previewSummary.totalEntradas)}</span> &bull; Total Saídas: <span className="text-rose-700 font-bold">{formatCurrency(previewSummary.totalSaidas)}</span>
                 </p>
               </div>
             </div>
@@ -892,9 +892,9 @@ export const ImportView: React.FC<ImportViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsMappingModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-orange-500/10 border border border-black hover:border-orange-500/30 text-zinc-950 font-bold text-xs font-semibold rounded-xl transition-all"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-zinc-100 border border-zinc-200 text-zinc-800 text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-2xs"
                 >
-                  <Sliders className="w-4 h-4 text-orange-700 font-bold" />
+                  <Sliders className="w-4 h-4 text-orange-600" />
                   <span>Ajustar Mapeamento de Colunas</span>
                 </button>
               )}
@@ -906,7 +906,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
                   setItems([]);
                   setFile(null);
                 }}
-                className="px-3 py-1.5 text-xs text-zinc-900 font-semibold hover:text-white rounded-xl hover:bg-white/5 transition-colors"
+                className="px-3 py-1.5 text-xs text-zinc-600 hover:text-zinc-950 rounded-xl hover:bg-zinc-100 transition-colors cursor-pointer"
               >
                 Trocar Arquivo
               </button>
@@ -917,38 +917,38 @@ export const ImportView: React.FC<ImportViewProps> = ({
           {previewSummary?.detectedStatementBalance &&
             (typeof previewSummary.detectedStatementBalance.finalBalance === 'number' ||
               typeof previewSummary.detectedStatementBalance.initialBalance === 'number') && (
-            <div className="bg-gradient-to-r from-blue-950/40 via-[#141824] to-cyan-950/30 p-4 rounded-2xl border border-blue-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-md">
+            <div className="bg-slate-50 p-4 rounded-2xl border border-blue-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-2xs">
               <div className="flex items-start gap-3">
-                <div className="p-2.5 bg-blue-500/15 border border-blue-500/30 rounded-xl text-blue-400 shrink-0">
+                <div className="p-2.5 bg-blue-100 border border-blue-200 rounded-xl text-blue-600 shrink-0">
                   <GitCompare className="w-5 h-5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-bold text-zinc-950 font-bold uppercase tracking-wide">
+                    <span className="text-xs font-bold text-zinc-950 uppercase tracking-wide">
                       Saldos do Extrato Identificados (Ponto de Partida)
                     </span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-700 font-bold border border border-black">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
                       Saldo Inicial Preservado
                     </span>
                   </div>
-                  <p className="text-xs text-zinc-950 font-bold mt-1 leading-relaxed">
-                    O primeiro saldo do documento foi identificado e configurado como <strong className="text-white">ponto de partida da movimentação financeiro-contínua</strong>. Ele é preservado no histórico sem gerar entradas/saídas duplicadas de receitas.
+                  <p className="text-xs text-zinc-600 mt-1 leading-relaxed">
+                    O primeiro saldo do documento foi identificado e configurado como <strong className="text-zinc-950">ponto de partida da movimentação financeiro-contínua</strong>. Ele é preservado no histórico sem gerar entradas/saídas duplicadas de receitas.
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-6 shrink-0 self-end md:self-center font-mono">
                 {typeof previewSummary.detectedStatementBalance.initialBalance === 'number' && (
                   <div className="text-right">
-                    <div className="text-[10px] text-zinc-900 font-semibold uppercase font-sans">Saldo Inicial ({previewSummary.detectedStatementBalance.initialBalanceDate ? formatDateBR(previewSummary.detectedStatementBalance.initialBalanceDate) : 'Início'})</div>
-                    <div className="text-base font-bold text-emerald-700 font-bold">
+                    <div className="text-[10px] text-zinc-500 uppercase font-sans">Saldo Inicial ({previewSummary.detectedStatementBalance.initialBalanceDate ? formatDateBR(previewSummary.detectedStatementBalance.initialBalanceDate) : 'Início'})</div>
+                    <div className="text-base font-bold text-emerald-700">
                       {formatCurrency(previewSummary.detectedStatementBalance.initialBalance)}
                     </div>
                   </div>
                 )}
                 {typeof previewSummary.detectedStatementBalance.finalBalance === 'number' && (
-                  <div className="text-right border-l border border-black pl-6">
-                    <div className="text-[10px] text-zinc-900 font-semibold uppercase font-sans">Saldo Final ({previewSummary.detectedStatementBalance.finalBalanceDate ? formatDateBR(previewSummary.detectedStatementBalance.finalBalanceDate) : 'Fim'})</div>
-                    <div className="text-base font-bold text-blue-300">
+                  <div className="text-right border-l border-zinc-200 pl-6">
+                    <div className="text-[10px] text-zinc-500 uppercase font-sans">Saldo Final ({previewSummary.detectedStatementBalance.finalBalanceDate ? formatDateBR(previewSummary.detectedStatementBalance.finalBalanceDate) : 'Fim'})</div>
+                    <div className="text-base font-bold text-blue-700">
                       {formatCurrency(previewSummary.detectedStatementBalance.finalBalance)}
                     </div>
                   </div>
@@ -959,26 +959,26 @@ export const ImportView: React.FC<ImportViewProps> = ({
 
           {/* Alerta de Extrato Já Importado Anteriormente */}
           {previewSummary?.isPreviouslyImportedStatement && (
-            <div className="bg-amber-500/10 border-2 border-amber-500/40 p-4 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-lg">
+            <div className="bg-amber-50 border-2 border-amber-300 p-4 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-2xs">
               <div className="flex items-start gap-3.5">
-                <div className="p-2.5 bg-amber-500/20 border border-amber-500/40 rounded-xl text-amber-400 shrink-0 mt-0.5">
+                <div className="p-2.5 bg-amber-100 border border-amber-200 rounded-xl text-amber-700 shrink-0 mt-0.5">
                   <AlertTriangle className="w-5 h-5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-black text-amber-400 uppercase tracking-wide">
+                    <span className="text-xs font-black text-amber-900 uppercase tracking-wide">
                       Atenção: Extrato Já Importado Anteriormente
                     </span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
                       {previewSummary.previouslyImportedDetails?.duplicatePercentage || 0}% de Duplicidade
                     </span>
                     {previewSummary.previouslyImportedDetails?.reason === 'SAME_FILENAME' && (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-zinc-100 text-zinc-800 border border-zinc-200">
                         Mesmo Nome de Arquivo
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-zinc-300 mt-1.5 leading-relaxed">
+                  <p className="text-xs text-zinc-700 mt-1.5 leading-relaxed">
                     {previewSummary.previouslyImportedDetails?.reason === 'SAME_FILENAME'
                       ? `O arquivo "${previewSummary.previouslyImportedDetails?.existingStatementFileName || fileName}" já consta registrado nas importações anteriores desta conta.`
                       : `Este extrato (${previewSummary.previouslyImportedDetails?.minDate || ''} a ${previewSummary.previouslyImportedDetails?.maxDate || ''}) possui lançamentos idênticos aos já registrados nesta conta.`}{' '}
@@ -990,7 +990,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsAlreadyImportedModalOpen(true)}
-                  className="px-3.5 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                  className="px-3.5 py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
                 >
                   <AlertTriangle className="w-3.5 h-3.5" />
                   Ver Alerta
@@ -998,7 +998,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
                 <button
                   type="button"
                   onClick={handleCancelImport}
-                  className="px-3.5 py-2 bg-zinc-800 hover:bg-red-500/20 text-zinc-300 hover:text-red-300 border border-zinc-700 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+                  className="px-3.5 py-2 bg-zinc-100 hover:bg-rose-50 text-zinc-700 hover:text-rose-700 border border-zinc-200 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
                 >
                   <XCircle className="w-3.5 h-3.5" />
                   Cancelar e Trocar Arquivo
@@ -1013,10 +1013,10 @@ export const ImportView: React.FC<ImportViewProps> = ({
             <button
               type="button"
               onClick={() => setActiveFilter('TODOS')}
-              className={`p-3.5 rounded-xl border text-left transition-all ${
+              className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-2xs ${
                 activeFilter === 'TODOS'
-                  ? 'bg-orange-600 text-white border-orange-500 shadow-md shadow-orange-950/40'
-                  : 'bg-white text-zinc-950 font-bold border border-black hover:border border-black'
+                  ? 'bg-orange-600 text-white border-orange-500 shadow-sm'
+                  : 'bg-slate-50 text-zinc-950 border-zinc-200 hover:bg-zinc-100'
               }`}
             >
               <div className="text-[10px] font-bold uppercase tracking-wider opacity-80">
@@ -1034,16 +1034,16 @@ export const ImportView: React.FC<ImportViewProps> = ({
             <button
               type="button"
               onClick={() => setActiveFilter('NOVOS')}
-              className={`p-3.5 rounded-xl border text-left transition-all ${
+              className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-2xs ${
                 activeFilter === 'NOVOS'
-                  ? 'bg-emerald-600 text-white border-emerald-500 shadow-md'
-                  : 'bg-white text-emerald-700 font-bold border border-black hover:border border-black'
+                  ? 'bg-emerald-600 text-white border-emerald-500 shadow-sm'
+                  : 'bg-slate-50 text-emerald-700 border-zinc-200 hover:bg-zinc-100'
               }`}
             >
               <div className="text-[10px] font-bold uppercase tracking-wider opacity-80">
                 Novos (Aptos)
               </div>
-              <div className="text-xl font-extrabold mt-1 text-emerald-700 font-bold">
+              <div className="text-xl font-extrabold mt-1 text-emerald-700">
                 {items.filter((i) => !i.isDuplicate && !i.hasError).length}
               </div>
               <div className="text-[10px] opacity-70 mt-0.5">
@@ -1055,16 +1055,16 @@ export const ImportView: React.FC<ImportViewProps> = ({
             <button
               type="button"
               onClick={() => setActiveFilter('DUPLICADOS')}
-              className={`p-3.5 rounded-xl border text-left transition-all ${
+              className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-2xs ${
                 activeFilter === 'DUPLICADOS'
-                  ? 'bg-amber-600 text-white border-amber-500 shadow-md'
-                  : 'bg-white text-amber-700 font-bold border border-black hover:border border-black'
+                  ? 'bg-amber-600 text-white border-amber-500 shadow-sm'
+                  : 'bg-slate-50 text-amber-700 border-zinc-200 hover:bg-zinc-100'
               }`}
             >
               <div className="text-[10px] font-bold uppercase tracking-wider opacity-80">
                 Duplicados
               </div>
-              <div className="text-xl font-extrabold mt-1 text-amber-700 font-bold">
+              <div className="text-xl font-extrabold mt-1 text-amber-700">
                 {items.filter((i) => i.isDuplicate).length}
               </div>
               <div className="text-[10px] opacity-70 mt-0.5">
@@ -1076,16 +1076,16 @@ export const ImportView: React.FC<ImportViewProps> = ({
             <button
               type="button"
               onClick={() => setActiveFilter('ERROS')}
-              className={`p-3.5 rounded-xl border text-left transition-all ${
+              className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-2xs ${
                 activeFilter === 'ERROS'
-                  ? 'bg-rose-600 text-white border-rose-500 shadow-md'
-                  : 'bg-white text-rose-700 font-bold border border-black hover:border border-black'
+                  ? 'bg-rose-600 text-white border-rose-500 shadow-sm'
+                  : 'bg-slate-50 text-rose-700 border-zinc-200 hover:bg-zinc-100'
               }`}
             >
               <div className="text-[10px] font-bold uppercase tracking-wider opacity-80">
                 Com Erro
               </div>
-              <div className="text-xl font-extrabold mt-1 text-rose-700 font-bold">
+              <div className="text-xl font-extrabold mt-1 text-rose-700">
                 {items.filter((i) => i.hasError).length}
               </div>
               <div className="text-[10px] opacity-70 mt-0.5">
@@ -1097,16 +1097,16 @@ export const ImportView: React.FC<ImportViewProps> = ({
             <button
               type="button"
               onClick={() => setActiveFilter('AUTO')}
-              className={`p-3.5 rounded-xl border text-left transition-all ${
+              className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-2xs ${
                 activeFilter === 'AUTO'
-                  ? 'bg-blue-600 text-white border-blue-500 shadow-md'
-                  : 'bg-white text-blue-400 border border-black hover:border-blue-500/30'
+                  ? 'bg-blue-600 text-white border-blue-500 shadow-sm'
+                  : 'bg-slate-50 text-blue-700 border-zinc-200 hover:bg-zinc-100'
               }`}
             >
               <div className="text-[10px] font-bold uppercase tracking-wider opacity-80">
                 Classificados
               </div>
-              <div className="text-xl font-extrabold mt-1 text-blue-400">
+              <div className="text-xl font-extrabold mt-1 text-blue-700">
                 {items.filter((i) => (i.categoryId || i.operationType !== 'NAO_CLASSIFICADO') && !i.hasError).length}
               </div>
               <div className="text-[10px] opacity-70 mt-0.5">
@@ -1118,16 +1118,16 @@ export const ImportView: React.FC<ImportViewProps> = ({
             <button
               type="button"
               onClick={() => setActiveFilter('NAO_CLASSIFICADOS')}
-              className={`p-3.5 rounded-xl border text-left transition-all ${
+              className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer shadow-2xs ${
                 activeFilter === 'NAO_CLASSIFICADOS'
-                  ? 'bg-purple-600 text-white border-purple-500 shadow-md'
-                  : 'bg-white text-purple-400 border border-black hover:border-purple-500/30'
+                  ? 'bg-purple-600 text-white border-purple-500 shadow-sm'
+                  : 'bg-slate-50 text-purple-700 border-zinc-200 hover:bg-zinc-100'
               }`}
             >
               <div className="text-[10px] font-bold uppercase tracking-wider opacity-80">
                 Sem Categoria
               </div>
-              <div className="text-xl font-extrabold mt-1 text-purple-400">
+              <div className="text-xl font-extrabold mt-1 text-purple-700">
                 {items.filter((i) => (!i.categoryId || i.operationType === 'NAO_CLASSIFICADO') && !i.hasError).length}
               </div>
               <div className="text-[10px] opacity-70 mt-0.5">
@@ -1137,28 +1137,28 @@ export const ImportView: React.FC<ImportViewProps> = ({
           </div>
 
           {/* Action Bar */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-2xl border border border-black shadow-md">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-zinc-200 shadow-2xs">
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => toggleSelectAll(true)}
-                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-zinc-950 font-bold text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                  className="px-3 py-1.5 bg-slate-50 hover:bg-zinc-100 text-zinc-800 border border-zinc-200 text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-2xs"
                 >
                   Marcar Válidos
                 </button>
                 <button
                   type="button"
                   onClick={() => toggleSelectAll(false)}
-                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-zinc-950 font-bold text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                  className="px-3 py-1.5 bg-slate-50 hover:bg-zinc-100 text-zinc-800 border border-zinc-200 text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-2xs"
                 >
                   Desmarcar Todos
                 </button>
               </div>
 
-              <div className="text-xs text-zinc-900 font-semibold border-l border border-black pl-3">
+              <div className="text-xs text-zinc-600 border-l border-zinc-200 pl-3">
                 Selecionados para gravação:{' '}
-                <strong className="text-orange-700 font-bold font-bold">{selectedCount}</strong> de{' '}
+                <strong className="text-orange-600 font-bold">{selectedCount}</strong> de{' '}
                 {items.filter((i) => !i.hasError).length} válidos
               </div>
             </div>
@@ -1167,7 +1167,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
               type="button"
               onClick={handleConfirmImport}
               disabled={isSaving || selectedCount === 0}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold shadow-lg shadow-emerald-950/40 transition-all cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
             >
               {isSaving ? (
                 <>
@@ -1185,18 +1185,18 @@ export const ImportView: React.FC<ImportViewProps> = ({
 
           {/* Detailed Error Diagnostics Banner when invalid records exist */}
           {items.filter((i) => i.hasError).length > 0 && (
-            <div className="p-4 bg-rose-950/40 border border border-black rounded-2xl text-rose-200 text-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-md">
+            <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 text-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-2xs">
               <div className="flex items-start gap-2.5">
-                <AlertCircle className="w-5 h-5 text-rose-700 font-bold shrink-0 mt-0.5" />
+                <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-bold text-rose-100 text-sm flex items-center gap-2">
+                  <h4 className="font-bold text-rose-950 text-sm flex items-center gap-2">
                     <span>{items.filter((i) => i.hasError).length} operação(ões) com colunas em branco ou incompletas</span>
                   </h4>
-                  <p className="text-rose-700 font-bold/90 text-xs mt-1">
-                    <strong className="font-semibold text-rose-200">Motivos:</strong>{' '}
+                  <p className="text-rose-700 text-xs mt-1">
+                    <strong className="font-semibold text-rose-900">Motivos:</strong>{' '}
                     {Array.from(new Set(items.filter((i) => i.hasError).map((i) => i.errorMessage || 'Dados em branco ou zerados'))).join(' • ')}
                   </p>
-                  <p className="text-[11px] text-zinc-900 font-semibold mt-1">
+                  <p className="text-[11px] text-zinc-600 mt-1">
                     🔒 Regra ativa: Operações com colunas vazias são excluídas e descartadas sem alimentar valores fictícios.
                   </p>
                 </div>
@@ -1205,7 +1205,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
                 <button
                   type="button"
                   onClick={handleExcludeAllErroredItems}
-                  className="px-3.5 py-2 bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs rounded-xl transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+                  className="px-3.5 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
                   title="Excluir todas as operações com colunas vazias ou dados incompletos"
                 >
                   <Trash2 className="w-4 h-4 text-white" />
@@ -1215,7 +1215,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsMappingModalOpen(true)}
-                    className="px-3 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border border-black rounded-xl font-bold text-xs transition-all shadow-sm cursor-pointer"
+                    className="px-3 py-2 bg-rose-100 hover:bg-rose-200 text-rose-800 border border-rose-200 rounded-xl font-bold text-xs transition-all shadow-2xs cursor-pointer"
                   >
                     Ajustar Colunas
                   </button>
@@ -1226,14 +1226,14 @@ export const ImportView: React.FC<ImportViewProps> = ({
 
           {/* Detailed Duplicate Diagnostics Banner */}
           {items.filter((i) => i.isDuplicate).length > 0 && (
-            <div className="p-4 bg-amber-950/40 border border border-black rounded-2xl text-amber-200 text-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-md">
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-800 text-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-2xs">
               <div className="flex items-start gap-2.5">
-                <AlertTriangle className="w-5 h-5 text-amber-700 font-bold shrink-0 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-extrabold text-amber-700 font-bold text-sm flex items-center gap-2">
+                  <h4 className="font-extrabold text-amber-950 text-sm flex items-center gap-2">
                     <span>{items.filter((i) => i.isDuplicate).length} lançamento(s) duplicado(s) identificado(s)</span>
                   </h4>
-                  <p className="text-amber-200/90 text-xs mt-1">
+                  <p className="text-amber-800/90 text-xs mt-1">
                     Estes lançamentos já existem no sistema ou aparecem repetidos no arquivo.
                   </p>
                 </div>
@@ -1243,7 +1243,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
                 <button
                   type="button"
                   onClick={() => handleOpenDuplicateModal()}
-                  className="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-extrabold text-xs rounded-xl transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+                  className="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-extrabold text-xs rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
                 >
                   <GitCompare className="w-4 h-4" />
                   <span>Comparar e Resolver Lado a Lado ({items.filter((i) => i.isDuplicate).length})</span>
@@ -1251,7 +1251,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
                 <button
                   type="button"
                   onClick={handleIgnoreAllDuplicates}
-                  className="px-3 py-2 bg-white/10 hover:bg-white/20 text-amber-200 border border border-black rounded-xl font-bold text-xs transition-all cursor-pointer"
+                  className="px-3 py-2 bg-white hover:bg-zinc-50 text-amber-900 border border-amber-300 rounded-xl font-bold text-xs transition-all cursor-pointer shadow-2xs"
                   title="Desmarcar todos os duplicados para manter os dados atuais"
                 >
                   Manter Existentes
@@ -1259,7 +1259,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
                 <button
                   type="button"
                   onClick={handleForceAllDuplicates}
-                  className="px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border border-black rounded-xl font-bold text-xs transition-all cursor-pointer"
+                  className="px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 rounded-xl font-bold text-xs transition-all cursor-pointer shadow-2xs"
                   title="Forçar a importação de todos os duplicados"
                 >
                   Forçar Todos
@@ -1269,10 +1269,10 @@ export const ImportView: React.FC<ImportViewProps> = ({
           )}
 
           {/* Conference Table */}
-          <div className="border border border-black rounded-2xl overflow-hidden bg-white shadow-md">
+          <div className="border border-zinc-200 rounded-2xl overflow-hidden bg-white shadow-2xs">
             <div className="overflow-x-auto max-h-[550px]">
               <table className="w-full text-left text-xs border-collapse">
-                <thead className="sticky top-0 z-10 bg-white text-zinc-900 font-semibold border-b border border-black">
+                <thead className="sticky top-0 z-10 bg-slate-50 text-zinc-700 font-semibold border-b border-zinc-200">
                   <tr>
                     <th className="p-3 w-10 text-center">Sel.</th>
                     <th className="p-3 whitespace-nowrap">Data Mov. / Lanç.</th>
@@ -1286,7 +1286,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
                     <th className="p-3 text-center whitespace-nowrap">Ação</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5 text-zinc-950 font-bold">
+                <tbody className="divide-y divide-zinc-200 text-zinc-900">
                   {filteredItems.map((it) => {
                     const availableCats = categories.filter((c) => c.type === it.type);
                     const selectedCat = categories.find((c) => c.id === it.categoryId);
@@ -1294,9 +1294,9 @@ export const ImportView: React.FC<ImportViewProps> = ({
                     return (
                       <tr
                         key={it.tempId}
-                        className={`hover:bg-white/[0.02] transition-colors ${
-                          it.isDuplicate ? 'bg-amber-500/[0.03]' : ''
-                        } ${it.hasError ? 'bg-rose-500/[0.05]' : ''}`}
+                        className={`hover:bg-zinc-50/80 transition-colors ${
+                          it.isDuplicate ? 'bg-amber-50/40' : ''
+                        } ${it.hasError ? 'bg-rose-50/40' : ''}`}
                       >
                         {/* Checkbox */}
                         <td className="p-3 text-center">
@@ -1305,7 +1305,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
                             checked={it.selected}
                             disabled={it.hasError}
                             onChange={() => toggleItemSelection(it.tempId)}
-                            className="rounded bg-white border border-black text-orange-700 font-bold focus:ring-0 cursor-pointer disabled:cursor-not-allowed"
+                            className="rounded bg-white border border-zinc-300 text-orange-600 focus:ring-0 cursor-pointer disabled:cursor-not-allowed"
                           />
                         </td>
 
@@ -1315,19 +1315,19 @@ export const ImportView: React.FC<ImportViewProps> = ({
                             type="date"
                             value={it.date ? it.date.split('T')[0] : ''}
                             onChange={(e) => updateItemField(it.tempId, 'date', e.target.value)}
-                            className={`px-2 py-1 bg-white border rounded-lg text-xs font-mono text-zinc-950 font-bold focus:outline-none focus:ring-1 focus:ring-orange-500 ${
+                            className={`px-2 py-1 bg-white border rounded-lg text-xs font-mono text-zinc-900 focus:outline-none focus:ring-1 focus:ring-orange-500 ${
                               !it.date || isNaN(new Date(it.date).getTime())
-                                ? 'border border-black bg-rose-500/15 text-rose-200'
-                                : 'border border-black'
+                                ? 'border-rose-300 bg-rose-50 text-rose-800'
+                                : 'border-zinc-300'
                             }`}
                           />
                           {it.postingDate && it.postingDate !== it.date && (
-                            <span className="block text-[10px] text-zinc-800 font-medium mt-0.5">
+                            <span className="block text-[10px] text-zinc-500 font-medium mt-0.5">
                               Lanç: {formatDateBR(it.postingDate)}
                             </span>
                           )}
                           {it.sourceLineNumber && (
-                            <span className="block text-[9px] text-zinc-900 font-semibold">
+                            <span className="block text-[9px] text-zinc-400">
                               Linha {it.sourceLineNumber}
                             </span>
                           )}
@@ -1340,14 +1340,14 @@ export const ImportView: React.FC<ImportViewProps> = ({
                             value={it.description}
                             placeholder="Descrição do lançamento..."
                             onChange={(e) => updateItemField(it.tempId, 'description', e.target.value)}
-                            className={`w-full px-2 py-1 bg-white border rounded-lg text-xs font-semibold text-zinc-950 font-bold focus:outline-none focus:ring-1 focus:ring-orange-500 ${
+                            className={`w-full px-2 py-1 bg-white border rounded-lg text-xs font-semibold text-zinc-900 focus:outline-none focus:ring-1 focus:ring-orange-500 ${
                               !it.description || !it.description.trim()
-                                ? 'border border-black bg-rose-500/15 text-rose-200 placeholder-rose-300'
-                                : 'border border-black'
+                                ? 'border-rose-300 bg-rose-50 text-rose-800 placeholder-rose-400'
+                                : 'border-zinc-300'
                             }`}
                           />
                           {it.balanceAfter !== undefined && (
-                            <span className="text-[10px] text-zinc-800 font-medium font-mono block mt-0.5">
+                            <span className="text-[10px] text-zinc-500 font-medium font-mono block mt-0.5">
                               Saldo após: {formatCurrency(it.balanceAfter)}
                             </span>
                           )}
@@ -1357,16 +1357,16 @@ export const ImportView: React.FC<ImportViewProps> = ({
                         <td className="p-3 whitespace-nowrap text-right">
                           {it.type === 'SALDO_INICIAL' ? (
                             <div className="text-right">
-                              <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block">
+                              <span className="text-[10px] font-bold text-cyan-700 uppercase tracking-wider block">
                                 Saldo Inicial
                               </span>
-                              <span className="text-xs font-mono font-bold text-cyan-300">
+                              <span className="text-xs font-mono font-bold text-cyan-800">
                                 {formatCurrency(it.balanceAfter || 0)}
                               </span>
                             </div>
                           ) : (
                             <div className="flex items-center justify-end gap-1">
-                              <span className={`text-xs font-extrabold ${it.type === 'ENTRADA' ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'}`}>
+                              <span className={`text-xs font-extrabold ${it.type === 'ENTRADA' ? 'text-emerald-700' : 'text-rose-700'}`}>
                                 {it.type === 'ENTRADA' ? '+' : '-'}
                               </span>
                               <input
@@ -1377,8 +1377,8 @@ export const ImportView: React.FC<ImportViewProps> = ({
                                 placeholder="0.00"
                                 onChange={(e) => updateItemField(it.tempId, 'amount', parseFloat(e.target.value) || 0)}
                                 className={`w-28 text-right px-2 py-1 bg-white border rounded-lg text-xs font-mono font-bold focus:outline-none focus:ring-1 focus:ring-orange-500 ${
-                                  it.type === 'ENTRADA' ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'
-                                } ${!it.amount || it.amount <= 0 ? 'border border-black bg-rose-500/15' : 'border border-black'}`}
+                                  it.type === 'ENTRADA' ? 'text-emerald-700' : 'text-rose-700'
+                                } ${!it.amount || it.amount <= 0 ? 'border-rose-300 bg-rose-50 text-rose-800' : 'border-zinc-300'}`}
                               />
                             </div>
                           )}
@@ -1386,7 +1386,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
                         {/* Type toggle */}
                         <td className="p-3 whitespace-nowrap">
                           {it.type === 'SALDO_INICIAL' ? (
-                            <span className="px-2 py-1 rounded-lg text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 uppercase tracking-wide inline-block">
+                            <span className="px-2 py-1 rounded-lg text-[10px] font-bold bg-cyan-50 text-cyan-800 border border-cyan-200 uppercase tracking-wide inline-block">
                               SALDO INICIAL
                             </span>
                           ) : (
@@ -1395,16 +1395,16 @@ export const ImportView: React.FC<ImportViewProps> = ({
                               onChange={(e) =>
                                 updateItemField(it.tempId, 'type', e.target.value as 'ENTRADA' | 'SAIDA')
                               }
-                              className={`text-[10px] font-bold px-2 py-1 rounded-lg border focus:outline-none ${
+                              className={`text-[10px] font-bold px-2 py-1 rounded-lg border focus:outline-none cursor-pointer ${
                                 it.type === 'ENTRADA'
-                                  ? 'bg-emerald-500/10 text-emerald-700 font-bold border border-black'
-                                  : 'bg-rose-500/10 text-rose-700 font-bold border border-black'
+                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                  : 'bg-rose-50 text-rose-800 border-rose-200'
                               }`}
                             >
-                              <option value="ENTRADA" className="bg-white text-emerald-700 font-bold">
+                              <option value="ENTRADA" className="bg-white text-emerald-700">
                                 ENTRADA (+)
                               </option>
-                              <option value="SAIDA" className="bg-white text-rose-700 font-bold">
+                              <option value="SAIDA" className="bg-white text-rose-700">
                                 SAÍDA (-)
                               </option>
                             </select>
@@ -1412,7 +1412,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
                         </td>
 
                         {/* Document ID */}
-                        <td className="p-3 whitespace-nowrap font-mono text-[11px] text-zinc-900 font-semibold">
+                        <td className="p-3 whitespace-nowrap font-mono text-[11px] text-zinc-600">
                           {it.externalId || '-'}
                         </td>
 
@@ -1422,11 +1422,11 @@ export const ImportView: React.FC<ImportViewProps> = ({
                             <select
                               value={it.categoryId || ''}
                               onChange={(e) => updateItemField(it.tempId, 'categoryId', e.target.value || undefined)}
-                              className="w-40 bg-white border border border-black rounded-lg px-2 py-1 text-[11px] text-zinc-950 font-bold focus:outline-none focus:ring-1 focus:ring-orange-500"
+                              className="w-40 bg-white border border-zinc-300 rounded-lg px-2 py-1 text-[11px] text-zinc-900 focus:outline-none focus:ring-1 focus:ring-orange-500 cursor-pointer"
                             >
                               <option value="">(Não classificado)</option>
                               {availableCats.map((c) => (
-                                <option key={c.id} value={c.id} className="bg-white text-zinc-950 font-bold">
+                                <option key={c.id} value={c.id} className="bg-white text-zinc-900">
                                   {c.name}
                                 </option>
                               ))}
@@ -1438,11 +1438,11 @@ export const ImportView: React.FC<ImportViewProps> = ({
                                 onChange={(e) =>
                                   updateItemField(it.tempId, 'subcategoryId', e.target.value || undefined)
                                 }
-                                className="w-40 bg-white border border border-black rounded-lg px-2 py-1 text-[10px] text-zinc-950 font-bold focus:outline-none focus:ring-1 focus:ring-orange-500 block"
+                                className="w-40 bg-white border border-zinc-300 rounded-lg px-2 py-1 text-[10px] text-zinc-900 focus:outline-none focus:ring-1 focus:ring-orange-500 block cursor-pointer"
                               >
                                 <option value="">(Subcategoria)</option>
                                 {selectedCat.subcategories.map((s) => (
-                                  <option key={s.id} value={s.id} className="bg-white text-zinc-950 font-bold">
+                                  <option key={s.id} value={s.id} className="bg-white text-zinc-900">
                                     {s.name}
                                   </option>
                                 ))}
@@ -1456,13 +1456,13 @@ export const ImportView: React.FC<ImportViewProps> = ({
                           <select
                             value={it.operationType}
                             onChange={(e) => updateItemField(it.tempId, 'operationType', e.target.value)}
-                            className="w-36 bg-white border border border-black rounded-lg px-2 py-1 text-[11px] text-zinc-950 font-bold focus:outline-none focus:ring-1 focus:ring-orange-500"
+                            className="w-36 bg-white border border-zinc-300 rounded-lg px-2 py-1 text-[11px] text-zinc-900 focus:outline-none focus:ring-1 focus:ring-orange-500 cursor-pointer"
                           >
                             <option value="NAO_CLASSIFICADO">NÃO CLASSIFICADO</option>
                             {operationTypes
                               .filter((o) => (it.type === 'ENTRADA' ? o.defaultType === 'ENTRADA' : o.defaultType === 'SAIDA'))
                               .map((o) => (
-                                <option key={o.code} value={o.code} className="bg-white text-zinc-950 font-bold">
+                                <option key={o.code} value={o.code} className="bg-white text-zinc-900">
                                   {o.label}
                                 </option>
                               ))}
@@ -1472,18 +1472,18 @@ export const ImportView: React.FC<ImportViewProps> = ({
                         {/* Status & Duplication / Error alerts */}
                         <td className="p-3 text-center">
                           {it.hasError ? (
-                            <div className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-rose-500/15 border border border-black text-rose-200 max-w-[210px] mx-auto shadow-xs">
-                              <div className="flex items-center gap-1 text-[11px] font-extrabold text-rose-700 font-bold uppercase tracking-wider">
+                            <div className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 max-w-[210px] mx-auto shadow-2xs">
+                              <div className="flex items-center gap-1 text-[11px] font-extrabold text-rose-700 uppercase tracking-wider">
                                 <XCircle className="w-3.5 h-3.5 shrink-0" />
                                 <span>Coluna Vazia</span>
                               </div>
-                              <span className="text-[10px] text-rose-200 font-semibold text-center leading-tight">
+                              <span className="text-[10px] text-rose-700 font-semibold text-center leading-tight">
                                 {it.errorMessage || 'Coluna em branco ou valor zerado'}
                               </span>
                               <button
                                 type="button"
                                 onClick={() => handleExcludeSingleItem(it.tempId)}
-                                className="mt-1 px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-[10px] font-extrabold flex items-center gap-1 cursor-pointer transition-colors shadow-sm"
+                                className="mt-1 px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-[10px] font-extrabold flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
                                 title="Excluir e descartar esta operação"
                               >
                                 <Trash2 className="w-3 h-3 text-white" />
@@ -1491,13 +1491,13 @@ export const ImportView: React.FC<ImportViewProps> = ({
                               </button>
                             </div>
                           ) : it.isDuplicate ? (
-                            <div className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-amber-500/10 border border border-black text-amber-700 font-bold max-w-[240px] mx-auto text-center shadow-xs">
+                            <div className="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 max-w-[240px] mx-auto text-center shadow-2xs">
                               <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold border flex items-center gap-1 uppercase tracking-wide ${
                                 it.duplicateLevel === 'EXACT'
-                                  ? 'bg-rose-500/20 text-rose-700 font-bold border border-black'
+                                  ? 'bg-rose-100 text-rose-800 border-rose-200'
                                   : it.duplicateLevel === 'FILE_INTERNAL'
-                                  ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
-                                  : 'bg-amber-500/20 text-amber-700 font-bold border border-black'
+                                  ? 'bg-purple-100 text-purple-800 border-purple-200'
+                                  : 'bg-amber-100 text-amber-800 border-amber-200'
                               }`}>
                                 <AlertTriangle className="w-3 h-3 shrink-0" />
                                 {it.duplicateLevel === 'EXACT'
@@ -1508,17 +1508,17 @@ export const ImportView: React.FC<ImportViewProps> = ({
                               </span>
 
                               {it.existingTransaction && (
-                                <div className="w-full text-[10px] text-amber-200/90 bg-amber-950/40 p-1.5 rounded-lg border border border-black text-left my-0.5">
-                                  <span className="font-bold text-amber-700 font-bold block">
+                                <div className="w-full text-[10px] text-amber-900 bg-white/90 p-1.5 rounded-lg border border-amber-200 text-left my-0.5 shadow-2xs">
+                                  <span className="font-bold text-amber-800 block">
                                     {it.duplicateSource === 'ARQUIVO' ? 'Outra Linha do Arquivo:' : 'Já no Banco:'}
                                   </span>
                                   <div className="truncate font-semibold">{it.existingTransaction.description}</div>
-                                  <div className="flex justify-between font-mono text-[9px] opacity-90 mt-0.5">
+                                  <div className="flex justify-between font-mono text-[9px] text-zinc-600 mt-0.5">
                                     <span>{formatDateBR(it.existingTransaction.date)}</span>
-                                    <span className="font-extrabold">{formatCurrency(it.existingTransaction.amount)}</span>
+                                    <span className="font-extrabold text-zinc-900">{formatCurrency(it.existingTransaction.amount)}</span>
                                   </div>
                                   {it.existingTransaction.externalId && (
-                                    <div className="text-[9px] font-mono text-zinc-900 font-semibold truncate mt-0.5">
+                                    <div className="text-[9px] font-mono text-zinc-500 truncate mt-0.5">
                                       Doc: {it.existingTransaction.externalId}
                                     </div>
                                   )}
@@ -1529,7 +1529,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
                                 <button
                                   type="button"
                                   onClick={() => handleOpenDuplicateModal(it.tempId)}
-                                  className="flex-1 px-2 py-1 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black text-[10px] rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                                  className="flex-1 px-2 py-1 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black text-[10px] rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
                                 >
                                   <GitCompare className="w-3 h-3" />
                                   <span>Comparar</span>
@@ -1537,7 +1537,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
                                 <button
                                   type="button"
                                   onClick={() => handleResolveDuplicateForceImport(it.tempId)}
-                                  className="px-2 py-1 bg-amber-500/20 hover:bg-amber-500/40 text-amber-200 font-bold text-[10px] rounded-lg border border border-black cursor-pointer"
+                                  className="px-2 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-[10px] rounded-lg border border-amber-200 cursor-pointer shadow-2xs"
                                   title="Forçar importação deste registro (Importar Ambas)"
                                 >
                                   Importar Ambas
@@ -1547,7 +1547,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
                               <button
                                 type="button"
                                 onClick={() => handleCreateDuplicateRuleForDescription(it.description, it.categoryId, it.categoryName, it.operationType)}
-                                className="w-full mt-1 px-2 py-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-black text-[10px] rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer shadow-xs"
+                                className="w-full mt-1 px-2 py-1 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black text-[10px] rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
                                 title="Criar regra para permitir múltiplos lançamentos deste histórico/fornecedor"
                               >
                                 <Sparkles className="w-3 h-3 text-zinc-950" />
@@ -1555,50 +1555,50 @@ export const ImportView: React.FC<ImportViewProps> = ({
                               </button>
                             </div>
                           ) : it.forceImport ? (
-                            <div className="flex flex-col items-center justify-center gap-1 p-1.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-300 max-w-[210px] mx-auto text-center">
-                              <span className="text-[10px] font-extrabold text-purple-300 flex items-center gap-1 uppercase tracking-wider">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-purple-400" />
+                            <div className="flex flex-col items-center justify-center gap-1 p-1.5 rounded-xl bg-purple-50 border border-purple-200 text-purple-800 max-w-[210px] mx-auto text-center shadow-2xs">
+                              <span className="text-[10px] font-extrabold text-purple-800 flex items-center gap-1 uppercase tracking-wider">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-purple-600" />
                                 Forçado (Ambas)
                               </span>
                               <button
                                 type="button"
                                 onClick={() => handleResolveDuplicateKeepExisting(it.tempId)}
-                                className="text-[9px] text-zinc-900 font-semibold hover:text-amber-700 font-bold underline mt-0.5 cursor-pointer"
+                                className="text-[9px] text-zinc-600 hover:text-amber-800 underline mt-0.5 cursor-pointer"
                               >
                                 Desfazer / Manter Existente
                               </button>
                             </div>
                           ) : it.resolvedDuplicate === 'KEPT_EXISTING' ? (
-                            <div className="flex flex-col items-center justify-center gap-1 p-1.5 rounded-xl bg-zinc-800/80 border border-zinc-700 text-zinc-300 max-w-[210px] mx-auto text-center">
-                              <span className="text-[10px] font-extrabold text-zinc-300 flex items-center gap-1 uppercase tracking-wider">
-                                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                            <div className="flex flex-col items-center justify-center gap-1 p-1.5 rounded-xl bg-slate-100 border border-zinc-200 text-zinc-700 max-w-[210px] mx-auto text-center shadow-2xs">
+                              <span className="text-[10px] font-extrabold text-zinc-800 flex items-center gap-1 uppercase tracking-wider">
+                                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                                 Mantido Existente
                               </span>
-                              <span className="text-[9px] text-zinc-400">Não será importado</span>
+                              <span className="text-[9px] text-zinc-500">Não será importado</span>
                               <button
                                 type="button"
                                 onClick={() => handleResolveDuplicateForceImport(it.tempId)}
-                                className="text-[9px] text-amber-400 font-bold hover:underline mt-0.5 cursor-pointer"
+                                className="text-[9px] text-amber-700 font-bold hover:underline mt-0.5 cursor-pointer"
                               >
                                 Forçar Importação
                               </button>
                             </div>
                           ) : it.duplicateLevel === 'SIMILAR' ? (
                             <div className="flex flex-col items-center justify-center gap-0.5">
-                              <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 inline-flex items-center gap-1">
-                                <CheckCircle2 className="w-3 h-3 text-blue-400" />
+                              <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 inline-flex items-center gap-1 shadow-2xs">
+                                <CheckCircle2 className="w-3 h-3 text-blue-600" />
                                 Apto (Docs Diferentes)
                               </span>
-                              <span className="text-[9px] text-zinc-900 font-semibold">Registros semelhantes</span>
+                              <span className="text-[9px] text-zinc-500">Registros semelhantes</span>
                             </div>
                           ) : it.type === 'SALDO_INICIAL' ? (
-                            <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 inline-flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3 text-cyan-400" />
+                            <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-cyan-50 text-cyan-800 border border-cyan-200 inline-flex items-center gap-1 shadow-2xs">
+                              <CheckCircle2 className="w-3 h-3 text-cyan-600" />
                               Saldo Inicial Extrato
                             </span>
                           ) : (
-                            <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-emerald-700 font-bold border border border-black inline-flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3 text-emerald-700 font-bold" />
+                            <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1 shadow-2xs">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                               Novo / Apto
                             </span>
                           )}
@@ -1609,7 +1609,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
                           <button
                             type="button"
                             onClick={() => handleExcludeSingleItem(it.tempId)}
-                            className="p-1.5 rounded-lg bg-white/5 hover:bg-rose-500/20 text-zinc-900 font-semibold hover:text-rose-700 font-bold transition-colors border border-transparent hover:border border-black cursor-pointer"
+                            className="p-1.5 rounded-lg bg-white hover:bg-rose-50 text-zinc-500 hover:text-rose-700 transition-colors border border-zinc-200 hover:border-rose-300 cursor-pointer shadow-2xs"
                             title="Excluir este lançamento da importação"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -1627,22 +1627,22 @@ export const ImportView: React.FC<ImportViewProps> = ({
 
       {/* Duplicate Resolution Side-by-Side Modal */}
       {isDuplicateModalOpen && duplicateItemsList.length > 0 && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white border border border-black rounded-3xl max-w-4xl w-full p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white border border-zinc-200 rounded-2xl max-w-4xl w-full p-6 shadow-xl space-y-6 max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border border-black pb-4">
+            <div className="flex items-center justify-between border-b border-zinc-200 pb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-2xl bg-amber-500/20 text-amber-700 font-bold border border border-black">
+                <div className="p-2.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 shadow-2xs">
                   <GitCompare className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-white flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
                     <span>Resolução de Duplicidades Lado a Lado</span>
-                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-700 font-bold border border border-black font-bold">
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 font-bold">
                       {duplicateIndex + 1} de {duplicateItemsList.length}
                     </span>
                   </h3>
-                  <p className="text-xs text-zinc-900 font-semibold">
+                  <p className="text-xs text-zinc-600">
                     Compare o lançamento recém-carregado do extrato com o registro correspondente no sistema.
                   </p>
                 </div>
@@ -1651,7 +1651,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
               <button
                 type="button"
                 onClick={() => setIsDuplicateModalOpen(false)}
-                className="p-2 rounded-xl text-zinc-900 font-semibold hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                className="p-2 rounded-xl text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1666,14 +1666,14 @@ export const ImportView: React.FC<ImportViewProps> = ({
               return (
                 <div className="space-y-6">
                   {/* Duplicate reason alert & Rule Exemption Action */}
-                  <div className="p-4 bg-amber-500/10 border border border-black rounded-2xl text-amber-700 font-bold text-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-inner">
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-800 text-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-2xs">
                     <div className="flex items-start gap-2.5">
-                      <AlertTriangle className="w-5 h-5 shrink-0 text-amber-700 font-bold mt-0.5" />
+                      <AlertTriangle className="w-5 h-5 shrink-0 text-amber-600 mt-0.5" />
                       <div>
-                        <strong className="text-amber-200 block text-xs">
+                        <strong className="text-amber-950 block text-xs">
                           Motivo da Duplicidade:
                         </strong>
-                        <span className="text-zinc-950 font-bold text-xs mt-0.5 block">
+                        <span className="text-zinc-800 text-xs mt-0.5 block">
                           {currentItem.duplicateReason || 'Já existe registro idêntico cadastrado no banco de dados.'}
                         </span>
                       </div>
@@ -1689,7 +1689,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
                           currentItem.operationType
                         )
                       }
-                      className="w-full md:w-auto px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-black text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+                      className="w-full md:w-auto px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-black text-xs rounded-xl transition-all shadow-2xs flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
                       title="Criar regra permanente no sistema para permitir múltiplos lançamentos deste histórico/fornecedor"
                     >
                       <Sparkles className="w-4 h-4 text-zinc-950" />
@@ -1700,45 +1700,45 @@ export const ImportView: React.FC<ImportViewProps> = ({
                   {/* Side-by-Side Comparison Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* LEFT COLUMN: EXTRATO ITEM (NEW) */}
-                    <div className="bg-white border-2 border border-black rounded-2xl p-4 space-y-4 shadow-lg relative">
-                      <div className="flex items-center justify-between border-b border border-black pb-2">
-                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-orange-500/20 text-orange-700 font-bold border border-orange-500/30 flex items-center gap-1.5">
+                    <div className="bg-slate-50/70 border border-zinc-200 rounded-2xl p-4 space-y-4 shadow-2xs relative">
+                      <div className="flex items-center justify-between border-b border-zinc-200 pb-2">
+                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-orange-100 text-orange-800 border border-orange-200 flex items-center gap-1.5">
                           <UploadCloud className="w-3.5 h-3.5" />
                           Novo no Extrato
                         </span>
-                        <span className="text-[10px] text-zinc-900 font-semibold font-mono">
+                        <span className="text-[10px] text-zinc-500 font-mono">
                           Linha {currentItem.sourceLineNumber || '#'}
                         </span>
                       </div>
 
                       <div className="space-y-3">
                         <div>
-                          <label className="text-[10px] font-bold text-zinc-900 font-semibold uppercase tracking-wider block mb-1">
+                          <label className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider block mb-1">
                             Data do Lançamento
                           </label>
                           <input
                             type="date"
                             value={currentItem.date ? currentItem.date.split('T')[0] : ''}
                             onChange={(e) => updateItemField(currentItem.tempId, 'date', e.target.value)}
-                            className="w-full px-3 py-2 bg-white border border border-black rounded-xl text-xs font-mono text-zinc-950 font-bold focus:outline-none focus:ring-1 focus:ring-orange-500"
+                            className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl text-xs font-mono text-zinc-900 focus:outline-none focus:ring-1 focus:ring-orange-500"
                           />
                         </div>
 
                         <div>
-                          <label className="text-[10px] font-bold text-zinc-900 font-semibold uppercase tracking-wider block mb-1">
+                          <label className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider block mb-1">
                             Descrição / Histórico
                           </label>
                           <input
                             type="text"
                             value={currentItem.description}
                             onChange={(e) => updateItemField(currentItem.tempId, 'description', e.target.value)}
-                            className="w-full px-3 py-2 bg-white border border border-black rounded-xl text-xs font-semibold text-zinc-950 font-bold focus:outline-none focus:ring-1 focus:ring-orange-500"
+                            className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl text-xs font-semibold text-zinc-900 focus:outline-none focus:ring-1 focus:ring-orange-500"
                           />
                         </div>
 
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="text-[10px] font-bold text-zinc-900 font-semibold uppercase tracking-wider block mb-1">
+                            <label className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider block mb-1">
                               Valor (R$)
                             </label>
                             <input
@@ -1746,20 +1746,20 @@ export const ImportView: React.FC<ImportViewProps> = ({
                               step="0.01"
                               value={currentItem.amount}
                               onChange={(e) => updateItemField(currentItem.tempId, 'amount', parseFloat(e.target.value) || 0)}
-                              className={`w-full px-3 py-2 bg-white border border border-black rounded-xl text-xs font-mono font-bold focus:outline-none focus:ring-1 focus:ring-orange-500 ${
-                                currentItem.type === 'ENTRADA' ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'
+                              className={`w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl text-xs font-mono font-bold focus:outline-none focus:ring-1 focus:ring-orange-500 ${
+                                currentItem.type === 'ENTRADA' ? 'text-emerald-700' : 'text-rose-700'
                               }`}
                             />
                           </div>
 
                           <div>
-                            <label className="text-[10px] font-bold text-zinc-900 font-semibold uppercase tracking-wider block mb-1">
+                            <label className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider block mb-1">
                               Tipo
                             </label>
                             <select
                               value={currentItem.type}
                               onChange={(e) => updateItemField(currentItem.tempId, 'type', e.target.value)}
-                              className="w-full px-3 py-2 bg-white border border border-black rounded-xl text-xs font-bold text-zinc-950 font-bold focus:outline-none focus:ring-1 focus:ring-orange-500"
+                              className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl text-xs font-bold text-zinc-900 focus:outline-none focus:ring-1 focus:ring-orange-500 cursor-pointer"
                             >
                               <option value="ENTRADA">ENTRADA (+)</option>
                               <option value="SAIDA">SAÍDA (-)</option>
@@ -1768,13 +1768,13 @@ export const ImportView: React.FC<ImportViewProps> = ({
                         </div>
 
                         <div>
-                          <label className="text-[10px] font-bold text-zinc-900 font-semibold uppercase tracking-wider block mb-1">
+                          <label className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider block mb-1">
                             Categoria
                           </label>
                           <select
                             value={currentItem.categoryId || ''}
                             onChange={(e) => updateItemField(currentItem.tempId, 'categoryId', e.target.value || undefined)}
-                            className="w-full px-3 py-2 bg-white border border border-black rounded-xl text-xs text-zinc-950 font-bold focus:outline-none focus:ring-1 focus:ring-orange-500"
+                            className="w-full px-3 py-2 bg-white border border-zinc-300 rounded-xl text-xs text-zinc-900 font-medium focus:outline-none focus:ring-1 focus:ring-orange-500 cursor-pointer"
                           >
                             <option value="">(Não classificado)</option>
                             {categories
@@ -1790,21 +1790,21 @@ export const ImportView: React.FC<ImportViewProps> = ({
                     </div>
 
                     {/* RIGHT COLUMN: EXISTING ITEM IN DB OR SAME FILE */}
-                    <div className="bg-white border border border-black rounded-2xl p-4 space-y-4 shadow-lg relative">
-                      <div className="flex items-center justify-between border-b border border-black pb-2">
+                    <div className="bg-slate-50/70 border border-zinc-200 rounded-2xl p-4 space-y-4 shadow-2xs relative">
+                      <div className="flex items-center justify-between border-b border-zinc-200 pb-2">
                         <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border flex items-center gap-1.5 ${
                           currentItem.duplicateSource === 'ARQUIVO'
-                            ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
-                            : 'bg-blue-500/20 text-blue-300 border-blue-500/30'
+                            ? 'bg-purple-100 text-purple-800 border-purple-200'
+                            : 'bg-blue-100 text-blue-800 border-blue-200'
                         }`}>
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           {currentItem.duplicateSource === 'ARQUIVO' ? 'Linha Anterior no Mesmo Arquivo' : 'Já no Sistema'}
                         </span>
                         {existing && (
-                          <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded ${
+                          <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded border ${
                             existing.reconciliationStatus === 'CONCILIADO'
-                              ? 'bg-emerald-500/20 text-emerald-700 font-bold border border border-black'
-                              : 'bg-amber-500/20 text-amber-700 font-bold border border border-black'
+                              ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                              : 'bg-amber-100 text-amber-800 border-amber-200'
                           }`}>
                             {currentItem.duplicateSource === 'ARQUIVO'
                               ? `Linha ${existing.sourceLineNumber || '#'}`
@@ -1816,61 +1816,61 @@ export const ImportView: React.FC<ImportViewProps> = ({
                       {existing ? (
                         <div className="space-y-3">
                           <div>
-                            <span className="text-[10px] font-bold text-zinc-800 font-medium uppercase tracking-wider block mb-1">
+                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block mb-1">
                               Data
                             </span>
-                            <div className="text-xs font-mono font-bold text-zinc-950 font-bold bg-white p-2.5 rounded-xl border border border-black">
+                            <div className="text-xs font-mono font-bold text-zinc-900 bg-white p-2.5 rounded-xl border border-zinc-200">
                               {formatDateBR(existing.date)}
                             </div>
                           </div>
 
                           <div>
-                            <span className="text-[10px] font-bold text-zinc-800 font-medium uppercase tracking-wider block mb-1">
+                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block mb-1">
                               Descrição / Histórico
                             </span>
-                            <div className="text-xs font-semibold text-zinc-950 font-bold bg-white p-2.5 rounded-xl border border border-black truncate">
+                            <div className="text-xs font-semibold text-zinc-900 bg-white p-2.5 rounded-xl border border-zinc-200 truncate">
                               {existing.description}
                             </div>
                           </div>
 
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <span className="text-[10px] font-bold text-zinc-800 font-medium uppercase tracking-wider block mb-1">
+                              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block mb-1">
                                 Valor
                               </span>
-                              <div className={`text-xs font-mono font-extrabold bg-white p-2.5 rounded-xl border border border-black ${
-                                existing.type === 'ENTRADA' ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'
+                              <div className={`text-xs font-mono font-extrabold bg-white p-2.5 rounded-xl border border-zinc-200 ${
+                                existing.type === 'ENTRADA' ? 'text-emerald-700' : 'text-rose-700'
                               }`}>
                                 {existing.type === 'ENTRADA' ? '+' : '-'} {formatCurrency(existing.amount)}
                               </div>
                             </div>
 
                             <div>
-                              <span className="text-[10px] font-bold text-zinc-800 font-medium uppercase tracking-wider block mb-1">
+                              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block mb-1">
                                 Categoria
                               </span>
-                              <div className="text-xs font-medium text-zinc-950 font-bold bg-white p-2.5 rounded-xl border border border-black truncate">
+                              <div className="text-xs font-medium text-zinc-800 bg-white p-2.5 rounded-xl border border-zinc-200 truncate">
                                 {existing.categoryName || 'Sem Categoria'}
                               </div>
                             </div>
                           </div>
 
                           <div>
-                            <span className="text-[10px] font-bold text-zinc-800 font-medium uppercase tracking-wider block mb-1">
+                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block mb-1">
                               ID / Documento
                             </span>
-                            <div className="text-[11px] font-mono text-zinc-900 font-semibold bg-white p-2 rounded-xl border border border-black truncate">
+                            <div className="text-[11px] font-mono text-zinc-600 bg-white p-2 rounded-xl border border-zinc-200 truncate">
                               {existing.externalId || existing.id}
                             </div>
                           </div>
                         </div>
                       ) : (
-                        <div className="flex flex-col items-center justify-center p-8 text-center text-zinc-900 font-semibold space-y-2 h-full">
-                          <AlertTriangle className="w-8 h-8 text-amber-700 font-bold" />
-                          <p className="text-xs font-semibold text-zinc-950 font-bold">
+                        <div className="flex flex-col items-center justify-center p-8 text-center text-zinc-500 space-y-2 h-full">
+                          <AlertTriangle className="w-8 h-8 text-amber-500" />
+                          <p className="text-xs font-semibold text-zinc-800">
                             Duplicado interno do próprio arquivo
                           </p>
-                          <p className="text-[11px] text-zinc-800 font-medium">
+                          <p className="text-[11px] text-zinc-500">
                             Este registro aparece repetido em mais de uma linha dentro deste mesmo extrato enviado.
                           </p>
                         </div>
@@ -1879,19 +1879,19 @@ export const ImportView: React.FC<ImportViewProps> = ({
                   </div>
 
                   {/* Action Bar for Current Duplicate Item */}
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-2xl border border border-black">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 p-4 rounded-2xl border border-zinc-200">
                     <div className="flex items-center gap-2 w-full sm:w-auto">
                       <button
                         type="button"
                         onClick={() => handleResolveDuplicateKeepExisting(currentItem.tempId)}
-                        className="flex-1 sm:flex-none px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-950 font-bold text-xs font-bold rounded-xl transition-all border border border-black cursor-pointer"
+                        className="flex-1 sm:flex-none px-4 py-2.5 bg-white hover:bg-zinc-100 text-zinc-800 text-xs font-bold rounded-xl transition-all border border-zinc-300 shadow-2xs cursor-pointer"
                       >
                         🛑 Manter Existente (Não Importar Este)
                       </button>
                       <button
                         type="button"
                         onClick={() => handleResolveDuplicateForceImport(currentItem.tempId)}
-                        className="flex-1 sm:flex-none px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-black rounded-xl transition-all shadow-md cursor-pointer"
+                        className="flex-1 sm:flex-none px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-black rounded-xl transition-all shadow-2xs cursor-pointer"
                       >
                         ⚡ Importar Ambas (Forçar Novo)
                       </button>
@@ -1903,19 +1903,19 @@ export const ImportView: React.FC<ImportViewProps> = ({
                         type="button"
                         disabled={duplicateIndex === 0}
                         onClick={() => setDuplicateIndex((prev) => Math.max(0, prev - 1))}
-                        className="p-2 bg-white/5 hover:bg-white/10 text-zinc-950 font-bold rounded-xl disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                        className="p-2 bg-white hover:bg-zinc-100 text-zinc-700 border border-zinc-200 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer shadow-2xs"
                         title="Duplicado Anterior"
                       >
                         <ChevronLeft className="w-5 h-5" />
                       </button>
-                      <span className="text-xs text-zinc-900 font-semibold font-mono">
+                      <span className="text-xs text-zinc-600 font-mono">
                         {duplicateIndex + 1} / {duplicateItemsList.length}
                       </span>
                       <button
                         type="button"
                         disabled={duplicateIndex >= duplicateItemsList.length - 1}
                         onClick={() => setDuplicateIndex((prev) => Math.min(duplicateItemsList.length - 1, prev + 1))}
-                        className="p-2 bg-white/5 hover:bg-white/10 text-zinc-950 font-bold rounded-xl disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                        className="p-2 bg-white hover:bg-zinc-100 text-zinc-700 border border-zinc-200 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer shadow-2xs"
                         title="Próximo Duplicado"
                       >
                         <ChevronRight className="w-5 h-5" />
@@ -1931,45 +1931,45 @@ export const ImportView: React.FC<ImportViewProps> = ({
 
       {/* Modal de Confirmação: Extrato Já Importado Anteriormente */}
       {isAlreadyImportedModalOpen && previewSummary?.isPreviouslyImportedStatement && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-zinc-900 border-2 border-amber-500/50 rounded-2xl max-w-xl w-full p-6 shadow-2xl relative text-zinc-100 space-y-5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white border border-zinc-200 rounded-2xl max-w-xl w-full p-6 shadow-xl relative text-zinc-900 space-y-5">
             {/* Header */}
             <div className="flex items-start gap-4">
-              <div className="p-3 bg-amber-500/20 text-amber-400 rounded-2xl border border-amber-500/40 shrink-0">
+              <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl border border-amber-200 shrink-0 shadow-2xs">
                 <AlertTriangle className="w-8 h-8" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-200">
                     Aviso de Duplicidade
                   </span>
                   {previewSummary.previouslyImportedDetails?.reason === 'SAME_FILENAME' && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-zinc-700 border border-zinc-200">
                       Mesmo Nome de Arquivo
                     </span>
                   )}
                   {previewSummary.previouslyImportedDetails?.reason === 'SAME_PERIOD' && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-zinc-700 border border-zinc-200">
                       Mesmo Período
                     </span>
                   )}
                   {previewSummary.previouslyImportedDetails?.reason === 'HIGH_DUPLICATE_RATIO' && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-zinc-700 border border-zinc-200">
                       Lançamentos Coincidentes
                     </span>
                   )}
                 </div>
-                <h3 className="text-lg font-bold text-white mt-1">
+                <h3 className="text-lg font-bold text-zinc-900 mt-1">
                   Este extrato bancário já foi importado anteriormente?
                 </h3>
-                <p className="text-xs text-zinc-400 mt-0.5">
+                <p className="text-xs text-zinc-500 mt-0.5">
                   Identificamos fortes indícios de que esta movimentação já foi processada nesta conta.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsAlreadyImportedModalOpen(false)}
-                className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="text-zinc-400 hover:text-zinc-700 p-1 rounded-lg hover:bg-zinc-100 transition-colors cursor-pointer"
                 title="Fechar aviso"
               >
                 <X className="w-5 h-5" />
@@ -1977,41 +1977,41 @@ export const ImportView: React.FC<ImportViewProps> = ({
             </div>
 
             {/* Informative Box */}
-            <div className="bg-zinc-950/80 border border-zinc-800 rounded-xl p-4 space-y-3 text-sm">
+            <div className="bg-slate-50 border border-zinc-200 rounded-xl p-4 space-y-3 text-sm">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div className="p-2.5 bg-zinc-900/90 rounded-lg border border-zinc-800/80">
+                <div className="p-2.5 bg-white rounded-lg border border-zinc-200 shadow-2xs">
                   <span className="text-zinc-500 block uppercase text-[10px] font-bold">Conta Bancária</span>
-                  <span className="text-zinc-200 font-semibold">{selectedAccount?.accountName || 'Conta Selecionada'}</span>
+                  <span className="text-zinc-900 font-semibold">{selectedAccount?.accountName || 'Conta Selecionada'}</span>
                 </div>
-                <div className="p-2.5 bg-zinc-900/90 rounded-lg border border-zinc-800/80">
+                <div className="p-2.5 bg-white rounded-lg border border-zinc-200 shadow-2xs">
                   <span className="text-zinc-500 block uppercase text-[10px] font-bold">Arquivo Carregado</span>
-                  <span className="text-zinc-200 font-semibold truncate block" title={fileName}>{fileName}</span>
+                  <span className="text-zinc-900 font-semibold truncate block" title={fileName}>{fileName}</span>
                 </div>
               </div>
 
               {previewSummary.previouslyImportedDetails && (
-                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-2 text-xs">
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-2 text-xs">
                   {previewSummary.previouslyImportedDetails.reason === 'SAME_FILENAME' && (
-                    <p className="text-amber-200 leading-relaxed">
-                      📁 O arquivo <strong className="text-white">"{previewSummary.previouslyImportedDetails.existingStatementFileName || fileName}"</strong> já consta registrado nas importações anteriores desta conta
+                    <p className="text-amber-900 leading-relaxed">
+                      📁 O arquivo <strong className="text-zinc-950">"{previewSummary.previouslyImportedDetails.existingStatementFileName || fileName}"</strong> já consta registrado nas importações anteriores desta conta
                       {previewSummary.previouslyImportedDetails.existingStatementImportedAt && (
                         <span> (importado em {new Date(previewSummary.previouslyImportedDetails.existingStatementImportedAt).toLocaleDateString('pt-BR')} às {new Date(previewSummary.previouslyImportedDetails.existingStatementImportedAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })})</span>
                       )}.
                     </p>
                   )}
                   {previewSummary.previouslyImportedDetails.minDate && previewSummary.previouslyImportedDetails.maxDate && (
-                    <p className="text-amber-200">
+                    <p className="text-amber-900">
                       📅 <strong>Período detectado:</strong> de {previewSummary.previouslyImportedDetails.minDate} até {previewSummary.previouslyImportedDetails.maxDate}.
                     </p>
                   )}
-                  <p className="text-amber-200">
+                  <p className="text-amber-900">
                     ⚡ <strong>{previewSummary.previouslyImportedDetails.duplicatePercentage}% dos lançamentos</strong> ({previewSummary.previouslyImportedDetails.totalDuplicates} de {previewSummary.totalRecords}) coincidem com registros já cadastrados.
                   </p>
                 </div>
               )}
 
-              <div className="flex items-start gap-2 text-xs text-zinc-400 bg-zinc-900/60 p-3 rounded-xl border border-zinc-800">
-                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2 text-xs text-zinc-600 bg-white p-3 rounded-xl border border-zinc-200 shadow-2xs">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                 <p>
                   <strong>Proteção Contábil Ativa:</strong> Todos os lançamentos idênticos já foram automaticamente <strong>desmarcados</strong> para evitar duplicidade de receitas, despesas e saldos.
                 </p>
@@ -2020,17 +2020,17 @@ export const ImportView: React.FC<ImportViewProps> = ({
 
             {/* Question Callout */}
             <div className="text-center py-1">
-              <p className="text-sm font-bold text-zinc-100">
+              <p className="text-sm font-bold text-zinc-800">
                 Deseja revisar e importar este extrato mesmo assim?
               </p>
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-2 border-t border-zinc-800">
+            <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-2 border-t border-zinc-200">
               <button
                 type="button"
                 onClick={handleCancelImport}
-                className="w-full sm:w-auto px-4 py-2.5 bg-zinc-800 hover:bg-red-500/20 text-zinc-300 hover:text-red-300 hover:border-red-500/40 border border-zinc-700 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full sm:w-auto px-4 py-2.5 bg-white hover:bg-rose-50 text-zinc-700 hover:text-rose-700 hover:border-rose-300 border border-zinc-300 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
               >
                 <XCircle className="w-4 h-4" />
                 Cancelar e Trocar Arquivo
@@ -2044,7 +2044,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
                       setIsAlreadyImportedModalOpen(false);
                       handleOpenDuplicateModal();
                     }}
-                    className="w-full sm:w-auto px-4 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full sm:w-auto px-4 py-2.5 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
                   >
                     <GitCompare className="w-4 h-4" />
                     Comparar Duplicados Lado a Lado ({previewSummary.duplicateRecords})
@@ -2054,7 +2054,7 @@ export const ImportView: React.FC<ImportViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsAlreadyImportedModalOpen(false)}
-                  className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   Sim, Continuar e Revisar

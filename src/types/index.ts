@@ -464,6 +464,43 @@ export interface UserInvite {
   notes?: string | null;
 }
 
+export interface BackupMetadata {
+  version: string;
+  createdAt: string;
+  checksum: string;
+  totalTransactions: number;
+  totalBankAccounts: number;
+  totalCategories: number;
+  totalRules: number;
+  totalTemplates: number;
+  encrypted: boolean;
+  notes?: string;
+}
+
+export interface BackupPackage {
+  metadata: BackupMetadata;
+  data: {
+    transactions: any[];
+    bankAccounts: any[];
+    categories: any[];
+    operationTypes: any[];
+    classificationRules: any[];
+    mappingTemplates: any[];
+    bankStatements: any[];
+  };
+}
+
+export interface BackupLog {
+  id: string;
+  createdAt: string;
+  fileName: string;
+  fileSize: number;
+  type: 'MANUAL' | 'AUTOMATIC' | 'RESTORE';
+  status: 'SUCCESS' | 'ERROR';
+  checksum: string;
+  recordsCount: number;
+}
+
 export interface AuditLogEntry {
   id: string;
   user: string;

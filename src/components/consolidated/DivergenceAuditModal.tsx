@@ -34,29 +34,29 @@ export const DivergenceAuditModal: React.FC<DivergenceAuditModalProps> = ({
   const dayTransactions = transactions.filter((t) => t.date === day.date);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white border border border-black rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="bg-white border border-zinc-200 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="p-5 border-b border border-black flex items-center justify-between bg-white">
+        <div className="p-5 border-b border-zinc-200 flex items-center justify-between bg-zinc-50">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-rose-500/20 text-rose-700 font-bold border border border-black rounded-xl">
+            <div className="p-2.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl">
               <ShieldAlert className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-zinc-950 font-bold flex items-center gap-2">
+              <h3 className="text-base font-bold text-zinc-950 flex items-center gap-2">
                 <span>Auditoria de Divergência — {day.formattedDate}</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/30 text-rose-200 border border border-black">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
                   Diferença: {formatCurrency(day.divergenceAmount)}
                 </span>
               </h3>
-              <p className="text-xs text-zinc-900 font-semibold mt-0.5">
+              <p className="text-xs text-zinc-600 mt-0.5">
                 Comparação entre o saldo contínuo calculado pelo sistema e o saldo informado pelo extrato bancário
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-zinc-900 font-semibold hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+            className="p-2 text-zinc-400 hover:text-zinc-950 hover:bg-zinc-100 rounded-xl transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -66,37 +66,37 @@ export const DivergenceAuditModal: React.FC<DivergenceAuditModalProps> = ({
         <div className="p-6 overflow-y-auto space-y-6">
           {/* Comparison Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white p-4 rounded-xl border border border-black space-y-2">
-              <div className="text-xs font-semibold text-zinc-900 font-semibold uppercase tracking-wider">
+            <div className="bg-slate-50 border border-zinc-200 p-4 rounded-xl space-y-2 shadow-2xs">
+              <div className="text-xs font-semibold text-zinc-600 uppercase tracking-wider">
                 Saldo Calculado pelo Sistema
               </div>
-              <div className="text-2xl font-black text-orange-700 font-bold">
+              <div className="text-2xl font-black text-orange-600">
                 {formatCurrency(day.saldoConsolidado)}
               </div>
-              <div className="text-xs text-zinc-900 font-semibold">
+              <div className="text-xs text-zinc-500">
                 Saldo Anterior ({formatCurrency(day.saldoAnterior)}) + Créditos ({formatCurrency(day.creditos)}) - Débitos ({formatCurrency(day.debitos)})
               </div>
             </div>
 
-            <div className="bg-white p-4 rounded-xl border border border-black space-y-2">
-              <div className="text-xs font-semibold text-zinc-900 font-semibold uppercase tracking-wider">
+            <div className="bg-slate-50 border border-zinc-200 p-4 rounded-xl space-y-2 shadow-2xs">
+              <div className="text-xs font-semibold text-zinc-600 uppercase tracking-wider">
                 Saldo Informado no Extrato
               </div>
-              <div className="text-2xl font-black text-zinc-950 font-bold">
+              <div className="text-2xl font-black text-zinc-950">
                 {day.saldoExtratoInformado !== undefined ? formatCurrency(day.saldoExtratoInformado) : 'Não informado'}
               </div>
-              <div className="text-xs text-zinc-900 font-semibold">
+              <div className="text-xs text-zinc-500">
                 Valor extraído diretamente da coluna de saldo bancário do arquivo importado
               </div>
             </div>
           </div>
 
           {/* Divergence explanation banner */}
-          <div className="p-4 bg-rose-950/20 border border border-black rounded-xl flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-rose-700 font-bold shrink-0 mt-0.5" />
-            <div className="text-xs text-zinc-950 font-bold space-y-1">
-              <strong className="text-rose-700 font-bold block font-bold">Análise da Divergência de {formatCurrency(day.divergenceAmount)}:</strong>
-              <p>
+          <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="text-xs text-zinc-900 space-y-1">
+              <strong className="text-rose-800 block font-bold">Análise da Divergência de {formatCurrency(day.divergenceAmount)}:</strong>
+              <p className="text-zinc-700">
                 {day.divergenceDetails || 'O saldo acumulado calculado difere do saldo final informado no extrato para esta data. Verifique se há tarifas bancárias não lançadas, estornos, ou saldo inicial acumulado de datas anteriores divergente.'}
               </p>
             </div>
@@ -104,20 +104,20 @@ export const DivergenceAuditModal: React.FC<DivergenceAuditModalProps> = ({
 
           {/* Transactions list of this day */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold text-zinc-950 font-bold uppercase tracking-wider flex items-center justify-between">
+            <h4 className="text-xs font-bold text-zinc-950 uppercase tracking-wider flex items-center justify-between">
               <span>Movimentações do Dia ({dayTransactions.length})</span>
-              <span className="text-zinc-800 font-medium font-normal">Data: {day.formattedDate}</span>
+              <span className="text-zinc-500 font-normal">Data: {day.formattedDate}</span>
             </h4>
 
-            <div className="bg-white rounded-xl border border border-black overflow-hidden">
+            <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden shadow-2xs">
               {dayTransactions.length === 0 ? (
-                <div className="p-6 text-center text-xs text-zinc-800 font-medium">
+                <div className="p-6 text-center text-xs text-zinc-500">
                   Nenhuma transação registrada especificamente para esta data.
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-white text-zinc-900 font-semibold font-semibold border-b border border-black">
+                    <thead className="bg-zinc-50 text-zinc-700 font-semibold border-b border-zinc-200">
                       <tr>
                         <th className="p-3">Histórico / Descrição</th>
                         <th className="p-3">Tipo</th>
@@ -125,28 +125,28 @@ export const DivergenceAuditModal: React.FC<DivergenceAuditModalProps> = ({
                         <th className="p-3 text-right">Saldo Informado (Extrato)</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
+                    <tbody className="divide-y divide-zinc-100">
                       {dayTransactions.map((tx) => (
-                        <tr key={tx.id} className="hover:bg-white/[0.02]">
-                          <td className="p-3 font-medium text-zinc-950 font-bold">
+                        <tr key={tx.id} className="hover:bg-zinc-50/50">
+                          <td className="p-3 font-medium text-zinc-950">
                             {tx.description}
-                            <div className="text-[10px] text-zinc-800 font-medium">Op: {tx.operationType || 'N/A'}</div>
+                            <div className="text-[10px] text-zinc-500">Op: {tx.operationType || 'N/A'}</div>
                           </td>
                           <td className="p-3">
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              tx.type === 'ENTRADA' ? 'bg-emerald-500/20 text-emerald-700 font-bold' :
-                              tx.type === 'SAIDA' ? 'bg-rose-500/20 text-rose-700 font-bold' :
-                              'bg-blue-500/20 text-blue-300'
+                              tx.type === 'ENTRADA' ? 'bg-emerald-50 text-emerald-800' :
+                              tx.type === 'SAIDA' ? 'bg-rose-50 text-rose-800' :
+                              'bg-blue-50 text-blue-800'
                             }`}>
                               {tx.type}
                             </span>
                           </td>
                           <td className={`p-3 text-right font-mono font-semibold ${
-                            tx.type === 'ENTRADA' ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'
+                            tx.type === 'ENTRADA' ? 'text-emerald-700' : 'text-rose-700'
                           }`}>
                             {tx.type === 'ENTRADA' ? '+ ' : '- '}{formatCurrency(tx.amount)}
                           </td>
-                          <td className="p-3 text-right font-mono text-zinc-950 font-bold">
+                          <td className="p-3 text-right font-mono text-zinc-950 font-semibold">
                             {tx.balanceAfter !== undefined ? formatCurrency(tx.balanceAfter) : '-'}
                           </td>
                         </tr>
@@ -160,13 +160,13 @@ export const DivergenceAuditModal: React.FC<DivergenceAuditModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border border-black bg-white flex items-center justify-between">
-          <div className="text-xs text-zinc-900 font-semibold">
+        <div className="p-4 border-t border-zinc-200 bg-zinc-50 flex items-center justify-between">
+          <div className="text-xs text-zinc-600">
             Dica: Se a divergência persistir, verifique a exatidão do saldo inicial do extrato importado.
           </div>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold rounded-xl transition-colors shadow-md"
+            className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold rounded-xl transition-colors shadow-xs cursor-pointer"
           >
             Fechar Auditoria
           </button>
