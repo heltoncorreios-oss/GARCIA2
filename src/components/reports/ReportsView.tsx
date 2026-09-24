@@ -366,7 +366,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
         <div>
           <h2 className="text-xl font-bold text-zinc-950 tracking-tight flex items-center gap-2">
             <FileBarChart className="w-6 h-6 text-orange-600" />
-            Relatórios Gerenciais do Supermercado
+            Relatórios Gerenciais &bull; {companyProfile?.name || 'Supermercado Central'}
           </h2>
           <p className="text-xs text-zinc-600 mt-0.5">
             15 relatórios analíticos para tomada de decisão, auditoria e fechamento financeiro

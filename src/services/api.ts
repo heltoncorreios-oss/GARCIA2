@@ -12,7 +12,8 @@ import {
   BankMappingTemplate,
   ColumnMapping,
   StatementFileType,
-  TabularAnalysis
+  TabularAnalysis,
+  CompanyProfile
 } from '../types';
 
 const API_BASE = '/api';
@@ -611,5 +612,24 @@ export const apiService = {
   async getBackupLogs(): Promise<{ logs: any[] }> {
     const res = await authFetch(`${API_BASE}/backup/logs`);
     return await parseJsonResponse(res, 'Erro ao carregar histórico de backups');
+  },
+
+  async getCompanyProfile(): Promise<{ profile: CompanyProfile | null }> {
+    try {
+      const res = await authFetch(`${API_BASE}/company-profile`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {}
+    return { profile: null };
+  },
+
+  async updateCompanyProfile(profile: CompanyProfile): Promise<{ success: boolean; profile: CompanyProfile }> {
+    const res = await authFetch(`${API_BASE}/company-profile`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ profile })
+    });
+    return await parseJsonResponse(res, 'Erro ao salvar perfil da empresa');
   }
 };

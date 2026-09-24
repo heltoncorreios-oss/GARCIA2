@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { apiService } from '../../services/api';
 import { safeStorage } from '../../utils/safeStorage';
+import { CompanyProfile } from '../../types';
 import {
   Building2,
   Mail,
@@ -75,6 +76,32 @@ export const LoginView: React.FC = () => {
     role?: string;
     error?: string;
   } | null>(null);
+
+  // Perfil e dados cadastrais da empresa
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(() => {
+    try {
+      const saved = safeStorage.getItem('supermarket_company_profile');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return null;
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadCompany() {
+      try {
+        const res = await apiService.getCompanyProfile();
+        if (isMounted && res.profile && res.profile.name) {
+          setCompanyProfile(res.profile);
+          safeStorage.setItem('supermarket_company_profile', JSON.stringify(res.profile));
+        }
+      } catch {}
+    }
+    loadCompany();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Read invite query param from URL (e.g. /login?invite=FIN-XXXX-XXXX)
   useEffect(() => {
@@ -269,16 +296,29 @@ export const LoginView: React.FC = () => {
       <div className="w-full max-w-md bg-white border border-zinc-200 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-zinc-200/50 space-y-6">
         {/* Brand & System Header */}
         <div className="flex flex-col items-center text-center space-y-3">
-          <div className="w-14 h-14 rounded-2xl bg-orange-600 text-white flex items-center justify-center shadow-md shadow-orange-600/30 border border-orange-700/30">
-            <Building2 className="w-8 h-8" />
+          <div className="w-14 h-14 rounded-2xl bg-orange-600 text-white flex items-center justify-center shadow-md shadow-orange-600/30 border border-orange-700/30 overflow-hidden">
+            {companyProfile?.logoUrl ? (
+              <img
+                src={companyProfile.logoUrl}
+                alt={companyProfile.name || 'Estabelecimento'}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <Building2 className="w-8 h-8" />
+            )}
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-zinc-950 tracking-tight">
-              Supermercado Central
+              {companyProfile?.name || 'Supermercado Central'}
             </h1>
             <p className="text-xs sm:text-sm font-bold text-zinc-700 mt-1">
-              Gestão Financeira & Conciliação Bancária
+              {companyProfile?.subtitle || 'Gestão Financeira & Conciliação Bancária'}
             </p>
+            {companyProfile?.cnpj && (
+              <span className="text-[11px] font-mono text-zinc-500 block mt-0.5">
+                CNPJ: {companyProfile.cnpj}
+              </span>
+            )}
           </div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 border border-orange-300 text-[11px] font-bold text-orange-800 uppercase tracking-wider">
             <span className="w-2 h-2 rounded-full bg-orange-600 animate-pulse" />
@@ -788,7 +828,7 @@ export const LoginView: React.FC = () => {
             Autenticação Segura via Supabase Auth & Criptografia TLS
           </p>
           <p className="text-[10px] text-zinc-500 font-medium">
-            Supermercado Central &bull; Painel Financeiro Protegido
+            {companyProfile?.name || 'Supermercado Central'} &bull; Painel Financeiro Protegido
           </p>
         </div>
       </div>

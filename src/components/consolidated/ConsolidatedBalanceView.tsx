@@ -154,10 +154,14 @@ export const ConsolidatedBalanceView: React.FC<ConsolidatedBalanceViewProps> = (
               onChange={(e) => setSelectedBankAccountId(e.target.value)}
               className="bg-transparent text-xs text-zinc-950 font-medium focus:outline-none cursor-pointer"
             >
-              <option value="" className="bg-white text-zinc-950 font-bold">Todas as Contas Bancárias</option>
-              {bankAccounts.map(acc => (
-                <option key={acc.id} value={acc.id} className="bg-white text-zinc-950">
-                  {acc.bankName || acc.accountName} - {acc.accountNumber}
+              <option key="all-accounts" value="" className="bg-white text-zinc-950 font-bold">Todas as Contas Bancárias</option>
+              {bankAccounts.filter(Boolean).map((acc, index) => (
+                <option
+                  key={acc.id ? `acc-${acc.id}` : `acc-idx-${index}`}
+                  value={acc.id || ''}
+                  className="bg-white text-zinc-950"
+                >
+                  {(acc.bankName || acc.accountName || 'Conta')} - {acc.accountNumber || 'S/N'}
                 </option>
               ))}
             </select>
@@ -171,11 +175,11 @@ export const ConsolidatedBalanceView: React.FC<ConsolidatedBalanceViewProps> = (
               onChange={(e) => setPeriod(e.target.value)}
               className="bg-transparent text-xs text-zinc-950 font-medium focus:outline-none cursor-pointer"
             >
-              <option value="todos" className="bg-white text-zinc-950">Todos os Períodos</option>
-              <option value="mes-atual" className="bg-white text-zinc-950">Mês Atual</option>
-              <option value="mes-anterior" className="bg-white text-zinc-950">Mês Anterior</option>
-              <option value="este-ano" className="bg-white text-zinc-950">Este Ano</option>
-              <option value="personalizado" className="bg-white text-zinc-950">Personalizado</option>
+              <option key="period-todos" value="todos" className="bg-white text-zinc-950">Todos os Períodos</option>
+              <option key="period-mes-atual" value="mes-atual" className="bg-white text-zinc-950">Mês Atual</option>
+              <option key="period-mes-anterior" value="mes-anterior" className="bg-white text-zinc-950">Mês Anterior</option>
+              <option key="period-este-ano" value="este-ano" className="bg-white text-zinc-950">Este Ano</option>
+              <option key="period-personalizado" value="personalizado" className="bg-white text-zinc-950">Personalizado</option>
             </select>
           </div>
 
@@ -272,17 +276,29 @@ export const ConsolidatedBalanceView: React.FC<ConsolidatedBalanceViewProps> = (
           </div>
         </div>
 
-        {/* Saldo Consolidado Final */}
-        <div className="bg-gradient-to-br from-orange-50/80 to-amber-50/50 p-4 rounded-2xl border border-orange-200/90 shadow-sm">
-          <div className="flex items-center justify-between text-orange-950 font-semibold text-[11px] uppercase tracking-wider">
-            <span>Saldo Consolidado Final</span>
-            <Scale className="w-4 h-4 text-orange-700" />
+        {/* Saldo Consolidado Final com fundo dinâmico conforme a saúde */}
+        <div className={`p-4 rounded-2xl border shadow-sm transition-all duration-200 ${
+          (calcResult?.finalBalanceOfPeriod ?? 0) >= 0
+            ? 'bg-gradient-to-br from-emerald-50/90 to-teal-50/60 border-emerald-300/90 text-emerald-950'
+            : 'bg-gradient-to-br from-rose-50/90 to-amber-50/60 border-rose-300/90 text-rose-950'
+        }`}>
+          <div className="flex items-center justify-between font-semibold text-[11px] uppercase tracking-wider">
+            <span className={(calcResult?.finalBalanceOfPeriod ?? 0) >= 0 ? 'text-emerald-950 font-bold' : 'text-rose-950 font-bold'}>
+              Saldo Consolidado Final
+            </span>
+            <Scale className={`w-4 h-4 ${
+              (calcResult?.finalBalanceOfPeriod ?? 0) >= 0 ? 'text-emerald-700' : 'text-rose-700'
+            }`} />
           </div>
-          <div className="text-xl font-black text-orange-900 font-mono mt-2">
+          <div className={`text-xl font-black font-mono mt-2 ${
+            (calcResult?.finalBalanceOfPeriod ?? 0) >= 0 ? 'text-emerald-900' : 'text-rose-900'
+          }`}>
             {formatCurrency(calcResult?.finalBalanceOfPeriod)}
           </div>
-          <div className="text-[10px] text-orange-700/80 font-medium mt-0.5">
-            Posição final acumulada
+          <div className={`text-[10px] font-medium mt-0.5 ${
+            (calcResult?.finalBalanceOfPeriod ?? 0) >= 0 ? 'text-emerald-700/90' : 'text-rose-700/90'
+          }`}>
+            {(calcResult?.finalBalanceOfPeriod ?? 0) >= 0 ? '🟢 Caixa Saudável (Positivo)' : '🔴 Caixa em Atenção (Negativo)'}
           </div>
         </div>
 

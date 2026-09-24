@@ -29,6 +29,7 @@ import {
 import { UserProfile, UserInvite, AuditLogEntry, UserRole, UserStatus } from '../../types';
 import { apiService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { safeStorage } from '../../utils/safeStorage';
 
 export const AdminUsersView: React.FC = () => {
   const { user: currentAuthUser, profile: currentProfile } = useAuth();
@@ -200,10 +201,22 @@ export const AdminUsersView: React.FC = () => {
     return `${origin}/login?invite=${encodeURIComponent(code)}`;
   };
 
+  const getCompanyName = () => {
+    try {
+      const raw = safeStorage.getItem('supermarket_company_profile');
+      if (raw) {
+        const p = JSON.parse(raw);
+        if (p.name) return p.name;
+      }
+    } catch {}
+    return 'Supermercado Central';
+  };
+
   // Generate Message template
   const getInviteMessage = (invite: UserInvite) => {
     const link = getInviteLink(invite.code);
-    return `Olá! Você foi convidado para acessar o Sistema Financeiro do Supermercado com perfil de acesso: ${invite.role}.\n\nPara concluir seu cadastro e definir sua senha, acesse o link:\n${link}\n\nCódigo do Convite: ${invite.code}`;
+    const company = getCompanyName();
+    return `Olá! Você foi convidado para acessar o Sistema Financeiro de ${company} com perfil de acesso: ${invite.role}.\n\nPara concluir seu cadastro e definir sua senha, acesse o link:\n${link}\n\nCódigo do Convite: ${invite.code}`;
   };
 
   // Copy code to clipboard
@@ -238,7 +251,7 @@ export const AdminUsersView: React.FC = () => {
 
   // Open Email client with invite
   const handleShareEmail = (invite: UserInvite) => {
-    const subject = encodeURIComponent(`Convite de Acesso - Sistema Financeiro Supermercado (${invite.role})`);
+    const subject = encodeURIComponent(`Convite de Acesso - Sistema Financeiro ${getCompanyName()} (${invite.role})`);
     const body = encodeURIComponent(getInviteMessage(invite));
     const to = invite.recipientEmail ? encodeURIComponent(invite.recipientEmail) : '';
     window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;

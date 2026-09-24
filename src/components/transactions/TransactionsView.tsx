@@ -372,10 +372,37 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       setNotification(`⚡ Status atualizado para "${label}" em ${selectedTxIds.size} lançamento(s)!`);
       setTimeout(() => setNotification(null), 3500);
       setSelectedTxIds(new Set());
-      fetchTransactions();
-      if (onRefreshStats) onRefreshStats();
+      await fetchTransactions();
+      if (onRefreshStats) {
+        await onRefreshStats();
+      }
     } catch (err: any) {
       alert(err.message || 'Erro ao atualizar conciliação.');
+    }
+  };
+
+  const handleReconcileAllPending = async () => {
+    try {
+      setIsLoading(true);
+      const res = await apiService.getTransactions({ reconciliationStatus: 'PENDENTE' });
+      const pendingIds = (res.transactions || []).map((t) => t.id);
+      if (pendingIds.length === 0) {
+        setNotification('Nenhum lançamento pendente encontrado para conciliar.');
+        setTimeout(() => setNotification(null), 3000);
+        return;
+      }
+      await apiService.batchReconcile(pendingIds, 'CONCILIAR', 'Financeiro');
+      setNotification(`⚡ Sucesso! Todos os ${pendingIds.length} lançamentos pendentes foram conciliados e zerados!`);
+      setTimeout(() => setNotification(null), 4000);
+      setSelectedTxIds(new Set());
+      await fetchTransactions();
+      if (onRefreshStats) {
+        await onRefreshStats();
+      }
+    } catch (err: any) {
+      alert(err.message || 'Erro ao conciliar lançamentos pendentes.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -385,8 +412,10 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
       await apiService.updateTransaction(tx.id, { reconciliationStatus: nextStatus }, 'Financeiro');
       setNotification(`Lançamento "${tx.description}" marcado como ${nextStatus}!`);
       setTimeout(() => setNotification(null), 3000);
-      fetchTransactions();
-      if (onRefreshStats) onRefreshStats();
+      await fetchTransactions();
+      if (onRefreshStats) {
+        await onRefreshStats();
+      }
     } catch (err: any) {
       alert(err.message || 'Erro ao alterar conciliação.');
     }
@@ -1070,45 +1099,115 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
             )}
           </div>
 
-          <div className="text-[11px] text-zinc-600 font-medium">
-            Exibindo <strong className="text-zinc-950 font-bold">{sortedTransactions.length}</strong> {sortedTransactions.length === 1 ? 'lançamento' : 'lançamentos'}
+          <div className="flex items-center gap-3">
+            {selectedTxIds.size === 0 && (
+              <>
+                <button
+                  type="button"
+                  onClick={toggleSelectAll}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold text-zinc-700 hover:text-orange-700 bg-slate-100 hover:bg-orange-50 border border-zinc-200 rounded-lg transition-colors cursor-pointer"
+                  title="Selecionar todos os lançamentos visíveis para ação em lote"
+                >
+                  <CheckSquare className="w-3.5 h-3.5 text-orange-600" />
+                  <span>Selecionar Todos ({sortedTransactions.length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleReconcileAllPending}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold text-emerald-800 hover:text-emerald-950 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg transition-colors cursor-pointer"
+                  title="Conciliar TODOS os lançamentos pendentes do sistema e zerar o contador de pendências"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>⚡ Conciliar Todos os Pendentes</span>
+                </button>
+              </>
+            )}
+
+            <div className="text-[11px] text-zinc-600 font-medium">
+              Exibindo <strong className="text-zinc-950 font-bold">{sortedTransactions.length}</strong> {sortedTransactions.length === 1 ? 'lançamento' : 'lançamentos'}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Transactions Table */}
-      <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-sm overflow-hidden relative pb-16">
-        {/* Batch Action Floating Bar */}
-        {selectedTxIds.size > 0 && (
-          <div className="absolute bottom-4 left-4 right-4 z-20 bg-[#1e1e26] border border-orange-500/40 rounded-2xl p-3 px-5 shadow-2xl flex items-center justify-between gap-4 animate-in slide-in-from-bottom duration-200">
-            <div className="flex items-center gap-3">
-              <span className="w-7 h-7 rounded-xl bg-orange-500/20 border border-orange-500/40 text-orange-700 font-bold font-bold text-xs flex items-center justify-center">
-                {selectedTxIds.size}
-              </span>
-              <span className="text-xs font-bold text-zinc-950 font-bold">
-                {selectedTxIds.size} movimentação(ões) selecionada(s)
-              </span>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <button
-                onClick={() => setSelectedTxIds(new Set())}
-                className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-zinc-950 font-bold rounded-xl text-xs font-semibold transition-colors"
-              >
-                Limpar Seleção
-              </button>
-              <button
-                onClick={() => {
-                  const targets = transactions.filter((t) => selectedTxIds.has(t.id));
-                  handleOpenCategorize(targets);
-                }}
-                className="px-4 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-bold shadow-md shadow-orange-950/40 transition-all flex items-center gap-1.5"
-              >
-                <Tag className="w-3.5 h-3.5" />
-                <span>Categorizar Selecionados</span>
-              </button>
+      {/* Barra de Ações em Lote no TOPO (Fixo/Sticky para não precisar rolar a lista) */}
+      {selectedTxIds.size > 0 && (
+        <div className="sticky top-16 z-30 bg-zinc-950 text-white border-2 border-emerald-500 rounded-2xl p-3 sm:px-5 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-3 animate-in fade-in slide-in-from-top duration-200">
+          <div className="flex items-center gap-3">
+            <span className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 font-black text-xs flex items-center justify-center shadow-xs shrink-0">
+              {selectedTxIds.size}
+            </span>
+            <div>
+              <div className="text-xs font-bold text-white flex items-center gap-2">
+                <span>{selectedTxIds.size} {selectedTxIds.size === 1 ? 'movimentação selecionada' : 'movimentações selecionadas'}</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase">
+                  Ação em Lote
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-400">
+                Execute a conciliação imediata ou categorize sem precisar rolar até o fim da página
+              </p>
             </div>
           </div>
-        )}
+
+          <div className="flex items-center gap-2 flex-wrap w-full md:w-auto justify-end">
+            <button
+              onClick={() => handleBatchReconcile('CONCILIAR')}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black shadow-lg shadow-emerald-950/50 transition-all flex items-center gap-2 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+              title="Conciliar os lançamentos selecionados"
+            >
+              <CheckCircle2 className="w-4 h-4 text-white" />
+              <span>Conciliar Selecionados ({selectedTxIds.size})</span>
+            </button>
+
+            <button
+              onClick={handleReconcileAllPending}
+              className="px-3.5 py-2 bg-teal-600 hover:bg-teal-500 text-white border border-teal-400/40 rounded-xl text-xs font-black shadow-md transition-all flex items-center gap-1.5 cursor-pointer hover:scale-[1.02]"
+              title="Conciliar TODOS os lançamentos pendentes do sistema de uma vez só e zerar o contador do topo"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5 text-teal-200" />
+              <span>Conciliar TODOS os Pendentes</span>
+            </button>
+
+            <button
+              onClick={() => handleBatchReconcile('PENDENTE')}
+              className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-amber-300 border border-amber-500/30 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+              title="Marcar selecionados como pendente"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+              <span>Marcar como Pendente</span>
+            </button>
+
+            <button
+              onClick={() => {
+                const sourceMap = new Map<string, Transaction>();
+                transactions.forEach((t) => sourceMap.set(t.id, t));
+                sortedTransactions.forEach((t) => sourceMap.set(t.id, t));
+                allPeriodTransactions.forEach((t) => sourceMap.set(t.id, t));
+                const targets = Array.from(selectedTxIds)
+                  .map((id: string) => sourceMap.get(id))
+                  .filter((t): t is Transaction => t !== undefined);
+                handleOpenCategorize(targets);
+              }}
+              className="px-3.5 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-xl text-xs font-bold shadow-md shadow-orange-950/40 transition-all flex items-center gap-1.5 cursor-pointer"
+              title="Categorizar selecionados"
+            >
+              <Tag className="w-3.5 h-3.5" />
+              <span>Categorizar</span>
+            </button>
+
+            <button
+              onClick={() => setSelectedTxIds(new Set())}
+              className="px-3 py-2 bg-white/10 hover:bg-white/15 text-zinc-300 hover:text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+            >
+              Limpar Seleção
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Main Transactions Table */}
+      <div className="bg-white rounded-2xl border border-zinc-200/90 shadow-sm overflow-hidden relative pb-4">
 
         <div className="overflow-x-auto rounded-2xl border border-zinc-300 shadow-sm bg-white">
           <table className="w-full text-left text-xs border-collapse">
@@ -1456,15 +1555,34 @@ export const TransactionsView: React.FC<TransactionsViewProps> = ({
                         </span>
                       </td>
 
-                      {/* Status / Duplicidade */}
+                      {/* Status / Duplicidade & Conciliação Individual Rápida */}
                       <td className="py-3 px-3.5 whitespace-nowrap border-r border-zinc-200/80">
                         {tx.reconciliationStatus === 'DUPLICADO' ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
                             <AlertTriangle className="w-3 h-3 text-amber-600" />
                             Duplicado
                           </span>
+                        ) : tx.reconciliationStatus === 'CONCILIADO' ? (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleSingleReconciliation(tx)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200 transition-colors cursor-pointer"
+                            title="Lançamento conciliado. Clique para marcar como Pendente"
+                          >
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            <span>Conciliado</span>
+                          </button>
                         ) : (
-                          <span className="text-zinc-400 text-xs">-</span>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleSingleReconciliation(tx)}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-300 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all cursor-pointer group shadow-2xs"
+                            title="Clique para conciliar este lançamento imediatamente"
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 group-hover:bg-white" />
+                            <span>Pendente</span>
+                            <span className="text-[10px] font-black ml-0.5 text-emerald-700 group-hover:text-white">✓ Conciliar</span>
+                          </button>
                         )}
                       </td>
 

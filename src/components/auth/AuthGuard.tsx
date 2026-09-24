@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ShieldCheck, ShieldAlert, Clock, Loader2, LogOut, RefreshCw } from 'lucide-react';
+import { safeStorage } from '../../utils/safeStorage';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -12,6 +13,14 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const location = useLocation();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
 
+  const savedProfile = React.useMemo(() => {
+    try {
+      const raw = safeStorage.getItem('supermarket_company_profile');
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return null;
+  }, []);
+
   // Enquanto a sessão está sendo checada, exibe tela de carregamento oficial e NUNCA o dashboard
   if (loading) {
     return (
@@ -21,8 +30,12 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
             <ShieldCheck className="w-8 h-8" />
           </div>
           <div className="space-y-1">
-            <h2 className="text-lg font-bold text-zinc-950 tracking-tight">Supermercado Central</h2>
-            <p className="text-xs text-zinc-600 font-medium">Gestão Financeira & Conciliação Bancária</p>
+            <h2 className="text-lg font-bold text-zinc-950 tracking-tight">
+              {savedProfile?.name || 'Supermercado Central'}
+            </h2>
+            <p className="text-xs text-zinc-600 font-medium">
+              {savedProfile?.subtitle || 'Gestão Financeira & Conciliação Bancária'}
+            </p>
           </div>
           <div className="flex items-center gap-2.5 text-xs text-zinc-700 font-semibold pt-2">
             <Loader2 className="w-4 h-4 text-orange-600 animate-spin" />

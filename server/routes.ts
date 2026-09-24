@@ -20,7 +20,7 @@ import { ColumnMapping, ImportPreviewItem, StatementFileType } from '../src/type
 import { calculateConsolidatedBalance } from '../src/utils/consolidatedBalance';
 import { runFinancialUnitTests } from './financialTests';
 import { getSupabaseClient, isSupabaseConfigured, resetSupabaseClient, diagnoseSupabaseConnection } from './supabaseService';
-import { getSqliteDatabaseInfo, getSqliteDbPath, saveUserProfileSqlite, saveAppSetting } from './sqliteService';
+import { getSqliteDatabaseInfo, getSqliteDbPath, saveUserProfileSqlite, saveAppSetting, getAppSetting } from './sqliteService';
 import {
   getUserProfiles,
   getUserProfileById,
@@ -48,6 +48,33 @@ apiRouter.get('/auth/config', (req: Request, res: Response) => {
     supabaseUrl,
     supabaseAnonKey
   });
+});
+
+// Endpoint para obter perfil cadastral da empresa
+apiRouter.get('/company-profile', (req: Request, res: Response) => {
+  try {
+    const raw = getAppSetting('company_profile');
+    if (raw) {
+      return res.json({ profile: JSON.parse(raw) });
+    }
+  } catch (e) {
+    console.warn('Erro ao ler company_profile:', e);
+  }
+  res.json({ profile: null });
+});
+
+// Endpoint para salvar dados cadastrais da empresa
+apiRouter.post('/company-profile', (req: Request, res: Response) => {
+  try {
+    const profile = req.body?.profile || req.body;
+    if (profile && typeof profile === 'object') {
+      saveAppSetting('company_profile', JSON.stringify(profile));
+      return res.json({ success: true, profile });
+    }
+    res.status(400).json({ success: false, error: 'Perfil inválido' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // Endpoint público para habilitar o usuário atual como Administrador Master irrestrito (suporta GET e POST)
@@ -321,7 +348,8 @@ apiRouter.use(async (req: Request, res: Response, next) => {
     '/database/schema-sql',
     '/supabase/status',
     '/sqlite/status',
-    '/auth/enable-master'
+    '/auth/enable-master',
+    '/company-profile'
   ];
   if (publicPaths.includes(req.path)) {
     return next();
@@ -1244,15 +1272,19 @@ apiRouter.delete('/statements/:id', (req: Request, res: Response) => {
 // Reconcile batch
 apiRouter.post('/reconciliation/batch', (req: Request, res: Response) => {
   try {
-    const { transactionIds, action, userName } = req.body;
-    if (!Array.isArray(transactionIds)) return res.status(400).json({ error: 'IDs inválidos.' });
-
-    let updatedCount = 0;
-    for (const id of transactionIds) {
-      const status = action === 'CONCILIAR' ? 'CONCILIADO' : (action === 'SUSPEITO' ? 'SUSPEITO' : 'PENDENTE');
-      const updated = db.updateTransaction(id, { reconciliationStatus: status }, userName || 'Financeiro');
-      if (updated) updatedCount++;
+    const { transactionIds, action, reconciliationStatus, userName } = req.body || {};
+    if (!Array.isArray(transactionIds) || transactionIds.length === 0) {
+      return res.status(400).json({ error: 'Nenhum ID de transação fornecido.' });
     }
+
+    let status = 'PENDENTE';
+    if (action === 'CONCILIAR' || action === 'CONCILIADO' || reconciliationStatus === 'CONCILIADO') {
+      status = 'CONCILIADO';
+    } else if (action === 'SUSPEITO' || reconciliationStatus === 'SUSPEITO') {
+      status = 'SUSPEITO';
+    }
+
+    const updatedCount = db.batchUpdateReconciliationStatus(transactionIds, status, userName || 'Financeiro');
     res.json({ success: true, updatedCount });
   } catch (err: unknown) {
     res.status(500).json({ error: (err as Error).message });

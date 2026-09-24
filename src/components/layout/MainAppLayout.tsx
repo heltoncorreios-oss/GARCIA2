@@ -119,10 +119,32 @@ export const MainAppLayout: React.FC = () => {
     return DEFAULT_COMPANY_PROFILE;
   });
 
-  const handleSaveCompanyProfile = (profile: CompanyProfile) => {
+  // Sincroniza dados cadastrais da empresa com o servidor para persistência unificada
+  useEffect(() => {
+    let isMounted = true;
+    async function syncCompanyProfile() {
+      try {
+        const res = await apiService.getCompanyProfile();
+        if (isMounted && res.profile && res.profile.name) {
+          setCompanyProfile(res.profile);
+          safeStorage.setItem('supermarket_company_profile', JSON.stringify(res.profile));
+        }
+      } catch (err) {
+        console.warn('Fallback ao carregar perfil da empresa:', err);
+      }
+    }
+    syncCompanyProfile();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleSaveCompanyProfile = async (profile: CompanyProfile) => {
     setCompanyProfile(profile);
     try {
       safeStorage.setItem('supermarket_company_profile', JSON.stringify(profile));
+      await apiService.updateCompanyProfile(profile);
+      showNotification('Identidade e dados cadastrais do estabelecimento salvos com sucesso!', 'success');
     } catch (e) {
       console.warn('Fallback ao salvar perfil da empresa:', e);
     }
@@ -344,6 +366,9 @@ export const MainAppLayout: React.FC = () => {
             <DashboardView
               bankAccounts={bankAccounts}
               onNavigateToImport={() => navigate('/importar')}
+              companyProfile={companyProfile}
+              userName={profile?.name || (user?.user_metadata as any)?.name}
+              userRole={profile?.role || 'ADMINISTRADOR'}
             />
           )}
 

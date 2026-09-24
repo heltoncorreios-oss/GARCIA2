@@ -49,7 +49,7 @@ import {
   Cell,
   CartesianGrid
 } from 'recharts';
-import { BankAccount, DashboardResponse, PeriodFilter, CategoryBreakdownItem } from '../../types';
+import { BankAccount, DashboardResponse, PeriodFilter, CategoryBreakdownItem, CompanyProfile } from '../../types';
 import { apiService } from '../../services/api';
 import { formatCurrency, formatDateBR } from '../../utils/formatters';
 import { validateFinancialConsistency } from '../../utils/financialTotals';
@@ -57,6 +57,9 @@ import { validateFinancialConsistency } from '../../utils/financialTotals';
 interface DashboardViewProps {
   bankAccounts: BankAccount[];
   onNavigateToImport: () => void;
+  companyProfile?: CompanyProfile;
+  userName?: string;
+  userRole?: string;
 }
 
 const COLORS = ['#10b981', '#0d9488', '#3b82f6', '#6366f1', '#8b5cf6', '#f59e0b', '#ef4444', '#64748b'];
@@ -102,7 +105,10 @@ const renderCategoryIcon = (name: string, type?: string) => {
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
   bankAccounts,
-  onNavigateToImport
+  onNavigateToImport,
+  companyProfile,
+  userName,
+  userRole
 }) => {
   const [period, setPeriod] = useState<PeriodFilter>('todos');
   const [selectedAccountId, setSelectedAccountId] = useState<string>('');
@@ -219,17 +225,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Header Bar with Period, Bank and Date Organization */}
       <div className="bg-white p-4 sm:p-5 rounded-2xl border border-zinc-200/90 shadow-sm flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <h2 className="text-xl font-bold text-zinc-950 font-bold tracking-tight">
-              Visão Geral Financeira do Supermercado
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-xl font-bold text-zinc-950 tracking-tight">
+              Visão Geral Financeira
             </h2>
             <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-orange-500/15 text-orange-700 font-bold border border-orange-500/30 flex items-center gap-1.5 shadow-xs">
               <ArrowUpDown className="w-3 h-3 text-orange-700 font-bold" />
               {dateSortOrder === 'desc' ? 'Organizado por Data: Mais Recentes Primeiro' : 'Organizado por Data: Mais Antigos Primeiro'}
             </span>
           </div>
-          <p className="text-xs text-zinc-900 font-semibold mt-0.5">
-            Métricas consolidadas, fluxo de caixa diário por data, conferência de saldos e recebíveis
+          <p className="text-xs text-zinc-800 font-medium mt-1">
+            {userName ? (
+              <span className="text-zinc-950 font-bold">Olá, {userName}! </span>
+            ) : null}
+            Métricas consolidadas, fluxo de caixa diário por data, conferência de saldos e recebíveis.
           </p>
         </div>
 

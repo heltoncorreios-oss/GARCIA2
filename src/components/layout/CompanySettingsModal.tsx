@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Building2,
   Upload,
@@ -45,6 +45,17 @@ export const CompanySettingsModal: React.FC<CompanySettingsModalProps> = ({
   const [cropperImage, setCropperImage] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setName(companyProfile.name || 'Supermercado Central');
+      setSubtitle(companyProfile.subtitle || 'Gestão Financeira');
+      setLogoUrl(companyProfile.logoUrl || null);
+      setCnpj(companyProfile.cnpj || '');
+      setBadge(companyProfile.badge || 'FINANCEIRO');
+      setErrorMsg(null);
+    }
+  }, [isOpen, companyProfile]);
 
   if (!isOpen) return null;
 

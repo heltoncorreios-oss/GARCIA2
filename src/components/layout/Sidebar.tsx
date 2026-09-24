@@ -292,6 +292,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       </button>
                     );
                   })}
+
+                  {/* Zerar Sistema (Exclusivo Administrador na lateral) */}
+                  {userRole === 'ADMINISTRADOR' && onResetData && (
+                    <button
+                      onClick={() => {
+                        onResetData();
+                        onClose();
+                      }}
+                      className="w-full flex items-center justify-between px-2.5 py-1 rounded-lg text-xs font-semibold text-rose-300 hover:text-rose-100 hover:bg-rose-500/15 border border-rose-500/25 hover:border-rose-500/40 transition-all cursor-pointer mt-1"
+                      title="Limpar todas as movimentações e deixar o sistema em branco para importar extrato real"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                        <span className="truncate">Zerar Sistema</span>
+                      </div>
+                    </button>
+                  )}
+
+                  {/* Restaurar Dados Demo (Exclusivo Administrador na lateral) */}
+                  {userRole === 'ADMINISTRADOR' && onRestoreSampleData && (
+                    <button
+                      onClick={() => {
+                        onRestoreSampleData();
+                        onClose();
+                      }}
+                      className="w-full flex items-center justify-between px-2.5 py-1 rounded-lg text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] border border-transparent transition-all cursor-pointer"
+                      title="Restaurar movimentações de teste para demonstração"
+                    >
+                      <div className="flex items-center gap-2">
+                        <RotateCcw className="w-3.5 h-3.5 text-zinc-400" />
+                        <span className="truncate">Restaurar Dados Demo</span>
+                      </div>
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -322,7 +356,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </nav>
 
-        {/* Supermarket info footer card and Development Reset Tools */}
+        {/* Supermarket info footer card */}
         <div className="p-2.5 border-t border-white/5 bg-[#0b0c10] space-y-1.5">
           {/* User profile capsule in sidebar */}
           {userEmail && (
@@ -347,35 +381,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
               <div className="text-[10px] text-zinc-500 truncate mt-0.5">{userEmail}</div>
             </div>
-          )}
-
-          {/* Reset System and Demo tools (ADMINISTRADOR ONLY) */}
-          {userRole === 'ADMINISTRADOR' && onResetData && (
-            <button
-              onClick={() => {
-                onResetData();
-                onClose();
-              }}
-              className="w-full flex items-center justify-center gap-1.5 px-2.5 py-1 text-[11px] font-bold text-rose-300 hover:text-white bg-rose-500/10 hover:bg-rose-600/30 border border-rose-500/25 hover:border-rose-500/50 rounded-lg transition-all cursor-pointer"
-              title="Limpar todas as movimentações e deixar o sistema em branco para importar extrato real"
-            >
-              <Trash2 className="w-3 h-3 text-rose-400" />
-              <span>Zerar Sistema</span>
-            </button>
-          )}
-
-          {userRole === 'ADMINISTRADOR' && onRestoreSampleData && (
-            <button
-              onClick={() => {
-                onRestoreSampleData();
-                onClose();
-              }}
-              className="w-full flex items-center justify-center gap-1.5 px-2.5 py-1 text-[10px] font-semibold text-zinc-400 hover:text-zinc-200 bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 rounded-lg transition-colors cursor-pointer"
-              title="Restaurar movimentações de teste para demonstração"
-            >
-              <RotateCcw className="w-3 h-3 text-zinc-400" />
-              <span>Restaurar Dados Demo</span>
-            </button>
           )}
         </div>
       </aside>
